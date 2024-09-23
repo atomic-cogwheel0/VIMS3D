@@ -1,0 +1,2599 @@
+SH SERIES C/C++ Compiler (V.9.04.02.001)                                                         21-Sep-2024 11:42:24  PAGE    1
+
+************ OBJECT LISTING ************
+
+FILE NAME: C:\CasioSDK\Projects\VIMS3D\game.c
+
+SCT OFFSET   CODE       C LABEL     INSTRUCTION OPERAND    COMMENT
+
+               game.c          1    #include "game.h"
+               game.c          2    
+               game.c          3    /*
+               game.c          4     GAME.C:
+               game.c          5      game setup, adding meshes, handling input
+               game.c          6    */
+               game.c          7    
+               game.c          8    extern texture_t textures[TX_CNT];
+               game.c          9    
+               game.c         10    vec3f pos;
+               game.c         11    fixed pitch, yaw;
+               game.c         12    float gdelta;
+               game.c         13    float gspeed;
+               game.c         14    
+               game.c         15    volatile unsigned int quit = 0;
+               game.c         16    
+               game.c         17    texture_ptr_t tx[72];
+               game.c         18    texture_ptr_t ptr[1];
+               game.c         19    texture_ptr_t ptr2[1];
+               game.c         20    vec3f vertices[26];
+               game.c         21    trianglef tankmesh[72];
+               game.c         22    trianglef personmesh[2];
+               game.c         23    trianglef treemesh[2];
+               game.c         24    mesh_id_t tid, pid;
+               game.c         25    
+               game.c         26    toggle_t overlay = {0, 0, 0};
+               game.c         27    toggle_t interlace = {0, 0, 0};
+               game.c         28    
+               game.c         29    void start(void) {
+P   00000000              _start:                          ; function: start
+                                                           ; frame size=168
+    00000000 2F86                   MOV.L       R8,@-R15
+    00000002 2F96                   MOV.L       R9,@-R15
+    00000004 2FA6                   MOV.L       R10,@-R15
+    00000006 2FB6                   MOV.L       R11,@-R15
+    00000008 2FC6                   MOV.L       R12,@-R15
+    0000000A 2FD6                   MOV.L       R13,@-R15
+    0000000C 2FE6                   MOV.L       R14,@-R15
+    0000000E 4F22                   STS.L       PR,@-R15
+    00000010 7FA4                   ADD         #-92,R15
+               game.c         30          int i, j;
+               game.c         31          mesh m, m2;
+               game.c         32          pos = ivec3f(float2f(4.2), float2f(2.0), float2f(12.0));
+    00000012 D1D3                   MOV.L       L69+8,R1   ; _pos
+    00000014 2F16                   MOV.L       R1,@-R15
+    00000016 EC30                   MOV         #48,R12    ; H'00000030
+    00000018 EE08                   MOV         #8,R14     ; H'00000008
+    0000001A D8D2                   MOV.L       L69+12,R8  ; _ivec3f
+    0000001C 4C18                   SHLL8       R12
+    0000001E 4E18                   SHLL8       R14
+    00000020 66C3                   MOV         R12,R6
+    00000022 94E2                   MOV.W       L67,R4     ; H'10CC
+    00000024 480B                   JSR         @R8
+    00000026 65E3                   MOV         R14,R5
+    00000028 7F04                   ADD         #4,R15
+    0000002A DACF                   MOV.L       L69+16,R10 ; _pitch
+    0000002C DBCF                   MOV.L       L69+20,R11 ; _yaw
+               game.c         33        pitch = float2f(-1.0*DEG2RAD_MULT), yaw = float2f(-162.5*DEG2RAD_MULT);
+               game.c         34        gdelta = 32.0f*DEG2RAD_MULT;
+    0000002E DDD0                   MOV.L       L69+24,R13 ; H'3F0EFA35
+    00000030 D7D0                   MOV.L       L69+28,R7  ; _gdelta
+               game.c         35        gspeed = 1.0f;
+    00000032 D8D1                   MOV.L       L69+32,R8  ; H'3F800000
+    00000034 D1D1                   MOV.L       L69+36,R1  ; _gspeed
+    00000036 E4EF                   MOV         #-17,R4    ; H'FFFFFFEF
+    00000038 95D8                   MOV.W       L67+2,R5   ; H'F4A8
+               game.c         36    
+               game.c         37          if (g_init() != G_SUCCESS) return;
+    0000003A D9D1                   MOV.L       L69+40,R9  ; _g_init
+    0000003C 2A42                   MOV.L       R4,@R10    ; pitch
+    0000003E 2B52                   MOV.L       R5,@R11    ; yaw
+    00000040 27D2                   MOV.L       R13,@R7    ; gdelta
+    00000042 490B                   JSR         @R9
+    00000044 2182                   MOV.L       R8,@R1     ; gspeed
+    00000046 2008                   TST         R0,R0
+    00000048 8901                   BT          L80
+    0000004A A6F0                   BRA         L12
+    0000004C 0009                   NOP
+    0000004E              L80:
+               game.c         38          if (m_init() != G_SUCCESS) return;
+    0000004E D2CD                   MOV.L       L69+44,R2  ; _m_init
+    00000050 420B                   JSR         @R2
+    00000052 0009                   NOP
+    00000054 2008                   TST         R0,R0
+    00000056 8901                   BT          L81
+    00000058 A6E9                   BRA         L12
+    0000005A 0009                   NOP
+    0000005C              L81:
+               game.c         39    
+               game.c         40        SetTimer(TICK_TIMER, TICK_MS, tick);
+    0000005C D6CA                   MOV.L       L69+48,R6  ; _tick
+    0000005E D9CB                   MOV.L       L69+52,R9  ; _SetTimer
+    00000060 E519                   MOV         #25,R5     ; H'00000019
+               game.c         41    
+               game.c         42          for (i = 0; i < 72; i++) {
+    00000062 DACB                   MOV.L       L69+56,R10 ; _textures
+    00000064 490B                   JSR         @R9
+    00000066 E401                   MOV         #1,R4      ; H'00000001
+    00000068 E058                   MOV         #88,R0     ; H'00000058
+    0000006A 0FA6                   MOV.L       R10,@(R0,R15)
+    0000006C D7C9                   MOV.L       L69+60,R7  ; _tx
+    0000006E E648                   MOV         #72,R6     ; H'00000048
+    00000070 6273                   MOV         R7,R2
+    00000072              L14:
+    00000072 4610                   DT          R6
+               game.c         43                  tx[i] = &textures[TX_WHITE];
+    00000074 22A2                   MOV.L       R10,@R2    ; tx[]
+    00000076 8FFC                   BF/S        L14
+    00000078 7204                   ADD         #4,R2
+               game.c         44          }
+               game.c         45          
+               game.c         46          tx[1] = tx[5] = tx[2] = tx[6] = &textures[TX_TANKTRACK];
+    0000007A E358                   MOV         #88,R3     ; H'00000058
+    0000007C 33FC                   ADD         R15,R3
+    0000007E 6132                   MOV.L       @R3,R1
+               game.c         47          tx[31] = tx[32] = tx[33] = tx[34] = tx[35] = tx[36] = tx[37] = &textures[TX_BLACK];
+    00000080 6D13                   MOV         R1,R13
+    00000082 E094                   MOV         #-108,R0   ; H'FFFFFF94
+    00000084 7154                   ADD         #84,R1
+    00000086 7D0C                   ADD         #12,R13
+    00000088 600C                   EXTU.B      R0,R0
+    0000008A 1716                   MOV.L       R1,@(24,R7); tx[]
+    0000008C 1712                   MOV.L       R1,@(8,R7) ; tx[]
+    0000008E 1715                   MOV.L       R1,@(20,R7); tx[]
+    00000090 1711                   MOV.L       R1,@(4,R7) ; tx[]
+    00000092 07D6                   MOV.L       R13,@(R0,R7); tx[]
+    00000094 70FC                   ADD         #-4,R0
+    00000096 07D6                   MOV.L       R13,@(R0,R7); tx[]
+    00000098 70FC                   ADD         #-4,R0
+    0000009A 07D6                   MOV.L       R13,@(R0,R7); tx[]
+    0000009C 70FC                   ADD         #-4,R0
+    0000009E 07D6                   MOV.L       R13,@(R0,R7); tx[]
+    000000A0 70FC                   ADD         #-4,R0
+               game.c         48          tx[26] = tx[27] = &textures[TX_TANKFRONT];
+    000000A2 6232                   MOV.L       @R3,R2
+    000000A4 07D6                   MOV.L       R13,@(R0,R7); tx[]
+    000000A6 70FC                   ADD         #-4,R0
+    000000A8 07D6                   MOV.L       R13,@(R0,R7); tx[]
+    000000AA E07C                   MOV         #124,R0    ; H'0000007C
+    000000AC 6B23                   MOV         R2,R11
+    000000AE 07D6                   MOV.L       R13,@(R0,R7); tx[]
+    000000B0 7B60                   ADD         #96,R11
+    000000B2 E06C                   MOV         #108,R0    ; H'0000006C
+    000000B4 07B6                   MOV.L       R11,@(R0,R7); tx[]
+    000000B6 E068                   MOV         #104,R0    ; H'00000068
+    000000B8 07B6                   MOV.L       R11,@(R0,R7); tx[]
+               game.c         49          tx[28] = tx[29] = &textures[TX_TANKTOP];
+    000000BA 726C                   ADD         #108,R2
+    000000BC E074                   MOV         #116,R0    ; H'00000074
+               game.c         50    
+               game.c         51          vertices[0] = ivec3f(int2f(1), int2f(1), int2f(0));
+    000000BE DAB6                   MOV.L       L69+64,R10 ; _vertices
+    000000C0 0726                   MOV.L       R2,@(R0,R7); tx[]
+    000000C2 E070                   MOV         #112,R0    ; H'00000070
+    000000C4 0726                   MOV.L       R2,@(R0,R7); tx[]
+    000000C6 2FA6                   MOV.L       R10,@-R15
+    000000C8 EB04                   MOV         #4,R11     ; H'00000004
+    000000CA 4B18                   SHLL8       R11
+    000000CC DDA5                   MOV.L       L69+12,R13 ; _ivec3f
+    000000CE 65B3                   MOV         R11,R5
+    000000D0 E600                   MOV         #0,R6      ; H'00000000
+    000000D2 4D0B                   JSR         @R13
+    000000D4 64B3                   MOV         R11,R4
+    000000D6 7F04                   ADD         #4,R15
+               game.c         52          vertices[1] = ivec3f(int2f(0), int2f(2), int2f(0));
+    000000D8 61A3                   MOV         R10,R1
+    000000DA 710C                   ADD         #12,R1
+    000000DC 2F16                   MOV.L       R1,@-R15
+    000000DE E600                   MOV         #0,R6      ; H'00000000
+    000000E0 D7A0                   MOV.L       L69+12,R7  ; _ivec3f
+    000000E2 6463                   MOV         R6,R4
+    000000E4 470B                   JSR         @R7
+    000000E6 65E3                   MOV         R14,R5
+    000000E8 7F04                   ADD         #4,R15
+               game.c         53          vertices[2] = ivec3f(int2f(-6), int2f(2), int2f(0));
+    000000EA 68A3                   MOV         R10,R8
+    000000EC 7818                   ADD         #24,R8
+    000000EE 2F86                   MOV.L       R8,@-R15
+    000000F0 E9E8                   MOV         #-24,R9    ; H'FFFFFFE8
+    000000F2 DD9C                   MOV.L       L69+12,R13 ; _ivec3f
+    000000F4 4918                   SHLL8       R9
+    000000F6 E600                   MOV         #0,R6      ; H'00000000
+    000000F8 65E3                   MOV         R14,R5
+    000000FA 4D0B                   JSR         @R13
+    000000FC 6493                   MOV         R9,R4
+    000000FE 7F04                   ADD         #4,R15
+               game.c         54          vertices[3] = ivec3f(int2f(-7), int2f(1), int2f(0));
+    00000100 61A3                   MOV         R10,R1
+    00000102 7124                   ADD         #36,R1
+    00000104 2F16                   MOV.L       R1,@-R15
+    00000106 E4E4                   MOV         #-28,R4    ; H'FFFFFFE4
+    00000108 D796                   MOV.L       L69+12,R7  ; _ivec3f
+    0000010A E600                   MOV         #0,R6      ; H'00000000
+    0000010C 65B3                   MOV         R11,R5
+    0000010E 470B                   JSR         @R7
+    00000110 4418                   SHLL8       R4
+    00000112 7F04                   ADD         #4,R15
+               game.c         55          vertices[4] = ivec3f(int2f(-6), int2f(0), int2f(0));
+    00000114 68A3                   MOV         R10,R8
+    00000116 7830                   ADD         #48,R8
+    00000118 2F86                   MOV.L       R8,@-R15
+    0000011A E600                   MOV         #0,R6      ; H'00000000
+    0000011C DD91                   MOV.L       L69+12,R13 ; _ivec3f
+    0000011E 6563                   MOV         R6,R5
+    00000120 4D0B                   JSR         @R13
+    00000122 6493                   MOV         R9,R4
+    00000124 7F04                   ADD         #4,R15
+               game.c         56          vertices[5] = ivec3f(int2f(0), int2f(0), int2f(0));
+    00000126 61A3                   MOV         R10,R1
+    00000128 713C                   ADD         #60,R1
+    0000012A 2F16                   MOV.L       R1,@-R15
+    0000012C E600                   MOV         #0,R6      ; H'00000000
+    0000012E D78D                   MOV.L       L69+12,R7  ; _ivec3f
+    00000130 6563                   MOV         R6,R5
+    00000132 470B                   JSR         @R7
+    00000134 6463                   MOV         R6,R4
+    00000136 7F04                   ADD         #4,R15
+               game.c         57    
+               game.c         58          vertices[6] = ivec3f(int2f(1), int2f(1), int2f(5));
+    00000138 68A3                   MOV         R10,R8
+    0000013A 7848                   ADD         #72,R8
+    0000013C 2F86                   MOV.L       R8,@-R15
+    0000013E ED14                   MOV         #20,R13    ; H'00000014
+    00000140 4D18                   SHLL8       R13
+    00000142 D188                   MOV.L       L69+12,R1  ; _ivec3f
+    00000144 65B3                   MOV         R11,R5
+    00000146 64B3                   MOV         R11,R4
+    00000148 410B                   JSR         @R1
+    0000014A 66D3                   MOV         R13,R6
+    0000014C 7F04                   ADD         #4,R15
+               game.c         59          vertices[7] = ivec3f(int2f(0), int2f(2), int2f(5));
+    0000014E 64A3                   MOV         R10,R4
+    00000150 7454                   ADD         #84,R4
+    00000152 2F46                   MOV.L       R4,@-R15
+    00000154 D783                   MOV.L       L69+12,R7  ; _ivec3f
+    00000156 E400                   MOV         #0,R4      ; H'00000000
+    00000158 65E3                   MOV         R14,R5
+    0000015A 470B                   JSR         @R7
+    0000015C 66D3                   MOV         R13,R6
+    0000015E 7F04                   ADD         #4,R15
+               game.c         60          vertices[8] = ivec3f(int2f(-6), int2f(2), int2f(5));
+    00000160 68A3                   MOV         R10,R8
+    00000162 7860                   ADD         #96,R8
+    00000164 2F86                   MOV.L       R8,@-R15
+    00000166 D17F                   MOV.L       L69+12,R1  ; _ivec3f
+    00000168 65E3                   MOV         R14,R5
+    0000016A 66D3                   MOV         R13,R6
+    0000016C 410B                   JSR         @R1
+    0000016E 6493                   MOV         R9,R4
+    00000170 7F04                   ADD         #4,R15
+               game.c         61          vertices[9] = ivec3f(int2f(-7), int2f(1), int2f(5));
+    00000172 64A3                   MOV         R10,R4
+    00000174 746C                   ADD         #108,R4
+    00000176 2F46                   MOV.L       R4,@-R15
+    00000178 E4E4                   MOV         #-28,R4    ; H'FFFFFFE4
+    0000017A D77A                   MOV.L       L69+12,R7  ; _ivec3f
+    0000017C 65B3                   MOV         R11,R5
+    0000017E 4418                   SHLL8       R4
+    00000180 470B                   JSR         @R7
+    00000182 66D3                   MOV         R13,R6
+    00000184 7F04                   ADD         #4,R15
+               game.c         62          vertices[10] = ivec3f(int2f(-6), int2f(0), int2f(5));
+    00000186 68A3                   MOV         R10,R8
+    00000188 7878                   ADD         #120,R8
+    0000018A 2F86                   MOV.L       R8,@-R15
+    0000018C D175                   MOV.L       L69+12,R1  ; _ivec3f
+    0000018E E500                   MOV         #0,R5      ; H'00000000
+    00000190 66D3                   MOV         R13,R6
+    00000192 410B                   JSR         @R1
+    00000194 6493                   MOV         R9,R4
+    00000196 7F04                   ADD         #4,R15
+               game.c         63          vertices[11] = ivec3f(int2f(0), int2f(0), int2f(5));
+    00000198 64A3                   MOV         R10,R4
+    0000019A 747F                   ADD         #127,R4
+    0000019C 7405                   ADD         #5,R4
+    0000019E 2F46                   MOV.L       R4,@-R15
+    000001A0 E500                   MOV         #0,R5      ; H'00000000
+    000001A2 D770                   MOV.L       L69+12,R7  ; _ivec3f
+    000001A4 6453                   MOV         R5,R4
+    000001A6 470B                   JSR         @R7
+    000001A8 66D3                   MOV         R13,R6
+    000001AA 7F04                   ADD         #4,R15
+               game.c         64    
+               game.c         65          vertices[12] = ivec3f(float2f(-1.5), int2f(2), float2f(1));
+    000001AC 68A3                   MOV         R10,R8
+    000001AE 787F                   ADD         #127,R8
+    000001B0 7811                   ADD         #17,R8
+    000001B2 2F86                   MOV.L       R8,@-R15
+    000001B4 E4FA                   MOV         #-6,R4     ; H'FFFFFFFA
+    000001B6 D96B                   MOV.L       L69+12,R9  ; _ivec3f
+    000001B8 65E3                   MOV         R14,R5
+    000001BA 66B3                   MOV         R11,R6
+    000001BC 490B                   JSR         @R9
+    000001BE 4418                   SHLL8       R4
+    000001C0 7F04                   ADD         #4,R15
+               game.c         66          vertices[13] = ivec3f(float2f(-1.5), float2f(3.5), float2f(1));
+    000001C2 6DA3                   MOV         R10,R13
+    000001C4 7D7F                   ADD         #127,R13
+    000001C6 7D1D                   ADD         #29,R13
+    000001C8 2FD6                   MOV.L       R13,@-R15
+    000001CA E90E                   MOV         #14,R9     ; H'0000000E
+    000001CC E4FA                   MOV         #-6,R4     ; H'FFFFFFFA
+    000001CE 4918                   SHLL8       R9
+    000001D0 D164                   MOV.L       L69+12,R1  ; _ivec3f
+    000001D2 66B3                   MOV         R11,R6
+    000001D4 4418                   SHLL8       R4
+    000001D6 410B                   JSR         @R1
+    000001D8 6593                   MOV         R9,R5
+    000001DA 7F04                   ADD         #4,R15
+               game.c         67          vertices[14] = ivec3f(float2f(-4.5), float2f(3.5), float2f(1));
+    000001DC 67A3                   MOV         R10,R7
+    000001DE 777F                   ADD         #127,R7
+    000001E0 7729                   ADD         #41,R7
+    000001E2 2F76                   MOV.L       R7,@-R15
+    000001E4 E8EE                   MOV         #-18,R8    ; H'FFFFFFEE
+    000001E6 A002                   BRA         L66
+    000001E8 4818                   SHLL8       R8
+    000001EA              L67:
+    000001EA 10CC                   .DATA.W     H'10CC
+    000001EC F4A8                   .DATA.W     H'F4A8
+    000001EE              L66:
+    000001EE DD5D                   MOV.L       L69+12,R13 ; _ivec3f
+    000001F0 66B3                   MOV         R11,R6
+    000001F2 6593                   MOV         R9,R5
+    000001F4 4D0B                   JSR         @R13
+    000001F6 6483                   MOV         R8,R4
+    000001F8 7F04                   ADD         #4,R15
+               game.c         68          vertices[15] = ivec3f(float2f(-4.5), int2f(2), float2f(1));
+    000001FA 61A3                   MOV         R10,R1
+    000001FC 717F                   ADD         #127,R1
+    000001FE 7135                   ADD         #53,R1
+    00000200 2F16                   MOV.L       R1,@-R15
+    00000202 D758                   MOV.L       L69+12,R7  ; _ivec3f
+    00000204 65E3                   MOV         R14,R5
+    00000206 66B3                   MOV         R11,R6
+    00000208 470B                   JSR         @R7
+    0000020A 6483                   MOV         R8,R4
+    0000020C 7F04                   ADD         #4,R15
+               game.c         69    
+               game.c         70          vertices[16] = ivec3f(float2f(-1.5), int2f(2), float2f(4));
+    0000020E 6BA3                   MOV         R10,R11
+    00000210 7B7F                   ADD         #127,R11
+    00000212 7B41                   ADD         #65,R11
+    00000214 2FB6                   MOV.L       R11,@-R15
+    00000216 ED10                   MOV         #16,R13    ; H'00000010
+    00000218 E4FA                   MOV         #-6,R4     ; H'FFFFFFFA
+    0000021A 4D18                   SHLL8       R13
+    0000021C D151                   MOV.L       L69+12,R1  ; _ivec3f
+    0000021E 65E3                   MOV         R14,R5
+    00000220 4418                   SHLL8       R4
+    00000222 410B                   JSR         @R1
+    00000224 66D3                   MOV         R13,R6
+    00000226 7F04                   ADD         #4,R15
+               game.c         71          vertices[17] = ivec3f(float2f(-1.5), float2f(3.5), float2f(4));
+    00000228 67A3                   MOV         R10,R7
+    0000022A 777F                   ADD         #127,R7
+    0000022C 774D                   ADD         #77,R7
+    0000022E 2F76                   MOV.L       R7,@-R15
+    00000230 E4FA                   MOV         #-6,R4     ; H'FFFFFFFA
+    00000232 DB4C                   MOV.L       L69+12,R11 ; _ivec3f
+    00000234 4418                   SHLL8       R4
+    00000236 6593                   MOV         R9,R5
+    00000238 4B0B                   JSR         @R11
+    0000023A 66D3                   MOV         R13,R6
+    0000023C 7F04                   ADD         #4,R15
+               game.c         72          vertices[18] = ivec3f(float2f(-4.5), float2f(3.5), float2f(4));
+    0000023E 61A3                   MOV         R10,R1
+    00000240 717F                   ADD         #127,R1
+    00000242 7159                   ADD         #89,R1
+    00000244 2F16                   MOV.L       R1,@-R15
+    00000246 D747                   MOV.L       L69+12,R7  ; _ivec3f
+    00000248 6593                   MOV         R9,R5
+    0000024A 6483                   MOV         R8,R4
+    0000024C 470B                   JSR         @R7
+    0000024E 66D3                   MOV         R13,R6
+    00000250 7F04                   ADD         #4,R15
+               game.c         73          vertices[19] = ivec3f(float2f(-4.5), int2f(2), float2f(4));
+    00000252 69A3                   MOV         R10,R9
+    00000254 797F                   ADD         #127,R9
+    00000256 7965                   ADD         #101,R9
+    00000258 2F96                   MOV.L       R9,@-R15
+    0000025A DB42                   MOV.L       L69+12,R11 ; _ivec3f
+    0000025C 65E3                   MOV         R14,R5
+    0000025E 6483                   MOV         R8,R4
+    00000260 4B0B                   JSR         @R11
+    00000262 66D3                   MOV         R13,R6
+    00000264 7F04                   ADD         #4,R15
+               game.c         74    
+               game.c         75          vertices[20] = ivec3f(int2f(4), float2f(2.8), float2f(2.25));
+    00000266 61A3                   MOV         R10,R1
+    00000268 717F                   ADD         #127,R1
+    0000026A 7171                   ADD         #113,R1
+    0000026C 2F16                   MOV.L       R1,@-R15
+    0000026E E609                   MOV         #9,R6      ; H'00000009
+    00000270 D83C                   MOV.L       L69+12,R8  ; _ivec3f
+    00000272 64D3                   MOV         R13,R4
+    00000274 9570                   MOV.W       L69,R5     ; H'0B33
+    00000276 480B                   JSR         @R8
+    00000278 4618                   SHLL8       R6
+    0000027A 7F04                   ADD         #4,R15
+               game.c         76          vertices[21] = ivec3f(int2f(4), float2f(3.2), float2f(2.5));
+    0000027C 69A3                   MOV         R10,R9
+    0000027E 797F                   ADD         #127,R9
+    00000280 797D                   ADD         #125,R9
+    00000282 2F96                   MOV.L       R9,@-R15
+    00000284 E90A                   MOV         #10,R9     ; H'0000000A
+    00000286 4918                   SHLL8       R9
+    00000288 DB36                   MOV.L       L69+12,R11 ; _ivec3f
+    0000028A 64D3                   MOV         R13,R4
+    0000028C 9565                   MOV.W       L69+2,R5   ; H'0CCC
+    0000028E 4B0B                   JSR         @R11
+    00000290 6693                   MOV         R9,R6
+    00000292 7F04                   ADD         #4,R15
+    00000294 EB42                   MOV         #66,R11    ; H'00000042
+               game.c         77          vertices[22] = ivec3f(int2f(4), float2f(2.8), float2f(2.75));
+    00000296 62A3                   MOV         R10,R2
+    00000298 4B08                   SHLL2       R11
+    0000029A 32BC                   ADD         R11,R2
+    0000029C 2F26                   MOV.L       R2,@-R15
+    0000029E E60B                   MOV         #11,R6     ; H'0000000B
+    000002A0 4618                   SHLL8       R6
+    000002A2 6563                   MOV         R6,R5
+    000002A4 D22F                   MOV.L       L69+12,R2  ; _ivec3f
+    000002A6 7533                   ADD         #51,R5
+    000002A8 420B                   JSR         @R2
+    000002AA 64D3                   MOV         R13,R4
+    000002AC 7F04                   ADD         #4,R15
+               game.c         78          vertices[23] = ivec3f(int2f(-3), float2f(2.5), float2f(2.25));
+    000002AE 62A3                   MOV         R10,R2
+    000002B0 7B0C                   ADD         #12,R11
+    000002B2 32BC                   ADD         R11,R2
+    000002B4 2F26                   MOV.L       R2,@-R15
+    000002B6 E8F4                   MOV         #-12,R8    ; H'FFFFFFF4
+    000002B8 E609                   MOV         #9,R6      ; H'00000009
+    000002BA 4818                   SHLL8       R8
+    000002BC D229                   MOV.L       L69+12,R2  ; _ivec3f
+    000002BE 4618                   SHLL8       R6
+    000002C0 6593                   MOV         R9,R5
+    000002C2 420B                   JSR         @R2
+    000002C4 6483                   MOV         R8,R4
+    000002C6 7F04                   ADD         #4,R15
+               game.c         79          vertices[24] = ivec3f(int2f(-3), float2f(2.9), float2f(2.5));
+    000002C8 62A3                   MOV         R10,R2
+    000002CA 7B0C                   ADD         #12,R11
+    000002CC 32BC                   ADD         R11,R2
+    000002CE 2F26                   MOV.L       R2,@-R15
+    000002D0 D224                   MOV.L       L69+12,R2  ; _ivec3f
+    000002D2 6693                   MOV         R9,R6
+    000002D4 9542                   MOV.W       L69+4,R5   ; H'0B99
+    000002D6 420B                   JSR         @R2
+    000002D8 6483                   MOV         R8,R4
+    000002DA 7F04                   ADD         #4,R15
+               game.c         80          vertices[25] = ivec3f(int2f(-3), float2f(2.5), float2f(2.75));
+    000002DC 62A3                   MOV         R10,R2
+    000002DE 7B0C                   ADD         #12,R11
+    000002E0 32BC                   ADD         R11,R2
+    000002E2 2F26                   MOV.L       R2,@-R15
+    000002E4 6593                   MOV         R9,R5
+    000002E6 6483                   MOV         R8,R4
+    000002E8 E60B                   MOV         #11,R6     ; H'0000000B
+    000002EA 4618                   SHLL8       R6
+    000002EC D21D                   MOV.L       L69+12,R2  ; _ivec3f
+    000002EE 420B                   JSR         @R2
+    000002F0 0009                   NOP
+    000002F2 7FF8                   ADD         #-8,R15
+    000002F4 62A3                   MOV         R10,R2
+    000002F6 D929                   MOV.L       L69+68,R9  ; __quick_odd_mvn
+    000002F8 E80C                   MOV         #12,R8     ; H'0000000C
+               game.c         81    
+               game.c         82          tankmesh[0] = itrianglef(vertices[0], vertices[5], vertices[1], 0, 0, 0);
+    000002FA 61F3                   MOV         R15,R1
+    000002FC 720C                   ADD         #12,R2
+    000002FE 490B                   JSR         @R9
+    00000300 6083                   MOV         R8,R0
+    00000302 7FF4                   ADD         #-12,R15
+    00000304 62A3                   MOV         R10,R2
+    00000306 61F3                   MOV         R15,R1
+    00000308 723C                   ADD         #60,R2
+    0000030A 490B                   JSR         @R9
+    0000030C 6083                   MOV         R8,R0
+    0000030E 7FF4                   ADD         #-12,R15
+    00000310 6083                   MOV         R8,R0
+    00000312 D823                   MOV.L       L69+72,R8  ; _tankmesh
+    00000314 61F3                   MOV         R15,R1
+    00000316 490B                   JSR         @R9
+    00000318 62A3                   MOV         R10,R2
+    0000031A 2F86                   MOV.L       R8,@-R15
+    0000031C E500                   MOV         #0,R5      ; H'00000000
+    0000031E DD21                   MOV.L       L69+76,R13 ; _itrianglef
+    00000320 6453                   MOV         R5,R4
+    00000322 4D0B                   JSR         @R13
+    00000324 6653                   MOV         R5,R6
+    00000326 7F1C                   ADD         #28,R15
+    00000328 62A3                   MOV         R10,R2
+    0000032A ED0C                   MOV         #12,R13    ; H'0000000C
+               game.c         83          tankmesh[1] = itrianglef(vertices[1], vertices[5], vertices[2], 0, 0, 0);
+    0000032C 61F3                   MOV         R15,R1
+    0000032E 7218                   ADD         #24,R2
+    00000330 490B                   JSR         @R9
+    00000332 60D3                   MOV         R13,R0
+    00000334 7FF4                   ADD         #-12,R15
+    00000336 62A3                   MOV         R10,R2
+    00000338 61F3                   MOV         R15,R1
+    0000033A 723C                   ADD         #60,R2
+    0000033C 490B                   JSR         @R9
+    0000033E 60D3                   MOV         R13,R0
+    00000340 7FF4                   ADD         #-12,R15
+    00000342 62A3                   MOV         R10,R2
+    00000344 61F3                   MOV         R15,R1
+    00000346 720C                   ADD         #12,R2
+    00000348 490B                   JSR         @R9
+    0000034A 60D3                   MOV         R13,R0
+    0000034C 6183                   MOV         R8,R1
+    0000034E 7130                   ADD         #48,R1
+    00000350 2F16                   MOV.L       R1,@-R15
+    00000352 D714                   MOV.L       L69+76,R7  ; _itrianglef
+    00000354 A028                   BRA         L68
+    00000356 E500                   MOV         #0,R5      ; H'00000000
+    00000358              L69:
+    00000358 0B33                   .DATA.W     H'0B33
+    0000035A 0CCC                   .DATA.W     H'0CCC
+    0000035C 0B99                   .DATA.W     H'0B99
+    0000035E 00000002               .RES.W      1
+    00000360 <00000000>             .DATA.L     _pos
+    00000364 <00000000>             .DATA.L     _ivec3f
+    00000368 <00000000>             .DATA.L     _pitch
+    0000036C <00000000>             .DATA.L     _yaw
+    00000370 3F0EFA35               .DATA.L     H'3F0EFA35
+    00000374 <00000000>             .DATA.L     _gdelta
+    00000378 3F800000               .DATA.L     H'3F800000
+    0000037C <00000000>             .DATA.L     _gspeed
+    00000380 <00000000>             .DATA.L     _g_init
+    00000384 <00000000>             .DATA.L     _m_init
+    00000388 <00000000>             .DATA.L     _tick
+    0000038C <00000000>             .DATA.L     _SetTimer
+    00000390 <00000000>             .DATA.L     _textures
+    00000394 <00000000>             .DATA.L     _tx
+    00000398 <00000000>             .DATA.L     _vertices
+    0000039C <00000000>             .DATA.L     __quick_odd_mvn
+    000003A0 <00000000>             .DATA.L     _tankmesh
+    000003A4 <00000000>             .DATA.L     _itrianglef
+    000003A8              L68:
+    000003A8 6453                   MOV         R5,R4
+    000003AA 470B                   JSR         @R7
+    000003AC 6653                   MOV         R5,R6
+    000003AE 7F1C                   ADD         #28,R15
+    000003B0 62A3                   MOV         R10,R2
+    000003B2 E40C                   MOV         #12,R4     ; H'0000000C
+               game.c         84          tankmesh[2] = itrianglef(vertices[4], vertices[2], vertices[5], 0, 0, 0);
+    000003B4 61F3                   MOV         R15,R1
+    000003B6 723C                   ADD         #60,R2
+    000003B8 490B                   JSR         @R9
+    000003BA 6043                   MOV         R4,R0
+    000003BC 7FF4                   ADD         #-12,R15
+    000003BE 62A3                   MOV         R10,R2
+    000003C0 61F3                   MOV         R15,R1
+    000003C2 7218                   ADD         #24,R2
+    000003C4 490B                   JSR         @R9
+    000003C6 6043                   MOV         R4,R0
+    000003C8 7FF4                   ADD         #-12,R15
+    000003CA 62A3                   MOV         R10,R2
+    000003CC 6D83                   MOV         R8,R13
+    000003CE 61F3                   MOV         R15,R1
+    000003D0 7230                   ADD         #48,R2
+    000003D2 6043                   MOV         R4,R0
+    000003D4 490B                   JSR         @R9
+    000003D6 7D60                   ADD         #96,R13
+    000003D8 2FD6                   MOV.L       R13,@-R15
+    000003DA E500                   MOV         #0,R5      ; H'00000000
+    000003DC D1DD                   MOV.L       L71+2,R1   ; _itrianglef
+    000003DE 6453                   MOV         R5,R4
+    000003E0 410B                   JSR         @R1
+    000003E2 6653                   MOV         R5,R6
+    000003E4 7F1C                   ADD         #28,R15
+    000003E6 62A3                   MOV         R10,R2
+    000003E8 E50C                   MOV         #12,R5     ; H'0000000C
+               game.c         85          tankmesh[3] = itrianglef(vertices[3], vertices[2], vertices[4], 0, 0, 0);
+    000003EA 61F3                   MOV         R15,R1
+    000003EC 7230                   ADD         #48,R2
+    000003EE 490B                   JSR         @R9
+    000003F0 6053                   MOV         R5,R0
+    000003F2 7FF4                   ADD         #-12,R15
+    000003F4 62A3                   MOV         R10,R2
+    000003F6 61F3                   MOV         R15,R1
+    000003F8 7218                   ADD         #24,R2
+    000003FA 490B                   JSR         @R9
+    000003FC 6053                   MOV         R5,R0
+    000003FE 7FF4                   ADD         #-12,R15
+    00000400 6483                   MOV         R8,R4
+    00000402 62A3                   MOV         R10,R2
+    00000404 747F                   ADD         #127,R4
+    00000406 61F3                   MOV         R15,R1
+    00000408 7224                   ADD         #36,R2
+    0000040A 6053                   MOV         R5,R0
+    0000040C 490B                   JSR         @R9
+    0000040E 7411                   ADD         #17,R4
+    00000410 2F46                   MOV.L       R4,@-R15
+    00000412 E500                   MOV         #0,R5      ; H'00000000
+    00000414 D7CF                   MOV.L       L71+2,R7   ; _itrianglef
+    00000416 6453                   MOV         R5,R4
+    00000418 470B                   JSR         @R7
+    0000041A 6653                   MOV         R5,R6
+    0000041C 7F1C                   ADD         #28,R15
+    0000041E 62A3                   MOV         R10,R2
+    00000420 727F                   ADD         #127,R2
+    00000422 E70C                   MOV         #12,R7     ; H'0000000C
+               game.c         86          
+               game.c         87          tankmesh[4] = itrianglef(vertices[6], vertices[7], vertices[11], 0, 0, 0);
+    00000424 61F3                   MOV         R15,R1
+    00000426 7205                   ADD         #5,R2
+    00000428 490B                   JSR         @R9
+    0000042A 6073                   MOV         R7,R0
+    0000042C 7FF4                   ADD         #-12,R15
+    0000042E 62A3                   MOV         R10,R2
+    00000430 61F3                   MOV         R15,R1
+    00000432 7254                   ADD         #84,R2
+    00000434 490B                   JSR         @R9
+    00000436 6073                   MOV         R7,R0
+    00000438 7FF4                   ADD         #-12,R15
+    0000043A 6D83                   MOV         R8,R13
+    0000043C 62A3                   MOV         R10,R2
+    0000043E 7D7F                   ADD         #127,R13
+    00000440 61F3                   MOV         R15,R1
+    00000442 7248                   ADD         #72,R2
+    00000444 6073                   MOV         R7,R0
+    00000446 490B                   JSR         @R9
+    00000448 7D41                   ADD         #65,R13
+    0000044A 2FD6                   MOV.L       R13,@-R15
+    0000044C E500                   MOV         #0,R5      ; H'00000000
+    0000044E D1C1                   MOV.L       L71+2,R1   ; _itrianglef
+    00000450 6453                   MOV         R5,R4
+    00000452 410B                   JSR         @R1
+    00000454 6653                   MOV         R5,R6
+    00000456 7F1C                   ADD         #28,R15
+    00000458 62A3                   MOV         R10,R2
+    0000045A ED0C                   MOV         #12,R13    ; H'0000000C
+               game.c         88          tankmesh[5] = itrianglef(vertices[8], vertices[10], vertices[7], 0, 0, 0);
+    0000045C 61F3                   MOV         R15,R1
+    0000045E 7254                   ADD         #84,R2
+    00000460 490B                   JSR         @R9
+    00000462 60D3                   MOV         R13,R0
+    00000464 7FF4                   ADD         #-12,R15
+    00000466 62A3                   MOV         R10,R2
+    00000468 61F3                   MOV         R15,R1
+    0000046A 7278                   ADD         #120,R2
+    0000046C 490B                   JSR         @R9
+    0000046E 60D3                   MOV         R13,R0
+    00000470 7FF4                   ADD         #-12,R15
+    00000472 6483                   MOV         R8,R4
+    00000474 62A3                   MOV         R10,R2
+    00000476 747F                   ADD         #127,R4
+    00000478 61F3                   MOV         R15,R1
+    0000047A 7260                   ADD         #96,R2
+    0000047C 60D3                   MOV         R13,R0
+    0000047E 490B                   JSR         @R9
+    00000480 7471                   ADD         #113,R4
+    00000482 2F46                   MOV.L       R4,@-R15
+    00000484 E500                   MOV         #0,R5      ; H'00000000
+    00000486 D7B3                   MOV.L       L71+2,R7   ; _itrianglef
+    00000488 6453                   MOV         R5,R4
+    0000048A 470B                   JSR         @R7
+    0000048C 6653                   MOV         R5,R6
+    0000048E 7F1C                   ADD         #28,R15
+    00000490 62A3                   MOV         R10,R2
+    00000492 E40C                   MOV         #12,R4     ; H'0000000C
+               game.c         89          tankmesh[6] = itrianglef(vertices[11], vertices[7], vertices[10], 0, 0, 0);
+    00000494 61F3                   MOV         R15,R1
+    00000496 7278                   ADD         #120,R2
+    00000498 490B                   JSR         @R9
+    0000049A 6043                   MOV         R4,R0
+    0000049C 7FF4                   ADD         #-12,R15
+    0000049E 62A3                   MOV         R10,R2
+    000004A0 61F3                   MOV         R15,R1
+    000004A2 7254                   ADD         #84,R2
+    000004A4 490B                   JSR         @R9
+    000004A6 6043                   MOV         R4,R0
+    000004A8 7FF4                   ADD         #-12,R15
+    000004AA 62A3                   MOV         R10,R2
+    000004AC 727F                   ADD         #127,R2
+    000004AE 6D83                   MOV         R8,R13
+    000004B0 7BF4                   ADD         #-12,R11
+    000004B2 61F3                   MOV         R15,R1
+    000004B4 7205                   ADD         #5,R2
+    000004B6 6043                   MOV         R4,R0
+    000004B8 490B                   JSR         @R9
+    000004BA 3DBC                   ADD         R11,R13
+    000004BC 2FD6                   MOV.L       R13,@-R15
+    000004BE E500                   MOV         #0,R5      ; H'00000000
+    000004C0 D1A4                   MOV.L       L71+2,R1   ; _itrianglef
+    000004C2 6453                   MOV         R5,R4
+    000004C4 410B                   JSR         @R1
+    000004C6 6653                   MOV         R5,R6
+    000004C8 7F1C                   ADD         #28,R15
+    000004CA 62A3                   MOV         R10,R2
+    000004CC E50C                   MOV         #12,R5     ; H'0000000C
+               game.c         90          tankmesh[7] = itrianglef(vertices[9], vertices[10], vertices[8], 0, 0, 0);
+    000004CE 61F3                   MOV         R15,R1
+    000004D0 7260                   ADD         #96,R2
+    000004D2 490B                   JSR         @R9
+    000004D4 6053                   MOV         R5,R0
+    000004D6 7FF4                   ADD         #-12,R15
+    000004D8 62A3                   MOV         R10,R2
+    000004DA 61F3                   MOV         R15,R1
+    000004DC 7278                   ADD         #120,R2
+    000004DE 490B                   JSR         @R9
+    000004E0 6053                   MOV         R5,R0
+    000004E2 7FF4                   ADD         #-12,R15
+    000004E4 62A3                   MOV         R10,R2
+    000004E6 6483                   MOV         R8,R4
+    000004E8 7B30                   ADD         #48,R11
+    000004EA 61F3                   MOV         R15,R1
+    000004EC 726C                   ADD         #108,R2
+    000004EE 6053                   MOV         R5,R0
+    000004F0 490B                   JSR         @R9
+    000004F2 34BC                   ADD         R11,R4
+    000004F4 2F46                   MOV.L       R4,@-R15
+    000004F6 E500                   MOV         #0,R5      ; H'00000000
+    000004F8 D796                   MOV.L       L71+2,R7   ; _itrianglef
+    000004FA 6453                   MOV         R5,R4
+    000004FC 470B                   JSR         @R7
+    000004FE 6653                   MOV         R5,R6
+    00000500 7F1C                   ADD         #28,R15
+    00000502 62A3                   MOV         R10,R2
+    00000504 E70C                   MOV         #12,R7     ; H'0000000C
+               game.c         91    
+               game.c         92          tankmesh[8] = itrianglef(vertices[7], vertices[1], vertices[8], 0, 0, 0);
+    00000506 61F3                   MOV         R15,R1
+    00000508 7260                   ADD         #96,R2
+    0000050A 490B                   JSR         @R9
+    0000050C 6073                   MOV         R7,R0
+    0000050E 7FF4                   ADD         #-12,R15
+    00000510 62A3                   MOV         R10,R2
+    00000512 61F3                   MOV         R15,R1
+    00000514 720C                   ADD         #12,R2
+    00000516 490B                   JSR         @R9
+    00000518 6073                   MOV         R7,R0
+    0000051A 7FF4                   ADD         #-12,R15
+    0000051C 62A3                   MOV         R10,R2
+    0000051E 6D83                   MOV         R8,R13
+    00000520 7B30                   ADD         #48,R11
+    00000522 61F3                   MOV         R15,R1
+    00000524 7254                   ADD         #84,R2
+    00000526 6073                   MOV         R7,R0
+    00000528 490B                   JSR         @R9
+    0000052A 3DBC                   ADD         R11,R13
+    0000052C 2FD6                   MOV.L       R13,@-R15
+    0000052E E500                   MOV         #0,R5      ; H'00000000
+    00000530 D188                   MOV.L       L71+2,R1   ; _itrianglef
+    00000532 6453                   MOV         R5,R4
+    00000534 410B                   JSR         @R1
+    00000536 6653                   MOV         R5,R6
+    00000538 7F1C                   ADD         #28,R15
+    0000053A 62A3                   MOV         R10,R2
+    0000053C ED0C                   MOV         #12,R13    ; H'0000000C
+               game.c         93          tankmesh[9] = itrianglef(vertices[2], vertices[8], vertices[1], 0, 0, 0);       
+    0000053E 61F3                   MOV         R15,R1
+    00000540 720C                   ADD         #12,R2
+    00000542 490B                   JSR         @R9
+    00000544 60D3                   MOV         R13,R0
+    00000546 7FF4                   ADD         #-12,R15
+    00000548 62A3                   MOV         R10,R2
+    0000054A 61F3                   MOV         R15,R1
+    0000054C 7260                   ADD         #96,R2
+    0000054E 490B                   JSR         @R9
+    00000550 60D3                   MOV         R13,R0
+    00000552 7FF4                   ADD         #-12,R15
+    00000554 62A3                   MOV         R10,R2
+    00000556 6483                   MOV         R8,R4
+    00000558 7B30                   ADD         #48,R11
+    0000055A 61F3                   MOV         R15,R1
+    0000055C 7218                   ADD         #24,R2
+    0000055E 60D3                   MOV         R13,R0
+    00000560 490B                   JSR         @R9
+    00000562 34BC                   ADD         R11,R4
+    00000564 2F46                   MOV.L       R4,@-R15
+    00000566 E500                   MOV         #0,R5      ; H'00000000
+    00000568 D77A                   MOV.L       L71+2,R7   ; _itrianglef
+    0000056A 6453                   MOV         R5,R4
+    0000056C 470B                   JSR         @R7
+    0000056E 6653                   MOV         R5,R6
+    00000570 7F1C                   ADD         #28,R15
+    00000572 62A3                   MOV         R10,R2
+    00000574 E50C                   MOV         #12,R5     ; H'0000000C
+               game.c         94          tankmesh[10] = itrianglef(vertices[2], vertices[3], vertices[8], 0, 0, 0);
+    00000576 61F3                   MOV         R15,R1
+    00000578 7260                   ADD         #96,R2
+    0000057A 490B                   JSR         @R9
+    0000057C 6053                   MOV         R5,R0
+    0000057E 7FF4                   ADD         #-12,R15
+    00000580 62A3                   MOV         R10,R2
+    00000582 61F3                   MOV         R15,R1
+    00000584 7224                   ADD         #36,R2
+    00000586 490B                   JSR         @R9
+    00000588 6053                   MOV         R5,R0
+    0000058A 7FF4                   ADD         #-12,R15
+    0000058C 62A3                   MOV         R10,R2
+    0000058E 6D83                   MOV         R8,R13
+    00000590 7B30                   ADD         #48,R11
+    00000592 61F3                   MOV         R15,R1
+    00000594 7218                   ADD         #24,R2
+    00000596 6053                   MOV         R5,R0
+    00000598 490B                   JSR         @R9
+    0000059A 3DBC                   ADD         R11,R13
+    0000059C 2FD6                   MOV.L       R13,@-R15
+    0000059E E500                   MOV         #0,R5      ; H'00000000
+    000005A0 D16C                   MOV.L       L71+2,R1   ; _itrianglef
+    000005A2 6453                   MOV         R5,R4
+    000005A4 410B                   JSR         @R1
+    000005A6 6653                   MOV         R5,R6
+    000005A8 7F1C                   ADD         #28,R15
+    000005AA 62A3                   MOV         R10,R2
+    000005AC E70C                   MOV         #12,R7     ; H'0000000C
+               game.c         95          tankmesh[11] = itrianglef(vertices[9], vertices[8], vertices[3], 0, 0, 0);
+    000005AE 61F3                   MOV         R15,R1
+    000005B0 7224                   ADD         #36,R2
+    000005B2 490B                   JSR         @R9
+    000005B4 6073                   MOV         R7,R0
+    000005B6 7FF4                   ADD         #-12,R15
+    000005B8 62A3                   MOV         R10,R2
+    000005BA 61F3                   MOV         R15,R1
+    000005BC 7260                   ADD         #96,R2
+    000005BE 490B                   JSR         @R9
+    000005C0 6073                   MOV         R7,R0
+    000005C2 7FF4                   ADD         #-12,R15
+    000005C4 62A3                   MOV         R10,R2
+    000005C6 6483                   MOV         R8,R4
+    000005C8 7B30                   ADD         #48,R11
+    000005CA 61F3                   MOV         R15,R1
+    000005CC 726C                   ADD         #108,R2
+    000005CE 6073                   MOV         R7,R0
+    000005D0 490B                   JSR         @R9
+    000005D2 34BC                   ADD         R11,R4
+    000005D4 2F46                   MOV.L       R4,@-R15
+    000005D6 E500                   MOV         #0,R5      ; H'00000000
+    000005D8 D75E                   MOV.L       L71+2,R7   ; _itrianglef
+    000005DA 6453                   MOV         R5,R4
+    000005DC 470B                   JSR         @R7
+    000005DE 6653                   MOV         R5,R6
+    000005E0 7F1C                   ADD         #28,R15
+    000005E2 62A3                   MOV         R10,R2
+    000005E4 ED0C                   MOV         #12,R13    ; H'0000000C
+               game.c         96          tankmesh[12] = itrianglef(vertices[3], vertices[4], vertices[9], 0, 0, 0);
+    000005E6 61F3                   MOV         R15,R1
+    000005E8 726C                   ADD         #108,R2
+    000005EA 490B                   JSR         @R9
+    000005EC 60D3                   MOV         R13,R0
+    000005EE 7FF4                   ADD         #-12,R15
+    000005F0 62A3                   MOV         R10,R2
+    000005F2 61F3                   MOV         R15,R1
+    000005F4 7230                   ADD         #48,R2
+    000005F6 490B                   JSR         @R9
+    000005F8 60D3                   MOV         R13,R0
+    000005FA 7FF4                   ADD         #-12,R15
+    000005FC 62A3                   MOV         R10,R2
+    000005FE 60D3                   MOV         R13,R0
+    00000600 6D83                   MOV         R8,R13
+    00000602 7B30                   ADD         #48,R11
+    00000604 61F3                   MOV         R15,R1
+    00000606 7224                   ADD         #36,R2
+    00000608 490B                   JSR         @R9
+    0000060A 3DBC                   ADD         R11,R13
+    0000060C 2FD6                   MOV.L       R13,@-R15
+    0000060E E500                   MOV         #0,R5      ; H'00000000
+    00000610 D750                   MOV.L       L71+2,R7   ; _itrianglef
+    00000612 6453                   MOV         R5,R4
+    00000614 470B                   JSR         @R7
+    00000616 6653                   MOV         R5,R6
+    00000618 7F1C                   ADD         #28,R15
+    0000061A 62A3                   MOV         R10,R2
+    0000061C E70C                   MOV         #12,R7     ; H'0000000C
+               game.c         97          tankmesh[13] = itrianglef(vertices[10], vertices[9], vertices[4], 0, 0, 0);
+    0000061E 61F3                   MOV         R15,R1
+    00000620 7230                   ADD         #48,R2
+    00000622 490B                   JSR         @R9
+    00000624 6073                   MOV         R7,R0
+    00000626 7FF4                   ADD         #-12,R15
+    00000628 62A3                   MOV         R10,R2
+    0000062A 61F3                   MOV         R15,R1
+    0000062C 726C                   ADD         #108,R2
+    0000062E 490B                   JSR         @R9
+    00000630 6073                   MOV         R7,R0
+    00000632 7FF4                   ADD         #-12,R15
+    00000634 62A3                   MOV         R10,R2
+    00000636 6D83                   MOV         R8,R13
+    00000638 7B30                   ADD         #48,R11
+    0000063A 61F3                   MOV         R15,R1
+    0000063C 7278                   ADD         #120,R2
+    0000063E 6073                   MOV         R7,R0
+    00000640 490B                   JSR         @R9
+    00000642 3DBC                   ADD         R11,R13
+    00000644 2FD6                   MOV.L       R13,@-R15
+    00000646 E500                   MOV         #0,R5      ; H'00000000
+    00000648 D742                   MOV.L       L71+2,R7   ; _itrianglef
+    0000064A 6453                   MOV         R5,R4
+    0000064C 470B                   JSR         @R7
+    0000064E 6653                   MOV         R5,R6
+    00000650 7F1C                   ADD         #28,R15
+    00000652 62A3                   MOV         R10,R2
+    00000654 ED0C                   MOV         #12,R13    ; H'0000000C
+               game.c         98          
+               game.c         99          tankmesh[14] = itrianglef(vertices[5], vertices[11], vertices[4], 0, 0, 0);
+    00000656 61F3                   MOV         R15,R1
+    00000658 7230                   ADD         #48,R2
+    0000065A 490B                   JSR         @R9
+    0000065C 60D3                   MOV         R13,R0
+    0000065E 7FF4                   ADD         #-12,R15
+    00000660 62A3                   MOV         R10,R2
+    00000662 727F                   ADD         #127,R2
+    00000664 61F3                   MOV         R15,R1
+    00000666 7205                   ADD         #5,R2
+    00000668 490B                   JSR         @R9
+    0000066A 60D3                   MOV         R13,R0
+    0000066C 7FF4                   ADD         #-12,R15
+    0000066E 62A3                   MOV         R10,R2
+    00000670 60D3                   MOV         R13,R0
+    00000672 6D83                   MOV         R8,R13
+    00000674 7B30                   ADD         #48,R11
+    00000676 61F3                   MOV         R15,R1
+    00000678 723C                   ADD         #60,R2
+    0000067A 490B                   JSR         @R9
+    0000067C 3DBC                   ADD         R11,R13
+    0000067E 2FD6                   MOV.L       R13,@-R15
+    00000680 E500                   MOV         #0,R5      ; H'00000000
+    00000682 D734                   MOV.L       L71+2,R7   ; _itrianglef
+    00000684 6453                   MOV         R5,R4
+    00000686 470B                   JSR         @R7
+    00000688 6653                   MOV         R5,R6
+    0000068A 7F1C                   ADD         #28,R15
+    0000068C 62A3                   MOV         R10,R2
+    0000068E 727F                   ADD         #127,R2
+    00000690 E60C                   MOV         #12,R6     ; H'0000000C
+               game.c        100          tankmesh[15] = itrianglef(vertices[10], vertices[4], vertices[11], 0, 0, 0);
+    00000692 61F3                   MOV         R15,R1
+    00000694 7205                   ADD         #5,R2
+    00000696 490B                   JSR         @R9
+    00000698 6063                   MOV         R6,R0
+    0000069A 7FF4                   ADD         #-12,R15
+    0000069C 62A3                   MOV         R10,R2
+    0000069E 61F3                   MOV         R15,R1
+    000006A0 7230                   ADD         #48,R2
+    000006A2 490B                   JSR         @R9
+    000006A4 6063                   MOV         R6,R0
+    000006A6 7FF4                   ADD         #-12,R15
+    000006A8 62A3                   MOV         R10,R2
+    000006AA 61F3                   MOV         R15,R1
+    000006AC 7278                   ADD         #120,R2
+    000006AE 490B                   JSR         @R9
+    000006B0 6063                   MOV         R6,R0
+    000006B2 6183                   MOV         R8,R1
+    000006B4 7B30                   ADD         #48,R11
+    000006B6 31BC                   ADD         R11,R1
+    000006B8 2F16                   MOV.L       R1,@-R15
+    000006BA E500                   MOV         #0,R5      ; H'00000000
+    000006BC D725                   MOV.L       L71+2,R7   ; _itrianglef
+    000006BE 6453                   MOV         R5,R4
+    000006C0 470B                   JSR         @R7
+    000006C2 6653                   MOV         R5,R6
+    000006C4 7F1C                   ADD         #28,R15
+    000006C6 E40C                   MOV         #12,R4     ; H'0000000C
+               game.c        101          tankmesh[16] = itrianglef(vertices[6], vertices[11], vertices[0], 0, 0, 0);
+    000006C8 61F3                   MOV         R15,R1
+    000006CA 62A3                   MOV         R10,R2
+    000006CC 490B                   JSR         @R9
+    000006CE 6043                   MOV         R4,R0
+    000006D0 7FF4                   ADD         #-12,R15
+    000006D2 62A3                   MOV         R10,R2
+    000006D4 727F                   ADD         #127,R2
+    000006D6 61F3                   MOV         R15,R1
+    000006D8 7205                   ADD         #5,R2
+    000006DA 490B                   JSR         @R9
+    000006DC 6043                   MOV         R4,R0
+    000006DE 7FF4                   ADD         #-12,R15
+    000006E0 62A3                   MOV         R10,R2
+    000006E2 6D83                   MOV         R8,R13
+    000006E4 7B30                   ADD         #48,R11
+    000006E6 61F3                   MOV         R15,R1
+    000006E8 7248                   ADD         #72,R2
+    000006EA 6043                   MOV         R4,R0
+    000006EC 490B                   JSR         @R9
+    000006EE 3DBC                   ADD         R11,R13
+    000006F0 2FD6                   MOV.L       R13,@-R15
+    000006F2 E500                   MOV         #0,R5      ; H'00000000
+    000006F4 D117                   MOV.L       L71+2,R1   ; _itrianglef
+    000006F6 6453                   MOV         R5,R4
+    000006F8 410B                   JSR         @R1
+    000006FA 6653                   MOV         R5,R6
+    000006FC 7F1C                   ADD         #28,R15
+    000006FE 62A3                   MOV         R10,R2
+    00000700 727F                   ADD         #127,R2
+    00000702 E50C                   MOV         #12,R5     ; H'0000000C
+               game.c        102          tankmesh[17] = itrianglef(vertices[5], vertices[0], vertices[11], 0, 0, 0);
+    00000704 61F3                   MOV         R15,R1
+    00000706 7205                   ADD         #5,R2
+    00000708 490B                   JSR         @R9
+    0000070A 6053                   MOV         R5,R0
+    0000070C 7FF4                   ADD         #-12,R15
+    0000070E 61F3                   MOV         R15,R1
+    00000710 62A3                   MOV         R10,R2
+    00000712 490B                   JSR         @R9
+    00000714 6053                   MOV         R5,R0
+    00000716 7FF4                   ADD         #-12,R15
+    00000718 62A3                   MOV         R10,R2
+    0000071A 6483                   MOV         R8,R4
+    0000071C 7B30                   ADD         #48,R11
+    0000071E 61F3                   MOV         R15,R1
+    00000720 723C                   ADD         #60,R2
+    00000722 6053                   MOV         R5,R0
+    00000724 490B                   JSR         @R9
+    00000726 34BC                   ADD         R11,R4
+    00000728 2F46                   MOV.L       R4,@-R15
+    0000072A E500                   MOV         #0,R5      ; H'00000000
+    0000072C D709                   MOV.L       L71+2,R7   ; _itrianglef
+    0000072E 6453                   MOV         R5,R4
+    00000730 470B                   JSR         @R7
+    00000732 6653                   MOV         R5,R6
+    00000734 7F1C                   ADD         #28,R15
+    00000736 62A3                   MOV         R10,R2
+    00000738 E70C                   MOV         #12,R7     ; H'0000000C
+               game.c        103          tankmesh[18] = itrianglef(vertices[7], vertices[6], vertices[1], 0, 0, 0);
+    0000073A 61F3                   MOV         R15,R1
+    0000073C 720C                   ADD         #12,R2
+    0000073E 490B                   JSR         @R9
+    00000740 6073                   MOV         R7,R0
+    00000742 7FF4                   ADD         #-12,R15
+    00000744 62A3                   MOV         R10,R2
+    00000746 61F3                   MOV         R15,R1
+    00000748 7248                   ADD         #72,R2
+    0000074A 490B                   JSR         @R9
+    0000074C 6073                   MOV         R7,R0
+    0000074E A003                   BRA         L70
+    00000750 0009                   NOP
+    00000752              L71:
+    00000752 00000002               .RES.W      1
+    00000754 <00000000>             .DATA.L     _itrianglef
+    00000758              L70:
+    00000758 7FF4                   ADD         #-12,R15
+    0000075A 62A3                   MOV         R10,R2
+    0000075C 6D83                   MOV         R8,R13
+    0000075E 7B30                   ADD         #48,R11
+    00000760 61F3                   MOV         R15,R1
+    00000762 7254                   ADD         #84,R2
+    00000764 6073                   MOV         R7,R0
+    00000766 490B                   JSR         @R9
+    00000768 3DBC                   ADD         R11,R13
+    0000076A 2FD6                   MOV.L       R13,@-R15
+    0000076C E500                   MOV         #0,R5      ; H'00000000
+    0000076E D1D8                   MOV.L       L73+2,R1   ; _itrianglef
+    00000770 6453                   MOV         R5,R4
+    00000772 410B                   JSR         @R1
+    00000774 6653                   MOV         R5,R6
+    00000776 7F1C                   ADD         #28,R15
+    00000778 62A3                   MOV         R10,R2
+    0000077A ED0C                   MOV         #12,R13    ; H'0000000C
+               game.c        104          tankmesh[19] = itrianglef(vertices[0], vertices[1], vertices[6], 0, 0, 0);
+    0000077C 61F3                   MOV         R15,R1
+    0000077E 7248                   ADD         #72,R2
+    00000780 490B                   JSR         @R9
+    00000782 60D3                   MOV         R13,R0
+    00000784 7FF4                   ADD         #-12,R15
+    00000786 62A3                   MOV         R10,R2
+    00000788 61F3                   MOV         R15,R1
+    0000078A 720C                   ADD         #12,R2
+    0000078C 490B                   JSR         @R9
+    0000078E 60D3                   MOV         R13,R0
+    00000790 7FF4                   ADD         #-12,R15
+    00000792 6483                   MOV         R8,R4
+    00000794 7B30                   ADD         #48,R11
+    00000796 61F3                   MOV         R15,R1
+    00000798 62A3                   MOV         R10,R2
+    0000079A 60D3                   MOV         R13,R0
+    0000079C 490B                   JSR         @R9
+    0000079E 34BC                   ADD         R11,R4
+    000007A0 2F46                   MOV.L       R4,@-R15
+    000007A2 E500                   MOV         #0,R5      ; H'00000000
+    000007A4 D7CA                   MOV.L       L73+2,R7   ; _itrianglef
+    000007A6 6453                   MOV         R5,R4
+    000007A8 470B                   JSR         @R7
+    000007AA 6653                   MOV         R5,R6
+    000007AC 7F1C                   ADD         #28,R15
+    000007AE 62A3                   MOV         R10,R2
+    000007B0 727F                   ADD         #127,R2
+    000007B2 E40C                   MOV         #12,R4     ; H'0000000C
+               game.c        105    
+               game.c        106          
+               game.c        107          tankmesh[20] = itrianglef(vertices[13], vertices[12], vertices[14], 0, 0, 0);
+    000007B4 61F3                   MOV         R15,R1
+    000007B6 7229                   ADD         #41,R2
+    000007B8 490B                   JSR         @R9
+    000007BA 6043                   MOV         R4,R0
+    000007BC 7FF4                   ADD         #-12,R15
+    000007BE 62A3                   MOV         R10,R2
+    000007C0 727F                   ADD         #127,R2
+    000007C2 61F3                   MOV         R15,R1
+    000007C4 7211                   ADD         #17,R2
+    000007C6 490B                   JSR         @R9
+    000007C8 6043                   MOV         R4,R0
+    000007CA 7FF4                   ADD         #-12,R15
+    000007CC 62A3                   MOV         R10,R2
+    000007CE 727F                   ADD         #127,R2
+    000007D0 6D83                   MOV         R8,R13
+    000007D2 7B30                   ADD         #48,R11
+    000007D4 61F3                   MOV         R15,R1
+    000007D6 721D                   ADD         #29,R2
+    000007D8 6043                   MOV         R4,R0
+    000007DA 490B                   JSR         @R9
+    000007DC 3DBC                   ADD         R11,R13
+    000007DE 2FD6                   MOV.L       R13,@-R15
+    000007E0 E500                   MOV         #0,R5      ; H'00000000
+    000007E2 D1BB                   MOV.L       L73+2,R1   ; _itrianglef
+    000007E4 6453                   MOV         R5,R4
+    000007E6 410B                   JSR         @R1
+    000007E8 6653                   MOV         R5,R6
+    000007EA 7F1C                   ADD         #28,R15
+    000007EC 62A3                   MOV         R10,R2
+    000007EE 727F                   ADD         #127,R2
+    000007F0 E50C                   MOV         #12,R5     ; H'0000000C
+               game.c        108          tankmesh[21] = itrianglef(vertices[15], vertices[14], vertices[12], 0, 0, 0);   
+    000007F2 61F3                   MOV         R15,R1
+    000007F4 7211                   ADD         #17,R2
+    000007F6 490B                   JSR         @R9
+    000007F8 6053                   MOV         R5,R0
+    000007FA 7FF4                   ADD         #-12,R15
+    000007FC 62A3                   MOV         R10,R2
+    000007FE 727F                   ADD         #127,R2
+    00000800 61F3                   MOV         R15,R1
+    00000802 7229                   ADD         #41,R2
+    00000804 490B                   JSR         @R9
+    00000806 6053                   MOV         R5,R0
+    00000808 7FF4                   ADD         #-12,R15
+    0000080A 62A3                   MOV         R10,R2
+    0000080C 727F                   ADD         #127,R2
+    0000080E 6483                   MOV         R8,R4
+    00000810 7B30                   ADD         #48,R11
+    00000812 61F3                   MOV         R15,R1
+    00000814 7235                   ADD         #53,R2
+    00000816 6053                   MOV         R5,R0
+    00000818 490B                   JSR         @R9
+    0000081A 34BC                   ADD         R11,R4
+    0000081C 2F46                   MOV.L       R4,@-R15
+    0000081E E500                   MOV         #0,R5      ; H'00000000
+    00000820 D7AB                   MOV.L       L73+2,R7   ; _itrianglef
+    00000822 6453                   MOV         R5,R4
+    00000824 470B                   JSR         @R7
+    00000826 6653                   MOV         R5,R6
+    00000828 7F1C                   ADD         #28,R15
+    0000082A 62A3                   MOV         R10,R2
+    0000082C 727F                   ADD         #127,R2
+    0000082E E70C                   MOV         #12,R7     ; H'0000000C
+               game.c        109          tankmesh[22] = itrianglef(vertices[14], vertices[15], vertices[18], 0, 0, 0);
+    00000830 61F3                   MOV         R15,R1
+    00000832 7259                   ADD         #89,R2
+    00000834 490B                   JSR         @R9
+    00000836 6073                   MOV         R7,R0
+    00000838 7FF4                   ADD         #-12,R15
+    0000083A 62A3                   MOV         R10,R2
+    0000083C 727F                   ADD         #127,R2
+    0000083E 61F3                   MOV         R15,R1
+    00000840 7235                   ADD         #53,R2
+    00000842 490B                   JSR         @R9
+    00000844 6073                   MOV         R7,R0
+    00000846 7FF4                   ADD         #-12,R15
+    00000848 62A3                   MOV         R10,R2
+    0000084A 727F                   ADD         #127,R2
+    0000084C 6D83                   MOV         R8,R13
+    0000084E 7B30                   ADD         #48,R11
+    00000850 61F3                   MOV         R15,R1
+    00000852 7229                   ADD         #41,R2
+    00000854 6073                   MOV         R7,R0
+    00000856 490B                   JSR         @R9
+    00000858 3DBC                   ADD         R11,R13
+    0000085A 2FD6                   MOV.L       R13,@-R15
+    0000085C E500                   MOV         #0,R5      ; H'00000000
+    0000085E D19C                   MOV.L       L73+2,R1   ; _itrianglef
+    00000860 6453                   MOV         R5,R4
+    00000862 410B                   JSR         @R1
+    00000864 6653                   MOV         R5,R6
+    00000866 7F1C                   ADD         #28,R15
+    00000868 62A3                   MOV         R10,R2
+    0000086A 727F                   ADD         #127,R2
+    0000086C ED0C                   MOV         #12,R13    ; H'0000000C
+               game.c        110          tankmesh[23] = itrianglef(vertices[19], vertices[18], vertices[15], 0, 0, 0);
+    0000086E 61F3                   MOV         R15,R1
+    00000870 7235                   ADD         #53,R2
+    00000872 490B                   JSR         @R9
+    00000874 60D3                   MOV         R13,R0
+    00000876 7FF4                   ADD         #-12,R15
+    00000878 62A3                   MOV         R10,R2
+    0000087A 727F                   ADD         #127,R2
+    0000087C 61F3                   MOV         R15,R1
+    0000087E 7259                   ADD         #89,R2
+    00000880 490B                   JSR         @R9
+    00000882 60D3                   MOV         R13,R0
+    00000884 7FF4                   ADD         #-12,R15
+    00000886 62A3                   MOV         R10,R2
+    00000888 727F                   ADD         #127,R2
+    0000088A 6483                   MOV         R8,R4
+    0000088C 7B30                   ADD         #48,R11
+    0000088E 61F3                   MOV         R15,R1
+    00000890 7265                   ADD         #101,R2
+    00000892 60D3                   MOV         R13,R0
+    00000894 490B                   JSR         @R9
+    00000896 34BC                   ADD         R11,R4
+    00000898 2F46                   MOV.L       R4,@-R15
+    0000089A E500                   MOV         #0,R5      ; H'00000000
+    0000089C D78C                   MOV.L       L73+2,R7   ; _itrianglef
+    0000089E 6453                   MOV         R5,R4
+    000008A0 470B                   JSR         @R7
+    000008A2 6653                   MOV         R5,R6
+    000008A4 7F1C                   ADD         #28,R15
+    000008A6 62A3                   MOV         R10,R2
+    000008A8 727F                   ADD         #127,R2
+    000008AA E50C                   MOV         #12,R5     ; H'0000000C
+               game.c        111          tankmesh[24] = itrianglef(vertices[18], vertices[19], vertices[17], 0, 0, 0);
+    000008AC 61F3                   MOV         R15,R1
+    000008AE 724D                   ADD         #77,R2
+    000008B0 490B                   JSR         @R9
+    000008B2 6053                   MOV         R5,R0
+    000008B4 7FF4                   ADD         #-12,R15
+    000008B6 62A3                   MOV         R10,R2
+    000008B8 727F                   ADD         #127,R2
+    000008BA 61F3                   MOV         R15,R1
+    000008BC 7265                   ADD         #101,R2
+    000008BE 490B                   JSR         @R9
+    000008C0 6053                   MOV         R5,R0
+    000008C2 7FF4                   ADD         #-12,R15
+    000008C4 62A3                   MOV         R10,R2
+    000008C6 727F                   ADD         #127,R2
+    000008C8 6D83                   MOV         R8,R13
+    000008CA 7B30                   ADD         #48,R11
+    000008CC 61F3                   MOV         R15,R1
+    000008CE 7259                   ADD         #89,R2
+    000008D0 6053                   MOV         R5,R0
+    000008D2 490B                   JSR         @R9
+    000008D4 3DBC                   ADD         R11,R13
+    000008D6 2FD6                   MOV.L       R13,@-R15
+    000008D8 E500                   MOV         #0,R5      ; H'00000000
+    000008DA D17D                   MOV.L       L73+2,R1   ; _itrianglef
+    000008DC 6453                   MOV         R5,R4
+    000008DE 410B                   JSR         @R1
+    000008E0 6653                   MOV         R5,R6
+    000008E2 7F1C                   ADD         #28,R15
+    000008E4 62A3                   MOV         R10,R2
+    000008E6 727F                   ADD         #127,R2
+    000008E8 E70C                   MOV         #12,R7     ; H'0000000C
+               game.c        112          tankmesh[25] = itrianglef(vertices[16], vertices[17], vertices[19], 0, 0, 0);   
+    000008EA 61F3                   MOV         R15,R1
+    000008EC 7265                   ADD         #101,R2
+    000008EE 490B                   JSR         @R9
+    000008F0 6073                   MOV         R7,R0
+    000008F2 7FF4                   ADD         #-12,R15
+    000008F4 62A3                   MOV         R10,R2
+    000008F6 727F                   ADD         #127,R2
+    000008F8 61F3                   MOV         R15,R1
+    000008FA 724D                   ADD         #77,R2
+    000008FC 490B                   JSR         @R9
+    000008FE 6073                   MOV         R7,R0
+    00000900 7FF4                   ADD         #-12,R15
+    00000902 62A3                   MOV         R10,R2
+    00000904 727F                   ADD         #127,R2
+    00000906 6483                   MOV         R8,R4
+    00000908 7B30                   ADD         #48,R11
+    0000090A 61F3                   MOV         R15,R1
+    0000090C 7241                   ADD         #65,R2
+    0000090E 6073                   MOV         R7,R0
+    00000910 490B                   JSR         @R9
+    00000912 34BC                   ADD         R11,R4
+    00000914 2F46                   MOV.L       R4,@-R15
+    00000916 E500                   MOV         #0,R5      ; H'00000000
+    00000918 D76D                   MOV.L       L73+2,R7   ; _itrianglef
+    0000091A 6453                   MOV         R5,R4
+    0000091C 470B                   JSR         @R7
+    0000091E 6653                   MOV         R5,R6
+    00000920 7F1C                   ADD         #28,R15
+    00000922 62A3                   MOV         R10,R2
+    00000924 727F                   ADD         #127,R2
+    00000926 ED0C                   MOV         #12,R13    ; H'0000000C
+               game.c        113          tankmesh[26] = itrianglef(vertices[17], vertices[16], vertices[13], 0, 0, 0);
+    00000928 61F3                   MOV         R15,R1
+    0000092A 721D                   ADD         #29,R2
+    0000092C 490B                   JSR         @R9
+    0000092E 60D3                   MOV         R13,R0
+    00000930 7FF4                   ADD         #-12,R15
+    00000932 62A3                   MOV         R10,R2
+    00000934 727F                   ADD         #127,R2
+    00000936 61F3                   MOV         R15,R1
+    00000938 7241                   ADD         #65,R2
+    0000093A 490B                   JSR         @R9
+    0000093C 60D3                   MOV         R13,R0
+    0000093E 7FF4                   ADD         #-12,R15
+    00000940 62A3                   MOV         R10,R2
+    00000942 727F                   ADD         #127,R2
+    00000944 60D3                   MOV         R13,R0
+    00000946 6D83                   MOV         R8,R13
+    00000948 7B30                   ADD         #48,R11
+    0000094A 61F3                   MOV         R15,R1
+    0000094C 724D                   ADD         #77,R2
+    0000094E 490B                   JSR         @R9
+    00000950 3DBC                   ADD         R11,R13
+    00000952 2FD6                   MOV.L       R13,@-R15
+    00000954 E500                   MOV         #0,R5      ; H'00000000
+    00000956 D15E                   MOV.L       L73+2,R1   ; _itrianglef
+    00000958 6453                   MOV         R5,R4
+    0000095A 410B                   JSR         @R1
+    0000095C 6653                   MOV         R5,R6
+    0000095E 7F1C                   ADD         #28,R15
+    00000960 62A3                   MOV         R10,R2
+    00000962 727F                   ADD         #127,R2
+    00000964 E50C                   MOV         #12,R5     ; H'0000000C
+               game.c        114          tankmesh[27] = itrianglef(vertices[12], vertices[13], vertices[16], 0, 0, 0);
+    00000966 61F3                   MOV         R15,R1
+    00000968 7241                   ADD         #65,R2
+    0000096A 490B                   JSR         @R9
+    0000096C 6053                   MOV         R5,R0
+    0000096E 7FF4                   ADD         #-12,R15
+    00000970 62A3                   MOV         R10,R2
+    00000972 727F                   ADD         #127,R2
+    00000974 61F3                   MOV         R15,R1
+    00000976 721D                   ADD         #29,R2
+    00000978 490B                   JSR         @R9
+    0000097A 6053                   MOV         R5,R0
+    0000097C 7FF4                   ADD         #-12,R15
+    0000097E 62A3                   MOV         R10,R2
+    00000980 727F                   ADD         #127,R2
+    00000982 6483                   MOV         R8,R4
+    00000984 7B30                   ADD         #48,R11
+    00000986 61F3                   MOV         R15,R1
+    00000988 7211                   ADD         #17,R2
+    0000098A 6053                   MOV         R5,R0
+    0000098C 490B                   JSR         @R9
+    0000098E 34BC                   ADD         R11,R4
+    00000990 2F46                   MOV.L       R4,@-R15
+    00000992 E500                   MOV         #0,R5      ; H'00000000
+    00000994 D74E                   MOV.L       L73+2,R7   ; _itrianglef
+    00000996 6453                   MOV         R5,R4
+    00000998 470B                   JSR         @R7
+    0000099A 6653                   MOV         R5,R6
+    0000099C 7F1C                   ADD         #28,R15
+    0000099E 62A3                   MOV         R10,R2
+    000009A0 727F                   ADD         #127,R2
+    000009A2 E70C                   MOV         #12,R7     ; H'0000000C
+               game.c        115    
+               game.c        116          tankmesh[28] = itrianglef(vertices[17], vertices[13], vertices[18], 0, 0, 0);
+    000009A4 61F3                   MOV         R15,R1
+    000009A6 7259                   ADD         #89,R2
+    000009A8 490B                   JSR         @R9
+    000009AA 6073                   MOV         R7,R0
+    000009AC 7FF4                   ADD         #-12,R15
+    000009AE 62A3                   MOV         R10,R2
+    000009B0 727F                   ADD         #127,R2
+    000009B2 61F3                   MOV         R15,R1
+    000009B4 721D                   ADD         #29,R2
+    000009B6 490B                   JSR         @R9
+    000009B8 6073                   MOV         R7,R0
+    000009BA 7FF4                   ADD         #-12,R15
+    000009BC 62A3                   MOV         R10,R2
+    000009BE 727F                   ADD         #127,R2
+    000009C0 6D83                   MOV         R8,R13
+    000009C2 7B30                   ADD         #48,R11
+    000009C4 61F3                   MOV         R15,R1
+    000009C6 724D                   ADD         #77,R2
+    000009C8 6073                   MOV         R7,R0
+    000009CA 490B                   JSR         @R9
+    000009CC 3DBC                   ADD         R11,R13
+    000009CE 2FD6                   MOV.L       R13,@-R15
+    000009D0 E500                   MOV         #0,R5      ; H'00000000
+    000009D2 D73F                   MOV.L       L73+2,R7   ; _itrianglef
+    000009D4 6453                   MOV         R5,R4
+    000009D6 470B                   JSR         @R7
+    000009D8 6653                   MOV         R5,R6
+    000009DA 7F1C                   ADD         #28,R15
+    000009DC 62A3                   MOV         R10,R2
+    000009DE 727F                   ADD         #127,R2
+    000009E0 ED0C                   MOV         #12,R13    ; H'0000000C
+               game.c        117          tankmesh[29] = itrianglef(vertices[14], vertices[18], vertices[13], 0, 0, 0);
+    000009E2 61F3                   MOV         R15,R1
+    000009E4 721D                   ADD         #29,R2
+    000009E6 490B                   JSR         @R9
+    000009E8 60D3                   MOV         R13,R0
+    000009EA 7FF4                   ADD         #-12,R15
+    000009EC 62A3                   MOV         R10,R2
+    000009EE 727F                   ADD         #127,R2
+    000009F0 61F3                   MOV         R15,R1
+    000009F2 7259                   ADD         #89,R2
+    000009F4 490B                   JSR         @R9
+    000009F6 60D3                   MOV         R13,R0
+    000009F8 7FF4                   ADD         #-12,R15
+    000009FA 62A3                   MOV         R10,R2
+    000009FC 727F                   ADD         #127,R2
+    000009FE 60D3                   MOV         R13,R0
+    00000A00 6D83                   MOV         R8,R13
+    00000A02 7B30                   ADD         #48,R11
+    00000A04 61F3                   MOV         R15,R1
+    00000A06 7229                   ADD         #41,R2
+    00000A08 490B                   JSR         @R9
+    00000A0A 3DBC                   ADD         R11,R13
+    00000A0C 2FD6                   MOV.L       R13,@-R15
+    00000A0E E500                   MOV         #0,R5      ; H'00000000
+    00000A10 6453                   MOV         R5,R4
+    00000A12 6653                   MOV         R5,R6
+    00000A14 D22E                   MOV.L       L73+2,R2   ; _itrianglef
+    00000A16 420B                   JSR         @R2
+    00000A18 0009                   NOP
+    00000A1A 7F1C                   ADD         #28,R15
+    00000A1C 62A3                   MOV         R10,R2
+    00000A1E 727F                   ADD         #127,R2
+               game.c        118          
+               game.c        119    
+               game.c        120          tankmesh[30] = itrianglef(vertices[21], vertices[22], vertices[20], 0, 0, 0);
+    00000A20 61F3                   MOV         R15,R1
+    00000A22 7271                   ADD         #113,R2
+    00000A24 490B                   JSR         @R9
+    00000A26 E00C                   MOV         #12,R0     ; H'0000000C
+    00000A28 7FF4                   ADD         #-12,R15
+    00000A2A ED42                   MOV         #66,R13    ; H'00000042
+    00000A2C 62A3                   MOV         R10,R2
+    00000A2E 4D08                   SHLL2       R13
+    00000A30 E40C                   MOV         #12,R4     ; H'0000000C
+    00000A32 61F3                   MOV         R15,R1
+    00000A34 32DC                   ADD         R13,R2
+    00000A36 490B                   JSR         @R9
+    00000A38 6043                   MOV         R4,R0
+    00000A3A 7FF4                   ADD         #-12,R15
+    00000A3C 62A3                   MOV         R10,R2
+    00000A3E 727F                   ADD         #127,R2
+    00000A40 61F3                   MOV         R15,R1
+    00000A42 727D                   ADD         #125,R2
+    00000A44 490B                   JSR         @R9
+    00000A46 6043                   MOV         R4,R0
+    00000A48 6183                   MOV         R8,R1
+    00000A4A 7B30                   ADD         #48,R11
+    00000A4C 31BC                   ADD         R11,R1
+    00000A4E 2F16                   MOV.L       R1,@-R15
+    00000A50 E500                   MOV         #0,R5      ; H'00000000
+    00000A52 D71F                   MOV.L       L73+2,R7   ; _itrianglef
+    00000A54 6453                   MOV         R5,R4
+    00000A56 470B                   JSR         @R7
+    00000A58 6653                   MOV         R5,R6
+    00000A5A 7F1C                   ADD         #28,R15
+    00000A5C 62A3                   MOV         R10,R2
+    00000A5E 7D18                   ADD         #24,R13
+    00000A60 E50C                   MOV         #12,R5     ; H'0000000C
+               game.c        121    
+               game.c        122          tankmesh[31] = itrianglef(vertices[21], vertices[20], vertices[24], 0, 0, 0);
+    00000A62 61F3                   MOV         R15,R1
+    00000A64 32DC                   ADD         R13,R2
+    00000A66 490B                   JSR         @R9
+    00000A68 6053                   MOV         R5,R0
+    00000A6A 7FF4                   ADD         #-12,R15
+    00000A6C 62A3                   MOV         R10,R2
+    00000A6E 727F                   ADD         #127,R2
+    00000A70 61F3                   MOV         R15,R1
+    00000A72 7271                   ADD         #113,R2
+    00000A74 490B                   JSR         @R9
+    00000A76 6053                   MOV         R5,R0
+    00000A78 7FF4                   ADD         #-12,R15
+    00000A7A 62A3                   MOV         R10,R2
+    00000A7C 727F                   ADD         #127,R2
+    00000A7E 61F3                   MOV         R15,R1
+    00000A80 727D                   ADD         #125,R2
+    00000A82 490B                   JSR         @R9
+    00000A84 6053                   MOV         R5,R0
+    00000A86 6183                   MOV         R8,R1
+    00000A88 7B30                   ADD         #48,R11
+    00000A8A 31BC                   ADD         R11,R1
+    00000A8C 2F16                   MOV.L       R1,@-R15
+    00000A8E E500                   MOV         #0,R5      ; H'00000000
+    00000A90 D70F                   MOV.L       L73+2,R7   ; _itrianglef
+    00000A92 6453                   MOV         R5,R4
+    00000A94 470B                   JSR         @R7
+    00000A96 6653                   MOV         R5,R6
+    00000A98 7F1C                   ADD         #28,R15
+    00000A9A 62A3                   MOV         R10,R2
+    00000A9C 727F                   ADD         #127,R2
+    00000A9E E70C                   MOV         #12,R7     ; H'0000000C
+               game.c        123          tankmesh[32] = itrianglef(vertices[23], vertices[24], vertices[20], 0, 0, 0);   
+    00000AA0 61F3                   MOV         R15,R1
+    00000AA2 7271                   ADD         #113,R2
+    00000AA4 490B                   JSR         @R9
+    00000AA6 6073                   MOV         R7,R0
+    00000AA8 7FF4                   ADD         #-12,R15
+    00000AAA 62A3                   MOV         R10,R2
+    00000AAC 61F3                   MOV         R15,R1
+    00000AAE 32DC                   ADD         R13,R2
+    00000AB0 490B                   JSR         @R9
+    00000AB2 6073                   MOV         R7,R0
+    00000AB4 7FF4                   ADD         #-12,R15
+    00000AB6 62A3                   MOV         R10,R2
+    00000AB8 7DF4                   ADD         #-12,R13
+    00000ABA 61F3                   MOV         R15,R1
+    00000ABC 32DC                   ADD         R13,R2
+    00000ABE 490B                   JSR         @R9
+    00000AC0 6073                   MOV         R7,R0
+    00000AC2 6183                   MOV         R8,R1
+    00000AC4 7B30                   ADD         #48,R11
+    00000AC6 31BC                   ADD         R11,R1
+    00000AC8 2F16                   MOV.L       R1,@-R15
+    00000ACA A003                   BRA         L72
+    00000ACC E500                   MOV         #0,R5      ; H'00000000
+    00000ACE              L73:
+    00000ACE 00000002               .RES.W      1
+    00000AD0 <00000000>             .DATA.L     _itrianglef
+    00000AD4              L72:
+    00000AD4 D7AD                   MOV.L       L75,R7     ; _itrianglef
+    00000AD6 6453                   MOV         R5,R4
+    00000AD8 470B                   JSR         @R7
+    00000ADA 6653                   MOV         R5,R6
+    00000ADC 7F1C                   ADD         #28,R15
+    00000ADE 62A3                   MOV         R10,R2
+    00000AE0 E50C                   MOV         #12,R5     ; H'0000000C
+               game.c        124          tankmesh[33] = itrianglef(vertices[20], vertices[22], vertices[23], 0, 0, 0);
+    00000AE2 61F3                   MOV         R15,R1
+    00000AE4 32DC                   ADD         R13,R2
+    00000AE6 490B                   JSR         @R9
+    00000AE8 6053                   MOV         R5,R0
+    00000AEA 7FF4                   ADD         #-12,R15
+    00000AEC 62A3                   MOV         R10,R2
+    00000AEE 7DF4                   ADD         #-12,R13
+    00000AF0 61F3                   MOV         R15,R1
+    00000AF2 32DC                   ADD         R13,R2
+    00000AF4 490B                   JSR         @R9
+    00000AF6 6053                   MOV         R5,R0
+    00000AF8 7FF4                   ADD         #-12,R15
+    00000AFA 62A3                   MOV         R10,R2
+    00000AFC 727F                   ADD         #127,R2
+    00000AFE 61F3                   MOV         R15,R1
+    00000B00 7271                   ADD         #113,R2
+    00000B02 490B                   JSR         @R9
+    00000B04 6053                   MOV         R5,R0
+    00000B06 6183                   MOV         R8,R1
+    00000B08 7B30                   ADD         #48,R11
+    00000B0A 31BC                   ADD         R11,R1
+    00000B0C 2F16                   MOV.L       R1,@-R15
+    00000B0E E500                   MOV         #0,R5      ; H'00000000
+    00000B10 D79E                   MOV.L       L75,R7     ; _itrianglef
+    00000B12 6453                   MOV         R5,R4
+    00000B14 470B                   JSR         @R7
+    00000B16 6653                   MOV         R5,R6
+    00000B18 7F1C                   ADD         #28,R15
+    00000B1A 62A3                   MOV         R10,R2
+    00000B1C E70C                   MOV         #12,R7     ; H'0000000C
+               game.c        125          tankmesh[34] = itrianglef(vertices[25], vertices[23], vertices[22], 0, 0, 0);
+    00000B1E 61F3                   MOV         R15,R1
+    00000B20 32DC                   ADD         R13,R2
+    00000B22 490B                   JSR         @R9
+    00000B24 6073                   MOV         R7,R0
+    00000B26 7FF4                   ADD         #-12,R15
+    00000B28 62A3                   MOV         R10,R2
+    00000B2A 7D0C                   ADD         #12,R13
+    00000B2C 61F3                   MOV         R15,R1
+    00000B2E 32DC                   ADD         R13,R2
+    00000B30 490B                   JSR         @R9
+    00000B32 6073                   MOV         R7,R0
+    00000B34 7FF4                   ADD         #-12,R15
+    00000B36 62A3                   MOV         R10,R2
+    00000B38 7D18                   ADD         #24,R13
+    00000B3A 61F3                   MOV         R15,R1
+    00000B3C 32DC                   ADD         R13,R2
+    00000B3E 490B                   JSR         @R9
+    00000B40 6073                   MOV         R7,R0
+    00000B42 6183                   MOV         R8,R1
+    00000B44 7B30                   ADD         #48,R11
+    00000B46 31BC                   ADD         R11,R1
+    00000B48 2F16                   MOV.L       R1,@-R15
+    00000B4A E500                   MOV         #0,R5      ; H'00000000
+    00000B4C D78F                   MOV.L       L75,R7     ; _itrianglef
+    00000B4E 6453                   MOV         R5,R4
+    00000B50 470B                   JSR         @R7
+    00000B52 6653                   MOV         R5,R6
+    00000B54 7F1C                   ADD         #28,R15
+    00000B56 62A3                   MOV         R10,R2
+    00000B58 E70C                   MOV         #12,R7     ; H'0000000C
+               game.c        126          tankmesh[35] = itrianglef(vertices[22], vertices[21], vertices[25], 0, 0, 0);
+    00000B5A 61F3                   MOV         R15,R1
+    00000B5C 32DC                   ADD         R13,R2
+    00000B5E 490B                   JSR         @R9
+    00000B60 6073                   MOV         R7,R0
+    00000B62 7FF4                   ADD         #-12,R15
+    00000B64 62A3                   MOV         R10,R2
+    00000B66 727F                   ADD         #127,R2
+    00000B68 61F3                   MOV         R15,R1
+    00000B6A 727D                   ADD         #125,R2
+    00000B6C 490B                   JSR         @R9
+    00000B6E 6073                   MOV         R7,R0
+    00000B70 7FF4                   ADD         #-12,R15
+    00000B72 62A3                   MOV         R10,R2
+    00000B74 7DDC                   ADD         #-36,R13
+    00000B76 61F3                   MOV         R15,R1
+    00000B78 32DC                   ADD         R13,R2
+    00000B7A 490B                   JSR         @R9
+    00000B7C 6073                   MOV         R7,R0
+    00000B7E 6183                   MOV         R8,R1
+    00000B80 7B30                   ADD         #48,R11
+    00000B82 31BC                   ADD         R11,R1
+    00000B84 2F16                   MOV.L       R1,@-R15
+    00000B86 E500                   MOV         #0,R5      ; H'00000000
+    00000B88 D780                   MOV.L       L75,R7     ; _itrianglef
+    00000B8A 6453                   MOV         R5,R4
+    00000B8C 470B                   JSR         @R7
+    00000B8E 6653                   MOV         R5,R6
+    00000B90 7F1C                   ADD         #28,R15
+    00000B92 62A3                   MOV         R10,R2
+    00000B94 727F                   ADD         #127,R2
+    00000B96 E70C                   MOV         #12,R7     ; H'0000000C
+               game.c        127          tankmesh[36] = itrianglef(vertices[24], vertices[25], vertices[21], 0, 0, 0);
+    00000B98 61F3                   MOV         R15,R1
+    00000B9A 727D                   ADD         #125,R2
+    00000B9C 490B                   JSR         @R9
+    00000B9E 6073                   MOV         R7,R0
+    00000BA0 7FF4                   ADD         #-12,R15
+    00000BA2 62A3                   MOV         R10,R2
+    00000BA4 7D24                   ADD         #36,R13
+    00000BA6 61F3                   MOV         R15,R1
+    00000BA8 32DC                   ADD         R13,R2
+    00000BAA 490B                   JSR         @R9
+    00000BAC 6073                   MOV         R7,R0
+    00000BAE 7FF4                   ADD         #-12,R15
+    00000BB0 7DF4                   ADD         #-12,R13
+    00000BB2 3ADC                   ADD         R13,R10
+    00000BB4 62A3                   MOV         R10,R2
+    00000BB6 6A83                   MOV         R8,R10
+    00000BB8 7B30                   ADD         #48,R11
+    00000BBA 61F3                   MOV         R15,R1
+    00000BBC 6073                   MOV         R7,R0
+    00000BBE 490B                   JSR         @R9
+    00000BC0 3ABC                   ADD         R11,R10
+    00000BC2 2FA6                   MOV.L       R10,@-R15
+    00000BC4 E500                   MOV         #0,R5      ; H'00000000
+    00000BC6 DB71                   MOV.L       L75,R11    ; _itrianglef
+    00000BC8 6453                   MOV         R5,R4
+    00000BCA 4B0B                   JSR         @R11
+    00000BCC 6653                   MOV         R5,R6
+    00000BCE 7F1C                   ADD         #28,R15
+               game.c        128    
+               game.c        129          personmesh[0] = itrianglef(ivec3f(0, int2f(4), 0), ivec3f(int2f(2), int2f(4), 0), ivec3f(0, 0, 0), 0, 0, 0);
+    00000BD0 6DF3                   MOV         R15,R13
+    00000BD2 2FD6                   MOV.L       R13,@-R15
+    00000BD4 E600                   MOV         #0,R6      ; H'00000000
+    00000BD6 D16E                   MOV.L       L75+4,R1   ; _ivec3f
+    00000BD8 6563                   MOV         R6,R5
+    00000BDA 410B                   JSR         @R1
+    00000BDC 6463                   MOV         R6,R4
+    00000BDE 7FF8                   ADD         #-8,R15
+    00000BE0 64F3                   MOV         R15,R4
+    00000BE2 2F46                   MOV.L       R4,@-R15
+    00000BE4 E510                   MOV         #16,R5     ; H'00000010
+    00000BE6 D76A                   MOV.L       L75+4,R7   ; _ivec3f
+    00000BE8 E600                   MOV         #0,R6      ; H'00000000
+    00000BEA 64E3                   MOV         R14,R4
+    00000BEC 470B                   JSR         @R7
+    00000BEE 4518                   SHLL8       R5
+    00000BF0 7FF8                   ADD         #-8,R15
+    00000BF2 6AF3                   MOV         R15,R10
+    00000BF4 2FA6                   MOV.L       R10,@-R15
+    00000BF6 ED10                   MOV         #16,R13    ; H'00000010
+    00000BF8 4D18                   SHLL8       R13
+    00000BFA E600                   MOV         #0,R6      ; H'00000000
+    00000BFC DB64                   MOV.L       L75+4,R11  ; _ivec3f
+    00000BFE 6463                   MOV         R6,R4
+    00000C00 4B0B                   JSR         @R11
+    00000C02 65D3                   MOV         R13,R5
+    00000C04 7F04                   ADD         #4,R15
+    00000C06 DB63                   MOV.L       L75+8,R11  ; _personmesh
+    00000C08 2FB6                   MOV.L       R11,@-R15
+    00000C0A E500                   MOV         #0,R5      ; H'00000000
+    00000C0C D15F                   MOV.L       L75,R1     ; _itrianglef
+    00000C0E 6453                   MOV         R5,R4
+    00000C10 410B                   JSR         @R1
+    00000C12 6653                   MOV         R5,R6
+    00000C14 7F1C                   ADD         #28,R15
+               game.c        130          personmesh[1] = itrianglef(ivec3f(int2f(2), 0, 0), ivec3f(0, 0, 0), ivec3f(int2f(2), int2f(4), 0), 0, 0, 0);
+    00000C16 64F3                   MOV         R15,R4
+    00000C18 2F46                   MOV.L       R4,@-R15
+    00000C1A D75D                   MOV.L       L75+4,R7   ; _ivec3f
+    00000C1C E600                   MOV         #0,R6      ; H'00000000
+    00000C1E 65D3                   MOV         R13,R5
+    00000C20 470B                   JSR         @R7
+    00000C22 64E3                   MOV         R14,R4
+    00000C24 7FF8                   ADD         #-8,R15
+    00000C26 6AF3                   MOV         R15,R10
+    00000C28 2FA6                   MOV.L       R10,@-R15
+    00000C2A E600                   MOV         #0,R6      ; H'00000000
+    00000C2C DD58                   MOV.L       L75+4,R13  ; _ivec3f
+    00000C2E 6563                   MOV         R6,R5
+    00000C30 4D0B                   JSR         @R13
+    00000C32 6463                   MOV         R6,R4
+    00000C34 7FF8                   ADD         #-8,R15
+    00000C36 61F3                   MOV         R15,R1
+    00000C38 2F16                   MOV.L       R1,@-R15
+    00000C3A E600                   MOV         #0,R6      ; H'00000000
+    00000C3C D754                   MOV.L       L75+4,R7   ; _ivec3f
+    00000C3E 6563                   MOV         R6,R5
+    00000C40 470B                   JSR         @R7
+    00000C42 64E3                   MOV         R14,R4
+    00000C44 7F04                   ADD         #4,R15
+    00000C46 6AB3                   MOV         R11,R10
+    00000C48 7A30                   ADD         #48,R10
+    00000C4A 2FA6                   MOV.L       R10,@-R15
+    00000C4C E500                   MOV         #0,R5      ; H'00000000
+    00000C4E DD4F                   MOV.L       L75,R13    ; _itrianglef
+    00000C50 6453                   MOV         R5,R4
+    00000C52 4D0B                   JSR         @R13
+    00000C54 6653                   MOV         R5,R6
+    00000C56 7F1C                   ADD         #28,R15
+               game.c        131    
+               game.c        132          m = imesh(tankmesh, tx, 37, ivec3f(float2f(1.5),0,float2f(12.0)), ivec3f(0,0,0)); //ivec3f(float2f(-3.5), int2f(2), float2f(-2.5)));
+    00000C58 6EF3                   MOV         R15,R14
+    00000C5A 2FE6                   MOV.L       R14,@-R15
+    00000C5C E600                   MOV         #0,R6      ; H'00000000
+    00000C5E D14C                   MOV.L       L75+4,R1   ; _ivec3f
+    00000C60 6563                   MOV         R6,R5
+    00000C62 410B                   JSR         @R1
+    00000C64 6463                   MOV         R6,R4
+    00000C66 7FF8                   ADD         #-8,R15
+    00000C68 64F3                   MOV         R15,R4
+    00000C6A 2F46                   MOV.L       R4,@-R15
+    00000C6C EE06                   MOV         #6,R14     ; H'00000006
+    00000C6E 4E18                   SHLL8       R14
+    00000C70 D747                   MOV.L       L75+4,R7   ; _ivec3f
+    00000C72 E500                   MOV         #0,R5      ; H'00000000
+    00000C74 66C3                   MOV         R12,R6
+    00000C76 470B                   JSR         @R7
+    00000C78 64E3                   MOV         R14,R4
+    00000C7A 7F04                   ADD         #4,R15
+    00000C7C 6483                   MOV         R8,R4
+    00000C7E 68F3                   MOV         R15,R8
+    00000C80 7818                   ADD         #24,R8
+    00000C82 D545                   MOV.L       L75+12,R5  ; _tx
+    00000C84 2F86                   MOV.L       R8,@-R15
+    00000C86 DA45                   MOV.L       L75+16,R10 ; _imesh
+    00000C88 4A0B                   JSR         @R10
+    00000C8A E625                   MOV         #37,R6     ; H'00000025
+    00000C8C 7FF0                   ADD         #-16,R15
+    00000C8E 62F3                   MOV         R15,R2
+               game.c        133          tid = m_addmesh(m);
+    00000C90 61F3                   MOV         R15,R1
+    00000C92 722C                   ADD         #44,R2
+    00000C94 D842                   MOV.L       L75+20,R8  ; _m_addmesh
+    00000C96 490B                   JSR         @R9
+    00000C98 E02C                   MOV         #44,R0     ; H'0000002C
+    00000C9A 480B                   JSR         @R8
+    00000C9C 0009                   NOP
+    00000C9E 6403                   MOV         R0,R4
+    00000CA0 7F2C                   ADD         #44,R15
+    00000CA2 DD40                   MOV.L       L75+24,R13 ; _tid
+               game.c        134          m_rotmesh(tid, int2f(90)*DEG2RAD_MULT);
+    00000CA4 D140                   MOV.L       L75+28,R1  ; _m_rotmesh
+    00000CA6 7E48                   ADD         #72,R14
+    00000CA8 2D01                   MOV.W       R0,@R13    ; tid
+    00000CAA 410B                   JSR         @R1
+    00000CAC 65E3                   MOV         R14,R5
+               game.c        135    
+               game.c        136          ptr[0] = &textures[TX_PERSON];
+    00000CAE E058                   MOV         #88,R0     ; H'00000058
+    00000CB0 0AFE                   MOV.L       @(R0,R15),R10
+    00000CB2 DE3E                   MOV.L       L75+32,R14 ; _ptr
+    00000CB4 7A7F                   ADD         #127,R10
+    00000CB6 7A05                   ADD         #5,R10
+    00000CB8 2EA2                   MOV.L       R10,@R14   ; ptr[]
+               game.c        137    
+               game.c        138          m2 = ibill(personmesh, ptr, ivec3f(float2f(6.0),0,float2f(5.0)));
+    00000CBA 7FF4                   ADD         #-12,R15
+    00000CBC 64F3                   MOV         R15,R4
+    00000CBE 2F46                   MOV.L       R4,@-R15
+    00000CC0 ED18                   MOV         #24,R13    ; H'00000018
+    00000CC2 4D18                   SHLL8       R13
+    00000CC4 E614                   MOV         #20,R6     ; H'00000014
+    00000CC6 D732                   MOV.L       L75+4,R7   ; _ivec3f
+    00000CC8 E500                   MOV         #0,R5      ; H'00000000
+    00000CCA 64D3                   MOV         R13,R4
+    00000CCC 470B                   JSR         @R7
+    00000CCE 4618                   SHLL8       R6
+    00000CD0 7F04                   ADD         #4,R15
+    00000CD2 6AF3                   MOV         R15,R10
+    00000CD4 7A38                   ADD         #56,R10
+    00000CD6 D535                   MOV.L       L75+32,R5  ; _ptr
+    00000CD8 64B3                   MOV         R11,R4
+    00000CDA DE35                   MOV.L       L75+36,R14 ; _ibill
+    00000CDC 4E0B                   JSR         @R14
+    00000CDE 2FA6                   MOV.L       R10,@-R15
+    00000CE0 7FE4                   ADD         #-28,R15
+    00000CE2 62F3                   MOV         R15,R2
+               game.c        139          pid = m_addmesh(m2);
+    00000CE4 61F3                   MOV         R15,R1
+    00000CE6 7258                   ADD         #88,R2
+    00000CE8 490B                   JSR         @R9
+    00000CEA E02C                   MOV         #44,R0     ; H'0000002C
+    00000CEC 480B                   JSR         @R8
+    00000CEE 0009                   NOP
+    00000CF0 7F20                   ADD         #32,R15
+    00000CF2 DB30                   MOV.L       L75+40,R11 ; _pid
+    00000CF4 2B01                   MOV.W       R0,@R11    ; pid
+               game.c        140          
+               game.c        141          treemesh[0] = itrianglef(ivec3f(0, int2f(12), 0), ivec3f(int2f(6), int2f(12), 0), ivec3f(0, 0, 0), 0, 0, 0);
+    00000CF6 6BF3                   MOV         R15,R11
+    00000CF8 2FB6                   MOV.L       R11,@-R15
+    00000CFA E600                   MOV         #0,R6      ; H'00000000
+    00000CFC DE24                   MOV.L       L75+4,R14  ; _ivec3f
+    00000CFE 6563                   MOV         R6,R5
+    00000D00 4E0B                   JSR         @R14
+    00000D02 6463                   MOV         R6,R4
+    00000D04 7FF8                   ADD         #-8,R15
+    00000D06 61F3                   MOV         R15,R1
+    00000D08 2F16                   MOV.L       R1,@-R15
+    00000D0A D721                   MOV.L       L75+4,R7   ; _ivec3f
+    00000D0C E600                   MOV         #0,R6      ; H'00000000
+    00000D0E 65C3                   MOV         R12,R5
+    00000D10 470B                   JSR         @R7
+    00000D12 64D3                   MOV         R13,R4
+    00000D14 7FF8                   ADD         #-8,R15
+    00000D16 6AF3                   MOV         R15,R10
+    00000D18 2FA6                   MOV.L       R10,@-R15
+    00000D1A E600                   MOV         #0,R6      ; H'00000000
+    00000D1C DB1C                   MOV.L       L75+4,R11  ; _ivec3f
+    00000D1E 6463                   MOV         R6,R4
+    00000D20 4B0B                   JSR         @R11
+    00000D22 65C3                   MOV         R12,R5
+    00000D24 7F04                   ADD         #4,R15
+    00000D26 DA24                   MOV.L       L75+44,R10 ; _treemesh
+    00000D28 2FA6                   MOV.L       R10,@-R15
+    00000D2A E500                   MOV         #0,R5      ; H'00000000
+    00000D2C DE17                   MOV.L       L75,R14    ; _itrianglef
+    00000D2E 6453                   MOV         R5,R4
+    00000D30 4E0B                   JSR         @R14
+    00000D32 6653                   MOV         R5,R6
+    00000D34 7F1C                   ADD         #28,R15
+               game.c        142          treemesh[1] = itrianglef(ivec3f(int2f(6), 0, 0), ivec3f(0, 0, 0), ivec3f(int2f(6), int2f(12), 0), 0, 0, 0);
+    00000D36 65F3                   MOV         R15,R5
+    00000D38 2F56                   MOV.L       R5,@-R15
+    00000D3A D715                   MOV.L       L75+4,R7   ; _ivec3f
+    00000D3C E600                   MOV         #0,R6      ; H'00000000
+    00000D3E 65C3                   MOV         R12,R5
+    00000D40 470B                   JSR         @R7
+    00000D42 64D3                   MOV         R13,R4
+    00000D44 7FF8                   ADD         #-8,R15
+    00000D46 6BF3                   MOV         R15,R11
+    00000D48 2FB6                   MOV.L       R11,@-R15
+    00000D4A E600                   MOV         #0,R6      ; H'00000000
+    00000D4C DC10                   MOV.L       L75+4,R12  ; _ivec3f
+    00000D4E 6563                   MOV         R6,R5
+    00000D50 4C0B                   JSR         @R12
+    00000D52 6463                   MOV         R6,R4
+    00000D54 7FF8                   ADD         #-8,R15
+    00000D56 6EF3                   MOV         R15,R14
+    00000D58 2FE6                   MOV.L       R14,@-R15
+    00000D5A E600                   MOV         #0,R6      ; H'00000000
+    00000D5C D70C                   MOV.L       L75+4,R7   ; _ivec3f
+    00000D5E 6563                   MOV         R6,R5
+    00000D60 470B                   JSR         @R7
+    00000D62 64D3                   MOV         R13,R4
+    00000D64 7F04                   ADD         #4,R15
+    00000D66 6BA3                   MOV         R10,R11
+    00000D68 7B30                   ADD         #48,R11
+    00000D6A 2FB6                   MOV.L       R11,@-R15
+    00000D6C E500                   MOV         #0,R5      ; H'00000000
+    00000D6E DC07                   MOV.L       L75,R12    ; _itrianglef
+    00000D70 6453                   MOV         R5,R4
+    00000D72 4C0B                   JSR         @R12
+    00000D74 6653                   MOV         R5,R6
+    00000D76 7F28                   ADD         #40,R15
+               game.c        143    
+               game.c        144          ptr2[0] = &textures[TX_TREE];
+    00000D78 E058                   MOV         #88,R0     ; H'00000058
+    00000D7A 07FE                   MOV.L       @(R0,R15),R7
+    00000D7C DE0F                   MOV.L       L75+48,R14 ; _ptr2
+    00000D7E 777F                   ADD         #127,R7
+    00000D80 7711                   ADD         #17,R7
+    00000D82 2E72                   MOV.L       R7,@R14    ; ptr2[]
+    00000D84 0F76                   MOV.L       R7,@(R0,R15)
+               game.c        145    
+               game.c        146          for (i = 0; i < 5; i++) {
+    00000D86 EB05                   MOV         #5,R11     ; H'00000005
+    00000D88 A01A                   BRA         L74
+    00000D8A EC00                   MOV         #0,R12     ; H'00000000
+    00000D8C              L75:
+    00000D8C <00000000>             .DATA.L     _itrianglef
+    00000D90 <00000000>             .DATA.L     _ivec3f
+    00000D94 <00000000>             .DATA.L     _personmesh
+    00000D98 <00000000>             .DATA.L     _tx
+    00000D9C <00000000>             .DATA.L     _imesh
+    00000DA0 <00000000>             .DATA.L     _m_addmesh
+    00000DA4 <00000000>             .DATA.L     _tid
+    00000DA8 <00000000>             .DATA.L     _m_rotmesh
+    00000DAC <00000000>             .DATA.L     _ptr
+    00000DB0 <00000000>             .DATA.L     _ibill
+    00000DB4 <00000000>             .DATA.L     _pid
+    00000DB8 <00000000>             .DATA.L     _treemesh
+    00000DBC <00000000>             .DATA.L     _ptr2
+    00000DC0              L74:
+    00000DC0              L19:
+               game.c        147                  m2 = ibill(treemesh, ptr2, ivec3f(int2f(6),0,int2f(i*18)));
+    00000DC0 7FF4                   ADD         #-12,R15
+    00000DC2 61F3                   MOV         R15,R1
+    00000DC4 2F16                   MOV.L       R1,@-R15
+    00000DC6 D7AB                   MOV.L       L78+16,R7  ; _ivec3f
+    00000DC8 E500                   MOV         #0,R5      ; H'00000000
+    00000DCA 64D3                   MOV         R13,R4
+    00000DCC 470B                   JSR         @R7
+    00000DCE 66C3                   MOV         R12,R6
+    00000DD0 7F04                   ADD         #4,R15
+    00000DD2 61F3                   MOV         R15,R1
+    00000DD4 7138                   ADD         #56,R1
+    00000DD6 2F16                   MOV.L       R1,@-R15
+    00000DD8 D2A7                   MOV.L       L78+20,R2  ; _ibill
+    00000DDA 64A3                   MOV         R10,R4
+    00000DDC 420B                   JSR         @R2
+    00000DDE 65E3                   MOV         R14,R5
+    00000DE0 7FE4                   ADD         #-28,R15
+    00000DE2 62F3                   MOV         R15,R2
+               game.c        148              m_addmesh(m2);
+    00000DE4 61F3                   MOV         R15,R1
+    00000DE6 7258                   ADD         #88,R2
+    00000DE8 490B                   JSR         @R9
+    00000DEA E02C                   MOV         #44,R0     ; H'0000002C
+    00000DEC 480B                   JSR         @R8
+    00000DEE 0009                   NOP
+    00000DF0 7F20                   ADD         #32,R15
+               game.c        149                  m2 = ibill(treemesh, ptr2, ivec3f(int2f(-6),0,int2f(i*18)));
+    00000DF2 64F3                   MOV         R15,R4
+    00000DF4 2F46                   MOV.L       R4,@-R15
+    00000DF6 D79F                   MOV.L       L78+16,R7  ; _ivec3f
+    00000DF8 E4E8                   MOV         #-24,R4    ; H'FFFFFFE8
+    00000DFA E500                   MOV         #0,R5      ; H'00000000
+    00000DFC 4418                   SHLL8       R4
+    00000DFE 470B                   JSR         @R7
+    00000E00 66C3                   MOV         R12,R6
+    00000E02 7F04                   ADD         #4,R15
+    00000E04 66F3                   MOV         R15,R6
+    00000E06 7638                   ADD         #56,R6
+    00000E08 2F66                   MOV.L       R6,@-R15
+    00000E0A D79B                   MOV.L       L78+20,R7  ; _ibill
+    00000E0C 64A3                   MOV         R10,R4
+    00000E0E 470B                   JSR         @R7
+    00000E10 65E3                   MOV         R14,R5
+    00000E12 7FE4                   ADD         #-28,R15
+    00000E14 62F3                   MOV         R15,R2
+               game.c        150                  m_addmesh(m2);
+    00000E16 61F3                   MOV         R15,R1
+    00000E18 7258                   ADD         #88,R2
+    00000E1A 490B                   JSR         @R9
+    00000E1C E02C                   MOV         #44,R0     ; H'0000002C
+    00000E1E 480B                   JSR         @R8
+    00000E20 0009                   NOP
+    00000E22 7F2C                   ADD         #44,R15
+    00000E24 E248                   MOV         #72,R2     ; H'00000048
+    00000E26 4218                   SHLL8       R2
+    00000E28 4B10                   DT          R11
+    00000E2A 8FC9                   BF/S        L19
+    00000E2C 3C2C                   ADD         R2,R12
+    00000E2E              L12:
+    00000E2E 7F5C                   ADD         #92,R15
+    00000E30 4F26                   LDS.L       @R15+,PR
+    00000E32 6EF6                   MOV.L       @R15+,R14
+    00000E34 6DF6                   MOV.L       @R15+,R13
+    00000E36 6CF6                   MOV.L       @R15+,R12
+    00000E38 6BF6                   MOV.L       @R15+,R11
+    00000E3A 6AF6                   MOV.L       @R15+,R10
+    00000E3C 69F6                   MOV.L       @R15+,R9
+               game.c        151          }
+               game.c        152    }
+    00000E3E 000B                   RTS
+    00000E40 68F6                   MOV.L       @R15+,R8
+               game.c        153    
+               game.c        154    void exit(void) {
+    00000E42              _exit:                           ; function: exit
+                                                           ; frame size=4
+    00000E42 4F22                   STS.L       PR,@-R15
+    00000E44 D28D                   MOV.L       L78+24,R2  ; _quit
+               game.c        155        quit = 1;
+               game.c        156        KillTimer(TICK_TIMER);
+    00000E46 D58E                   MOV.L       L78+28,R5  ; _KillTimer
+    00000E48 E101                   MOV         #1,R1      ; H'00000001
+    00000E4A E401                   MOV         #1,R4      ; H'00000001
+    00000E4C 450B                   JSR         @R5
+    00000E4E 2212                   MOV.L       R1,@R2     ; quit
+    00000E50 D68A                   MOV.L       L78+24,R6  ; _quit
+               game.c        157        //KillTimer(DRAW_TIMER);
+               game.c        158        quit = 2;
+    00000E52 E702                   MOV         #2,R7      ; H'00000002
+    00000E54 4F26                   LDS.L       @R15+,PR
+               game.c        159    }
+    00000E56 000B                   RTS
+    00000E58 2672                   MOV.L       R7,@R6     ; quit
+               game.c        160    
+               game.c        161    void tick(void) {
+    00000E5A              _tick:                           ; function: tick
+                                                           ; frame size=56
+    00000E5A 2F96                   MOV.L       R9,@-R15
+    00000E5C 2FA6                   MOV.L       R10,@-R15
+    00000E5E 2FB6                   MOV.L       R11,@-R15
+    00000E60 2FC6                   MOV.L       R12,@-R15
+    00000E62 2FD6                   MOV.L       R13,@-R15
+    00000E64 2FE6                   MOV.L       R14,@-R15
+    00000E66 4F22                   STS.L       PR,@-R15
+    00000E68 7FE8                   ADD         #-24,R15
+               game.c        162          vec3f t;
+               game.c        163          int dtime;
+               game.c        164          float scale;
+               game.c        165          fixed speed, delta;
+               game.c        166          
+               game.c        167          g_coord(pos, pitch, yaw);
+    00000E6A DB86                   MOV.L       L78+32,R11 ; _pos
+    00000E6C D586                   MOV.L       L78+36,R5  ; __quick_odd_mvn
+    00000E6E 61F3                   MOV         R15,R1
+    00000E70 62B3                   MOV         R11,R2
+    00000E72 D986                   MOV.L       L78+40,R9  ; _yaw
+    00000E74 DA86                   MOV.L       L78+44,R10 ; _pitch
+    00000E76 450B                   JSR         @R5
+    00000E78 E00C                   MOV         #12,R0     ; H'0000000C
+    00000E7A D186                   MOV.L       L78+48,R1  ; _g_coord
+    00000E7C 6592                   MOV.L       @R9,R5     ; yaw
+    00000E7E 410B                   JSR         @R1
+    00000E80 64A2                   MOV.L       @R10,R4    ; pitch
+    00000E82 D681                   MOV.L       L78+36,R6  ; __quick_odd_mvn
+               game.c        168          m_coord(pos, pitch, yaw);
+    00000E84 61F3                   MOV         R15,R1
+    00000E86 62B3                   MOV         R11,R2
+    00000E88 460B                   JSR         @R6
+    00000E8A E00C                   MOV         #12,R0     ; H'0000000C
+    00000E8C D682                   MOV.L       L78+52,R6  ; _m_coord
+    00000E8E 6592                   MOV.L       @R9,R5     ; yaw
+    00000E90 460B                   JSR         @R6
+    00000E92 64A2                   MOV.L       @R10,R4    ; pitch
+    00000E94 7F0C                   ADD         #12,R15
+               game.c        169    
+               game.c        170          dtime = m_rendermeshes(overlay.state); //1/128 s ticks
+    00000E96 DD81                   MOV.L       L78+56,R13 ; _overlay
+    00000E98 DC81                   MOV.L       L78+60,R12 ; _m_rendermeshes
+    00000E9A 67D0                   MOV.B       @R13,R7    ; overlay.state
+               game.c        171          scale = (float)dtime/128.0f*5.0f;
+               game.c        172    
+               game.c        173          delta = float2f(gdelta * scale);
+    00000E9C DE81                   MOV.L       L78+64,R14 ; __itos
+    00000E9E 4C0B                   JSR         @R12
+    00000EA0 647C                   EXTU.B      R7,R4
+    00000EA2 4E0B                   JSR         @R14
+    00000EA4 0009                   NOP
+    00000EA6 6103                   MOV         R0,R1
+    00000EA8 E043                   MOV         #67,R0     ; H'00000043
+    00000EAA DD7F                   MOV.L       L78+68,R13 ; __divs
+    00000EAC 4018                   SHLL8       R0
+    00000EAE 4D0B                   JSR         @R13
+    00000EB0 4028                   SHLL16      R0
+    00000EB2 6103                   MOV         R0,R1
+    00000EB4 D27D                   MOV.L       L78+72,R2  ; __muls
+    00000EB6 D07E                   MOV.L       L78+76,R0  ; H'45A00000
+    00000EB8 D77E                   MOV.L       L78+80,R7  ; _gdelta
+    00000EBA 420B                   JSR         @R2
+    00000EBC 0009                   NOP
+    00000EBE 6172                   MOV.L       @R7,R1     ; gdelta
+    00000EC0 420B                   JSR         @R2
+    00000EC2 6603                   MOV         R0,R6
+    00000EC4 DC7C                   MOV.L       L78+84,R12 ; __stoi
+               game.c        174          speed = float2f(gspeed * scale);
+    00000EC6 D17D                   MOV.L       L78+88,R1  ; _gspeed
+    00000EC8 4C0B                   JSR         @R12
+    00000ECA 0009                   NOP
+    00000ECC 6112                   MOV.L       @R1,R1     ; gspeed
+    00000ECE 6E03                   MOV         R0,R14
+    00000ED0 420B                   JSR         @R2
+    00000ED2 6063                   MOV         R6,R0
+               game.c        175    
+               game.c        176          //m_movemesh(tid, ivec3f(0, 0, -speed/2));
+               game.c        177          
+               game.c        178          Bdisp_PutDisp_DD();
+    00000ED4 DD7A                   MOV.L       L78+92,R13 ; _Bdisp_PutDisp_DD
+    00000ED6 4C0B                   JSR         @R12
+    00000ED8 0009                   NOP
+    00000EDA 4D0B                   JSR         @R13
+    00000EDC 6C03                   MOV         R0,R12
+               game.c        179    
+               game.c        180        if (IsKeyDown(KEY_CTRL_UP)) {
+    00000EDE DD79                   MOV.L       L78+96,R13 ; _IsKeyDown
+    00000EE0 9427                   MOV.W       L76,R4     ; H'7542
+    00000EE2 4D0B                   JSR         @R13
+    00000EE4 0009                   NOP
+    00000EE6 2008                   TST         R0,R0
+    00000EE8 8902                   BT          L22
+               game.c        181                  pitch -= delta;
+    00000EEA 62A2                   MOV.L       @R10,R2    ; pitch
+    00000EEC 32E8                   SUB         R14,R2
+    00000EEE 2A22                   MOV.L       R2,@R10    ; pitch
+    00000EF0              L22:
+               game.c        182          }
+               game.c        183          if (IsKeyDown(KEY_CTRL_DOWN)) {
+    00000EF0 9420                   MOV.W       L76+2,R4   ; H'7547
+    00000EF2 4D0B                   JSR         @R13
+    00000EF4 0009                   NOP
+    00000EF6 2008                   TST         R0,R0
+    00000EF8 8902                   BT          L24
+               game.c        184                  pitch += delta;
+    00000EFA 62A2                   MOV.L       @R10,R2    ; pitch
+    00000EFC 32EC                   ADD         R14,R2
+    00000EFE 2A22                   MOV.L       R2,@R10    ; pitch
+    00000F00              L24:
+               game.c        185          }
+               game.c        186          if (IsKeyDown(KEY_CTRL_RIGHT)) {
+    00000F00 9419                   MOV.W       L76+4,R4   ; H'7545
+    00000F02 4D0B                   JSR         @R13
+    00000F04 0009                   NOP
+    00000F06 2008                   TST         R0,R0
+    00000F08 8902                   BT          L26
+               game.c        187                  yaw -= delta;
+    00000F0A 6292                   MOV.L       @R9,R2     ; yaw
+    00000F0C 32E8                   SUB         R14,R2
+    00000F0E 2922                   MOV.L       R2,@R9     ; yaw
+    00000F10              L26:
+               game.c        188          }
+               game.c        189          if (IsKeyDown(KEY_CTRL_LEFT)) {
+    00000F10 9412                   MOV.W       L76+6,R4   ; H'7544
+    00000F12 4D0B                   JSR         @R13
+    00000F14 0009                   NOP
+    00000F16 2008                   TST         R0,R0
+    00000F18 8902                   BT          L28
+               game.c        190                  yaw += delta;
+    00000F1A 6292                   MOV.L       @R9,R2     ; yaw
+    00000F1C 32EC                   ADD         R14,R2
+    00000F1E 2922                   MOV.L       R2,@R9     ; yaw
+    00000F20              L28:
+               game.c        191          }
+               game.c        192    
+               game.c        193          if (pitch > float2f(90*DEG2RAD_MULT)) {
+    00000F20 62A2                   MOV.L       @R10,R2    ; pitch
+    00000F22 910A                   MOV.W       L76+8,R1   ; H'0648
+    00000F24 3217                   CMP/GT      R1,R2
+    00000F26 890A                   BT          L31
+    00000F28 9608                   MOV.W       L76+10,R6  ; H'F9B8
+    00000F2A 3263                   CMP/GE      R6,R2
+    00000F2C 8908                   BT          L32
+               game.c        194                  pitch = float2f(90*DEG2RAD_MULT);
+               game.c        195          }
+               game.c        196          if (pitch < float2f(-90*DEG2RAD_MULT)) {
+               game.c        197                  pitch = float2f(-90*DEG2RAD_MULT);
+    00000F2E A007                   BRA         L32
+    00000F30 2A62                   MOV.L       R6,@R10    ; pitch
+    00000F32              L76:
+    00000F32 7542                   .DATA.W     H'7542
+    00000F34 7547                   .DATA.W     H'7547
+    00000F36 7545                   .DATA.W     H'7545
+    00000F38 7544                   .DATA.W     H'7544
+    00000F3A 0648                   .DATA.W     H'0648
+    00000F3C F9B8                   .DATA.W     H'F9B8
+    00000F3E              L31:
+    00000F3E 2A12                   MOV.L       R1,@R10    ; pitch
+    00000F40              L32:
+               game.c        198          }
+               game.c        199    
+               game.c        200          if (yaw > float2f(180*DEG2RAD_MULT)) {
+    00000F40 6292                   MOV.L       @R9,R2     ; yaw
+    00000F42 978F                   MOV.W       L78,R7     ; H'0C90
+    00000F44 3277                   CMP/GT      R7,R2
+    00000F46 8B02                   BF          L34
+               game.c        201                  yaw -= float2f(360*DEG2RAD_MULT);
+    00000F48 968D                   MOV.W       L78+2,R6   ; H'E6DF
+    00000F4A 326C                   ADD         R6,R2
+    00000F4C 2922                   MOV.L       R2,@R9     ; yaw
+    00000F4E              L34:
+               game.c        202          }
+               game.c        203          if (yaw < float2f(-180*DEG2RAD_MULT)) {
+    00000F4E 968B                   MOV.W       L78+4,R6   ; H'F370
+    00000F50 3263                   CMP/GE      R6,R2
+    00000F52 8902                   BT          L36
+               game.c        204                  yaw += float2f(360*DEG2RAD_MULT);
+    00000F54 9689                   MOV.W       L78+6,R6   ; H'1921
+    00000F56 326C                   ADD         R6,R2
+    00000F58 2922                   MOV.L       R2,@R9     ; yaw
+    00000F5A              L36:
+               game.c        205          }
+               game.c        206    
+               game.c        207          t = ivec3f(0, 0, 0);
+    00000F5A 62F3                   MOV         R15,R2
+    00000F5C 2F26                   MOV.L       R2,@-R15
+    00000F5E DE45                   MOV.L       L78+16,R14 ; _ivec3f
+    00000F60 E600                   MOV         #0,R6      ; H'00000000
+    00000F62 6563                   MOV         R6,R5
+    00000F64 4E0B                   JSR         @R14
+    00000F66 6463                   MOV         R6,R4
+    00000F68 7F04                   ADD         #4,R15
+               game.c        208          if (IsKeyDown(KEY_CHAR_8)) {
+    00000F6A 4D0B                   JSR         @R13
+    00000F6C E438                   MOV         #56,R4     ; H'00000038
+    00000F6E 2008                   TST         R0,R0
+    00000F70 890F                   BT          L38
+               game.c        209                  t = rot(ivec3f(0, 0, speed), 0, yaw);
+    00000F72 7FF4                   ADD         #-12,R15
+    00000F74 67F3                   MOV         R15,R7
+    00000F76 2F76                   MOV.L       R7,@-R15
+    00000F78 E500                   MOV         #0,R5      ; H'00000000
+    00000F7A 6453                   MOV         R5,R4
+    00000F7C 4E0B                   JSR         @R14
+    00000F7E 66C3                   MOV         R12,R6
+    00000F80 7F04                   ADD         #4,R15
+    00000F82 6AF3                   MOV         R15,R10
+    00000F84 7A0C                   ADD         #12,R10
+    00000F86 2FA6                   MOV.L       R10,@-R15
+    00000F88 D14F                   MOV.L       L78+100,R1 ; _rot
+    00000F8A 6592                   MOV.L       @R9,R5     ; yaw
+    00000F8C 410B                   JSR         @R1
+    00000F8E E400                   MOV         #0,R4      ; H'00000000
+    00000F90 7F10                   ADD         #16,R15
+    00000F92              L38:
+               game.c        210          }
+               game.c        211          if (IsKeyDown(KEY_CHAR_2)) {
+    00000F92 4D0B                   JSR         @R13
+    00000F94 E432                   MOV         #50,R4     ; H'00000032
+    00000F96 2008                   TST         R0,R0
+    00000F98 8911                   BT          L40
+               game.c        212                  t = rot(ivec3f(0, 0, speed), 0, yaw + float2f(180*DEG2RAD_MULT));
+    00000F9A 7FF4                   ADD         #-12,R15
+    00000F9C 64F3                   MOV         R15,R4
+    00000F9E 2F46                   MOV.L       R4,@-R15
+    00000FA0 E500                   MOV         #0,R5      ; H'00000000
+    00000FA2 6453                   MOV         R5,R4
+    00000FA4 4E0B                   JSR         @R14
+    00000FA6 66C3                   MOV         R12,R6
+    00000FA8 7F04                   ADD         #4,R15
+    00000FAA 6592                   MOV.L       @R9,R5     ; yaw
+    00000FAC 66F3                   MOV         R15,R6
+    00000FAE 9759                   MOV.W       L78,R7     ; H'0C90
+    00000FB0 760C                   ADD         #12,R6
+    00000FB2 357C                   ADD         R7,R5
+    00000FB4 2F66                   MOV.L       R6,@-R15
+    00000FB6 DA44                   MOV.L       L78+100,R10; _rot
+    00000FB8 4A0B                   JSR         @R10
+    00000FBA E400                   MOV         #0,R4      ; H'00000000
+    00000FBC 7F10                   ADD         #16,R15
+    00000FBE              L40:
+               game.c        213          }
+               game.c        214          if (IsKeyDown(KEY_CHAR_4)) {
+    00000FBE 4D0B                   JSR         @R13
+    00000FC0 E434                   MOV         #52,R4     ; H'00000034
+    00000FC2 2008                   TST         R0,R0
+    00000FC4 8911                   BT          L42
+               game.c        215                  t = rot(ivec3f(0, 0, speed), 0, yaw + float2f(90*DEG2RAD_MULT));
+    00000FC6 7FF4                   ADD         #-12,R15
+    00000FC8 61F3                   MOV         R15,R1
+    00000FCA 2F16                   MOV.L       R1,@-R15
+    00000FCC E500                   MOV         #0,R5      ; H'00000000
+    00000FCE 6453                   MOV         R5,R4
+    00000FD0 4E0B                   JSR         @R14
+    00000FD2 66C3                   MOV         R12,R6
+    00000FD4 7F04                   ADD         #4,R15
+    00000FD6 6592                   MOV.L       @R9,R5     ; yaw
+    00000FD8 66F3                   MOV         R15,R6
+    00000FDA 9147                   MOV.W       L78+8,R1   ; H'0648
+    00000FDC 760C                   ADD         #12,R6
+    00000FDE 351C                   ADD         R1,R5
+    00000FE0 2F66                   MOV.L       R6,@-R15
+    00000FE2 D739                   MOV.L       L78+100,R7 ; _rot
+    00000FE4 470B                   JSR         @R7
+    00000FE6 E400                   MOV         #0,R4      ; H'00000000
+    00000FE8 7F10                   ADD         #16,R15
+    00000FEA              L42:
+               game.c        216          }
+               game.c        217          if (IsKeyDown(KEY_CHAR_6)) {
+    00000FEA 4D0B                   JSR         @R13
+    00000FEC E436                   MOV         #54,R4     ; H'00000036
+    00000FEE 2008                   TST         R0,R0
+    00000FF0 8911                   BT          L44
+               game.c        218                  t = rot(ivec3f(0, 0, speed), 0, yaw - float2f(90*DEG2RAD_MULT));
+    00000FF2 7FF4                   ADD         #-12,R15
+    00000FF4 6AF3                   MOV         R15,R10
+    00000FF6 2FA6                   MOV.L       R10,@-R15
+    00000FF8 E500                   MOV         #0,R5      ; H'00000000
+    00000FFA 6453                   MOV         R5,R4
+    00000FFC 4E0B                   JSR         @R14
+    00000FFE 66C3                   MOV         R12,R6
+    00001000 7F04                   ADD         #4,R15
+    00001002 6592                   MOV.L       @R9,R5     ; yaw
+    00001004 61F3                   MOV         R15,R1
+    00001006 9932                   MOV.W       L78+10,R9  ; H'F9B8
+    00001008 710C                   ADD         #12,R1
+    0000100A 359C                   ADD         R9,R5
+    0000100C 2F16                   MOV.L       R1,@-R15
+    0000100E D72E                   MOV.L       L78+100,R7 ; _rot
+    00001010 470B                   JSR         @R7
+    00001012 E400                   MOV         #0,R4      ; H'00000000
+    00001014 7F10                   ADD         #16,R15
+    00001016              L44:
+               game.c        219          }
+               game.c        220          if (IsKeyDown(KEY_CHAR_9)) {
+    00001016 4D0B                   JSR         @R13
+    00001018 E439                   MOV         #57,R4     ; H'00000039
+    0000101A 2008                   TST         R0,R0
+    0000101C 8906                   BT          L46
+               game.c        221                  t = ivec3f(0, speed, 0);
+    0000101E 62F3                   MOV         R15,R2
+    00001020 2F26                   MOV.L       R2,@-R15
+    00001022 E600                   MOV         #0,R6      ; H'00000000
+    00001024 6463                   MOV         R6,R4
+    00001026 4E0B                   JSR         @R14
+    00001028 65C3                   MOV         R12,R5
+    0000102A 7F04                   ADD         #4,R15
+    0000102C              L46:
+               game.c        222          }
+               game.c        223          if (IsKeyDown(KEY_CHAR_3)) {
+    0000102C 4D0B                   JSR         @R13
+    0000102E E433                   MOV         #51,R4     ; H'00000033
+    00001030 2008                   TST         R0,R0
+    00001032 8906                   BT          L48
+    00001034 62F3                   MOV         R15,R2
+               game.c        224                  t = ivec3f(0, -speed, 0);
+    00001036 65CB                   NEG         R12,R5
+    00001038 2F26                   MOV.L       R2,@-R15
+    0000103A E600                   MOV         #0,R6      ; H'00000000
+    0000103C 4E0B                   JSR         @R14
+    0000103E 6463                   MOV         R6,R4
+    00001040 7F04                   ADD         #4,R15
+    00001042              L48:
+               game.c        225          }
+               game.c        226          addpvv(&pos, t);
+    00001042 6AB2                   MOV.L       @R11,R10
+    00001044 67F2                   MOV.L       @R15,R7    ; t.x
+    00001046 59F1                   MOV.L       @(4,R15),R9; t.y
+    00001048 3A7C                   ADD         R7,R10
+    0000104A 2BA2                   MOV.L       R10,@R11
+    0000104C 5CB1                   MOV.L       @(4,R11),R12
+    0000104E 5EB2                   MOV.L       @(8,R11),R14
+    00001050 52F2                   MOV.L       @(8,R15),R2; t.z
+    00001052 3C9C                   ADD         R9,R12
+    00001054 3E2C                   ADD         R2,R14
+    00001056 1BC1                   MOV.L       R12,@(4,R11)
+               game.c        227    
+               game.c        228          toggle_rising(&overlay, IsKeyDown(KEY_CTRL_F3));
+    00001058 940A                   MOV.W       L78+12,R4  ; H'753B
+    0000105A 4D0B                   JSR         @R13
+    0000105C 1BE2                   MOV.L       R14,@(8,R11)
+    0000105E D40F                   MOV.L       L78+56,R4  ; _overlay
+    00001060 A034                   BRA         L77
+    00001062 0009                   NOP
+    00001064              L78:
+    00001064 0C90                   .DATA.W     H'0C90
+    00001066 E6DF                   .DATA.W     H'E6DF
+    00001068 F370                   .DATA.W     H'F370
+    0000106A 1921                   .DATA.W     H'1921
+    0000106C 0648                   .DATA.W     H'0648
+    0000106E F9B8                   .DATA.W     H'F9B8
+    00001070 753B                   .DATA.W     H'753B
+    00001072 00000002               .RES.W      1
+    00001074 <00000000>             .DATA.L     _ivec3f
+    00001078 <00000000>             .DATA.L     _ibill
+    0000107C <00000000>             .DATA.L     _quit
+    00001080 <00000000>             .DATA.L     _KillTimer
+    00001084 <00000000>             .DATA.L     _pos
+    00001088 <00000000>             .DATA.L     __quick_odd_mvn
+    0000108C <00000000>             .DATA.L     _yaw
+    00001090 <00000000>             .DATA.L     _pitch
+    00001094 <00000000>             .DATA.L     _g_coord
+    00001098 <00000000>             .DATA.L     _m_coord
+    0000109C <00000000>             .DATA.L     _overlay
+    000010A0 <00000000>             .DATA.L     _m_rendermeshes
+    000010A4 <00000000>             .DATA.L     __itos
+    000010A8 <00000000>             .DATA.L     __divs
+    000010AC <00000000>             .DATA.L     __muls
+    000010B0 45A00000               .DATA.L     H'45A00000
+    000010B4 <00000000>             .DATA.L     _gdelta
+    000010B8 <00000000>             .DATA.L     __stoi
+    000010BC <00000000>             .DATA.L     _gspeed
+    000010C0 <00000000>             .DATA.L     _Bdisp_PutDisp_DD
+    000010C4 <00000000>             .DATA.L     _IsKeyDown
+    000010C8 <00000000>             .DATA.L     _rot
+    000010CC              L77:
+    000010CC 610C                   EXTU.B      R0,R1
+    000010CE 6013                   MOV         R1,R0
+    000010D0 8041                   MOV.B       R0,@(1,R4) ; (t)->toggle
+    000010D2 8442                   MOV.B       @(2,R4),R0 ; (t)->prev_toggle
+    000010D4 650C                   EXTU.B      R0,R5
+    000010D6 3150                   CMP/EQ      R5,R1
+    000010D8 8905                   BT          L50
+    000010DA 2118                   TST         R1,R1
+    000010DC 8903                   BT          L50
+    000010DE 6540                   MOV.B       @R4,R5     ; (t)->state
+    000010E0 2558                   TST         R5,R5
+    000010E2 0629                   MOVT        R6
+    000010E4 2460                   MOV.B       R6,@R4     ; (t)->state
+    000010E6              L50:
+    000010E6 6013                   MOV         R1,R0
+    000010E8 8042                   MOV.B       R0,@(2,R4) ; (t)->prev_toggle
+               game.c        229    
+               game.c        230          toggle_rising(&interlace, IsKeyDown(KEY_CTRL_F4));
+    000010EA 9450                   MOV.W       L79,R4     ; H'753C
+    000010EC 4D0B                   JSR         @R13
+    000010EE 0009                   NOP
+    000010F0 D428                   MOV.L       L79+6,R4   ; _interlace
+    000010F2 610C                   EXTU.B      R0,R1
+    000010F4 6013                   MOV         R1,R0
+    000010F6 8041                   MOV.B       R0,@(1,R4) ; (t)->toggle
+    000010F8 8442                   MOV.B       @(2,R4),R0 ; (t)->prev_toggle
+    000010FA 620C                   EXTU.B      R0,R2
+    000010FC 3120                   CMP/EQ      R2,R1
+    000010FE 8905                   BT          L53
+    00001100 2118                   TST         R1,R1
+    00001102 8903                   BT          L53
+    00001104 6740                   MOV.B       @R4,R7     ; (t)->state
+    00001106 2778                   TST         R7,R7
+    00001108 0929                   MOVT        R9
+    0000110A 2490                   MOV.B       R9,@R4     ; (t)->state
+    0000110C              L53:
+    0000110C 6013                   MOV         R1,R0
+    0000110E 8042                   MOV.B       R0,@(2,R4) ; (t)->prev_toggle
+               game.c        231    
+               game.c        232          if (IsKeyDown(KEY_CTRL_EXIT)) {
+    00001110 943E                   MOV.W       L79+2,R4   ; H'7532
+    00001112 4D0B                   JSR         @R13
+    00001114 0009                   NOP
+    00001116 2008                   TST         R0,R0
+    00001118 8908                   BT          L56
+    0000111A DD1F                   MOV.L       L79+10,R13 ; _quit
+    0000111C DB1F                   MOV.L       L79+14,R11 ; _KillTimer
+    0000111E DE1E                   MOV.L       L79+10,R14 ; _quit
+    00001120 EA01                   MOV         #1,R10     ; H'00000001
+    00001122 E401                   MOV         #1,R4      ; H'00000001
+    00001124 EC02                   MOV         #2,R12     ; H'00000002
+    00001126 4B0B                   JSR         @R11
+    00001128 2DA2                   MOV.L       R10,@R13   ; quit
+    0000112A 2EC2                   MOV.L       R12,@R14   ; quit
+    0000112C              L56:
+    0000112C 7F0C                   ADD         #12,R15
+    0000112E 4F26                   LDS.L       @R15+,PR
+    00001130 6EF6                   MOV.L       @R15+,R14
+    00001132 6DF6                   MOV.L       @R15+,R13
+    00001134 6CF6                   MOV.L       @R15+,R12
+    00001136 6BF6                   MOV.L       @R15+,R11
+    00001138 6AF6                   MOV.L       @R15+,R10
+               game.c        233                  exit();
+               game.c        234          }
+               game.c        235    }
+    0000113A 000B                   RTS
+    0000113C 69F6                   MOV.L       @R15+,R9
+               game.c        236    
+               game.c        237    void toggle_rising(toggle_t *t, bool state) {
+    0000113E              _toggle_rising:                  ; function: toggle_rising
+                                                           ; frame size=0
+    0000113E 6053                   MOV         R5,R0
+               game.c        238          t->toggle = state;
+    00001140 6143                   MOV         R4,R1
+    00001142 8041                   MOV.B       R0,@(1,R4) ; (t)->toggle
+    00001144 8442                   MOV.B       @(2,R4),R0 ; (t)->prev_toggle
+    00001146 625C                   EXTU.B      R5,R2
+    00001148 670C                   EXTU.B      R0,R7
+    0000114A 3270                   CMP/EQ      R7,R2
+               game.c        239          if (t->toggle != t->prev_toggle && t->toggle) {
+    0000114C 8D08                   BT/S        L60
+    0000114E 655C                   EXTU.B      R5,R5
+    00001150 2558                   TST         R5,R5
+    00001152 8905                   BT          L60
+               game.c        240                  t->state = !t->state;
+    00001154 6410                   MOV.B       @R1,R4     ; (t)->state
+    00001156 2448                   TST         R4,R4
+    00001158 0629                   MOVT        R6
+    0000115A 2160                   MOV.B       R6,@R1     ; (t)->state
+    0000115C 8411                   MOV.B       @(1,R1),R0 ; (t)->toggle
+    0000115E 6503                   MOV         R0,R5
+    00001160              L60:
+               game.c        241          }
+               game.c        242          t->prev_toggle = t->toggle;
+    00001160 6053                   MOV         R5,R0
+               game.c        243    }
+    00001162 000B                   RTS
+    00001164 8012                   MOV.B       R0,@(2,R1) ; (t)->prev_toggle
+               game.c        244    
+               game.c        245    void toggle_falling(toggle_t *t, bool state) {
+    00001166              _toggle_falling:                 ; function: toggle_falling
+                                                           ; frame size=0
+    00001166 6053                   MOV         R5,R0
+               game.c        246          t->toggle = state;
+    00001168 6143                   MOV         R4,R1
+    0000116A 8041                   MOV.B       R0,@(1,R4) ; (t)->toggle
+    0000116C 8442                   MOV.B       @(2,R4),R0 ; (t)->prev_toggle
+    0000116E 625C                   EXTU.B      R5,R2
+    00001170 670C                   EXTU.B      R0,R7
+    00001172 3270                   CMP/EQ      R7,R2
+               game.c        247          if (t->toggle != t->prev_toggle && !t->toggle) {
+    00001174 8D08                   BT/S        L64
+    00001176 655C                   EXTU.B      R5,R5
+    00001178 2558                   TST         R5,R5
+    0000117A 8B05                   BF          L64
+               game.c        248                  t->state = !t->state;
+    0000117C 6410                   MOV.B       @R1,R4     ; (t)->state
+    0000117E 2448                   TST         R4,R4
+    00001180 0629                   MOVT        R6
+    00001182 2160                   MOV.B       R6,@R1     ; (t)->state
+    00001184 8411                   MOV.B       @(1,R1),R0 ; (t)->toggle
+    00001186 6503                   MOV         R0,R5
+    00001188              L64:
+               game.c        249          }
+               game.c        250          t->prev_toggle = t->toggle;
+    00001188 6053                   MOV         R5,R0
+               game.c        251    }
+    0000118A 000B                   RTS
+    0000118C 8012                   MOV.B       R0,@(2,R1) ; (t)->prev_toggle
+    0000118E              L79:
+    0000118E 753C                   .DATA.W     H'753C
+    00001190 7532                   .DATA.W     H'7532
+    00001192 00000002               .RES.W      1
+    00001194 <00000000>             .DATA.L     _interlace
+    00001198 <00000000>             .DATA.L     _quit
+    0000119C <00000000>             .DATA.L     _KillTimer
+D   00000000              _quit:                           ; static: quit
+    00000000 00000000               .DATA.L     H'00000000
+    00000004              _overlay:                        ; static: overlay
+    00000004 000000                 .DATA.B     H'00,H'00,H'00
+    00000007              _interlace:                      ; static: interlace
+    00000007 000000                 .DATA.B     H'00,H'00,H'00
+B   00000000              _pos:                            ; static: pos
+    00000000 00000004               .RES.L      3
+    0000000C              _pitch:                          ; static: pitch
+    0000000C 00000004               .RES.L      1
+    00000010              _yaw:                            ; static: yaw
+    00000010 00000004               .RES.L      1
+    00000014              _gdelta:                         ; static: gdelta
+    00000014 00000004               .RES.L      1
+    00000018              _gspeed:                         ; static: gspeed
+    00000018 00000004               .RES.L      1
+    0000001C              _tx:                             ; static: tx
+    0000001C 00000004               .RES.L      72
+    0000013C              _ptr:                            ; static: ptr
+    0000013C 00000004               .RES.L      1
+    00000140              _ptr2:                           ; static: ptr2
+    00000140 00000004               .RES.L      1
+    00000144              _vertices:                       ; static: vertices
+    00000144 00000004               .RES.L      78
+    0000027C              _tankmesh:                       ; static: tankmesh
+    0000027C 00000004               .RES.L      864
+    00000FFC              _personmesh:                     ; static: personmesh
+    00000FFC 00000004               .RES.L      24
+    0000105C              _treemesh:                       ; static: treemesh
+    0000105C 00000004               .RES.L      24
+    000010BC              _tid:                            ; static: tid
+    000010BC 00000002               .RES.W      1
+    000010BE              _pid:                            ; static: pid
+    000010BE 00000002               .RES.W      1
+SH SERIES C/C++ Compiler (V.9.04.02.001)                                                         21-Sep-2024 11:42:24  PAGE    1
+
+
+******** STATISTICS INFORMATION ********
+
+
+********** ERROR INFORMATION ***********
+
+NUMBER OF ERRORS:           0
+NUMBER OF WARNINGS:         0
+
+
+
+
+******* SOURCE LINE INFORMATION ********
+
+COMPILED SOURCE LINE:      251
+
+
+
+******* SECTION SIZE INFORMATION *******
+
+PROGRAM  SECTION (P):                                 000011A0 Byte(s)
+CONSTANT SECTION (C):                                 00000000 Byte(s)
+DATA     SECTION (D):                                 0000000A Byte(s)
+BSS      SECTION (B):                                 000010C0 Byte(s)
+
+TOTAL PROGRAM  SECTION: 000011A0 Byte(s)
+TOTAL CONSTANT SECTION: 00000000 Byte(s)
+TOTAL DATA     SECTION: 0000000A Byte(s)
+TOTAL BSS      SECTION: 000010C0 Byte(s)
+
+    TOTAL PROGRAM SIZE: 0000226A Byte(s)
+
+
+
+********** LABEL INFORMATION ***********
+
+NUMBER OF EXTERNAL REFERENCE SYMBOLS:           22
+NUMBER OF EXTERNAL DEFINITION SYMBOLS:          22
+NUMBER OF INTERNAL/EXTERNAL SYMBOLS:            82
+
+
+
+*** COMMAND PARAMETER ***
+
+-subcommand=C:\Users\csani\AppData\Local\Temp\hmk3836.tmp
+-cpu=sh3
+-include="C:\CasioSDK\OS\FX\include","C:\CasioSDK\Projects\VIMS3D"
+-objectfile="C:\CasioSDK\Projects\VIMS3D\Debug\game.obj"
+-show=source
+-listfile="C:\CasioSDK\Projects\VIMS3D\Debug\game.lst"
+-size
+-inline
+-chgincpath
+-errorpath
+"C:\CasioSDK\Projects\VIMS3D\game.c"
+-lang=c
+-nologo
+-debug

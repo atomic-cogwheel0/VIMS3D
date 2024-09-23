@@ -1,0 +1,1441 @@
+SH SERIES C/C++ Compiler (V.9.04.02.001)                                                         21-Sep-2024 11:42:24  PAGE    1
+
+************ OBJECT LISTING ************
+
+FILE NAME: C:\CasioSDK\Projects\VIMS3D\vec.c
+
+SCT OFFSET   CODE       C LABEL     INSTRUCTION OPERAND    COMMENT
+
+                vec.c          1    #include "vec.h"
+                vec.c          2    
+                vec.c          3    /*
+                vec.c          4      VEC.C
+                vec.c          5          functions for handling vectors (and triangles)
+                vec.c          6          they are most likely correct
+                vec.c          7    */
+                vec.c          8    
+                vec.c          9    //initialize vec3f
+                vec.c         10    
+                vec.c         11    vec3f ivec3f(fixed _x, fixed _y, fixed _z) {
+P   00000000              _ivec3f:                         ; function: ivec3f
+                                                           ; frame size=16
+    00000000 4F22                   STS.L       PR,@-R15
+    00000002 7FF4                   ADD         #-12,R15
+                vec.c         12        vec3f r;
+                vec.c         13        r.x = _x; r.y = _y; r.z = _z;
+    00000004 2F42                   MOV.L       R4,@R15    ; r.x
+                vec.c         14        return r;
+    00000006 51F4                   MOV.L       @(16,R15),R1
+    00000008 D4D7                   MOV.L       L26+2,R4   ; __quick_odd_mvn
+    0000000A 1F51                   MOV.L       R5,@(4,R15); r.y
+    0000000C 1F62                   MOV.L       R6,@(8,R15); r.z
+    0000000E 62F3                   MOV         R15,R2
+    00000010 440B                   JSR         @R4
+    00000012 E00C                   MOV         #12,R0     ; H'0000000C
+    00000014 7F0C                   ADD         #12,R15
+    00000016 4F26                   LDS.L       @R15+,PR
+                vec.c         15    }
+    00000018 000B                   RTS
+    0000001A 0009                   NOP
+                vec.c         16    
+                vec.c         17    fixed magnitude(vec3f t) {
+    0000001C              _magnitude:                      ; function: magnitude
+                                                           ; frame size=32
+    0000001C 4F22                   STS.L       PR,@-R15
+    0000001E 4F12                   STS.L       MACL,@-R15
+    00000020 4F02                   STS.L       MACH,@-R15
+                vec.c         18          return sqrt_f(dotp(t, t));
+    00000022 7FF0                   ADD         #-16,R15
+    00000024 51F7                   MOV.L       @(28,R15),R1
+    00000026 65F3                   MOV         R15,R5
+    00000028 311D                   DMULS.L     R1,R1
+    0000002A 7508                   ADD         #8,R5
+    0000002C 040A                   STS         MACH,R4
+    0000002E 071A                   STS         MACL,R7
+    00000030 2F42                   MOV.L       R4,@R15
+    00000032 1F71                   MOV.L       R7,@(4,R15)
+    00000034 2F56                   MOV.L       R5,@-R15
+    00000036 D5CD                   MOV.L       L26+6,R5   ; __shard64
+    00000038 450B                   JSR         @R5
+    0000003A E10A                   MOV         #10,R1     ; H'0000000A
+    0000003C 7F0C                   ADD         #12,R15
+    0000003E 66F6                   MOV.L       @R15+,R6
+    00000040 64F6                   MOV.L       @R15+,R4
+    00000042 7FF0                   ADD         #-16,R15
+    00000044 56F8                   MOV.L       @(32,R15),R6
+    00000046 61F3                   MOV         R15,R1
+    00000048 366D                   DMULS.L     R6,R6
+    0000004A 7108                   ADD         #8,R1
+    0000004C 070A                   STS         MACH,R7
+    0000004E 021A                   STS         MACL,R2
+    00000050 2F72                   MOV.L       R7,@R15
+    00000052 1F21                   MOV.L       R2,@(4,R15)
+    00000054 2F16                   MOV.L       R1,@-R15
+    00000056 450B                   JSR         @R5
+    00000058 E10A                   MOV         #10,R1     ; H'0000000A
+    0000005A 7F0C                   ADD         #12,R15
+    0000005C 66F6                   MOV.L       @R15+,R6
+    0000005E 66F6                   MOV.L       @R15+,R6
+    00000060 346C                   ADD         R6,R4
+    00000062 7FF0                   ADD         #-16,R15
+    00000064 57F9                   MOV.L       @(36,R15),R7
+    00000066 62F3                   MOV         R15,R2
+    00000068 377D                   DMULS.L     R7,R7
+    0000006A 7208                   ADD         #8,R2
+    0000006C 060A                   STS         MACH,R6
+    0000006E 071A                   STS         MACL,R7
+    00000070 2F62                   MOV.L       R6,@R15
+    00000072 1F71                   MOV.L       R7,@(4,R15)
+    00000074 2F26                   MOV.L       R2,@-R15
+    00000076 450B                   JSR         @R5
+    00000078 E10A                   MOV         #10,R1     ; H'0000000A
+    0000007A 7F0C                   ADD         #12,R15
+    0000007C 65F6                   MOV.L       @R15+,R5
+    0000007E 65F6                   MOV.L       @R15+,R5
+    00000080 D2BB                   MOV.L       L26+10,R2  ; _sqrt_f
+    00000082 345C                   ADD         R5,R4
+    00000084 4F06                   LDS.L       @R15+,MACH
+    00000086 4F16                   LDS.L       @R15+,MACL
+    00000088 422B                   JMP         @R2
+    0000008A 4F26                   LDS.L       @R15+,PR
+                vec.c         19    }
+                vec.c         20    
+                vec.c         21    vec3f neg(vec3f t) {
+    0000008C              _neg:                            ; function: neg
+                                                           ; frame size=16
+    0000008C 4F22                   STS.L       PR,@-R15
+    0000008E 7FF4                   ADD         #-12,R15
+    00000090 52F5                   MOV.L       @(20,R15),R2
+    00000092 54F6                   MOV.L       @(24,R15),R4
+    00000094 612B                   NEG         R2,R1
+    00000096 56F7                   MOV.L       @(28,R15),R6
+    00000098 2F12                   MOV.L       R1,@R15    ; r.x
+    0000009A 654B                   NEG         R4,R5
+    0000009C 1F51                   MOV.L       R5,@(4,R15); r.y
+    0000009E 656B                   NEG         R6,R5
+                vec.c         22        return ivec3f(-t.x, -t.y, -t.z);
+    000000A0 51F4                   MOV.L       @(16,R15),R1
+    000000A2 D7B1                   MOV.L       L26+2,R7   ; __quick_odd_mvn
+    000000A4 1F52                   MOV.L       R5,@(8,R15); r.z
+    000000A6 62F3                   MOV         R15,R2
+    000000A8 470B                   JSR         @R7
+    000000AA E00C                   MOV         #12,R0     ; H'0000000C
+    000000AC 7F0C                   ADD         #12,R15
+    000000AE 4F26                   LDS.L       @R15+,PR
+                vec.c         23    }
+    000000B0 000B                   RTS
+    000000B2 0009                   NOP
+                vec.c         24    
+                vec.c         25    vec3f normalize(vec3f t) {
+    000000B4              _normalize:                      ; function: normalize
+                                                           ; frame size=64
+    000000B4 2FE6                   MOV.L       R14,@-R15
+    000000B6 4F22                   STS.L       PR,@-R15
+    000000B8 7FE0                   ADD         #-32,R15
+                vec.c         26          fixed m = magnitude(t);
+    000000BA 62F3                   MOV         R15,R2
+    000000BC DEAA                   MOV.L       L26+2,R14  ; __quick_odd_mvn
+    000000BE 61F3                   MOV         R15,R1
+    000000C0 722C                   ADD         #44,R2
+    000000C2 4E0B                   JSR         @R14
+    000000C4 E00C                   MOV         #12,R0     ; H'0000000C
+    000000C6 BFA9                   BSR         _magnitude
+    000000C8 0009                   NOP
+    000000CA 6503                   MOV         R0,R5
+    000000CC 7F0C                   ADD         #12,R15
+    000000CE 6253                   MOV         R5,R2
+    000000D0 4200                   SHLL        R2
+    000000D2 322A                   SUBC        R2,R2
+    000000D4 2F22                   MOV.L       R2,@R15
+    000000D6 1F51                   MOV.L       R5,@(4,R15)
+    000000D8 7FF8                   ADD         #-8,R15
+    000000DA 64F3                   MOV         R15,R4
+    000000DC 7408                   ADD         #8,R4
+    000000DE 5141                   MOV.L       @(4,R4),R1
+    000000E0 6742                   MOV.L       @R4,R7
+    000000E2 2F16                   MOV.L       R1,@-R15
+    000000E4 2F76                   MOV.L       R7,@-R15
+    000000E6 7FF0                   ADD         #-16,R15
+    000000E8 E040                   MOV         #64,R0     ; H'00000040
+    000000EA 04FE                   MOV.L       @(R0,R15),R4
+    000000EC 6243                   MOV         R4,R2
+    000000EE 4200                   SHLL        R2
+    000000F0 322A                   SUBC        R2,R2
+    000000F2 1F41                   MOV.L       R4,@(4,R15)
+    000000F4 64F3                   MOV         R15,R4
+    000000F6 7408                   ADD         #8,R4
+    000000F8 2F22                   MOV.L       R2,@R15
+    000000FA 2F46                   MOV.L       R4,@-R15
+    000000FC D79D                   MOV.L       L26+14,R7  ; __shlld64
+    000000FE 470B                   JSR         @R7
+    00000100 E10A                   MOV         #10,R1     ; H'0000000A
+    00000102 7F0C                   ADD         #12,R15
+    00000104 65F3                   MOV         R15,R5
+    00000106 7510                   ADD         #16,R5
+    00000108 D49B                   MOV.L       L26+18,R4  ; __div64s
+    0000010A 440B                   JSR         @R4
+    0000010C 2F56                   MOV.L       R5,@-R15
+    0000010E 7F14                   ADD         #20,R15
+    00000110 66F6                   MOV.L       @R15+,R6
+    00000112 66F6                   MOV.L       @R15+,R6
+    00000114 1F62                   MOV.L       R6,@(8,R15); r.x
+    00000116 7FF8                   ADD         #-8,R15
+    00000118 65F3                   MOV         R15,R5
+    0000011A 7508                   ADD         #8,R5
+    0000011C 5151                   MOV.L       @(4,R5),R1
+    0000011E 6652                   MOV.L       @R5,R6
+    00000120 2F16                   MOV.L       R1,@-R15
+    00000122 2F66                   MOV.L       R6,@-R15
+    00000124 7FF0                   ADD         #-16,R15
+    00000126 E044                   MOV         #68,R0     ; H'00000044
+    00000128 05FE                   MOV.L       @(R0,R15),R5
+    0000012A 6253                   MOV         R5,R2
+    0000012C 4200                   SHLL        R2
+    0000012E 322A                   SUBC        R2,R2
+    00000130 1F51                   MOV.L       R5,@(4,R15)
+    00000132 65F3                   MOV         R15,R5
+    00000134 7508                   ADD         #8,R5
+    00000136 2F22                   MOV.L       R2,@R15
+    00000138 2F56                   MOV.L       R5,@-R15
+    0000013A 470B                   JSR         @R7
+    0000013C E10A                   MOV         #10,R1     ; H'0000000A
+    0000013E 7F0C                   ADD         #12,R15
+    00000140 66F3                   MOV         R15,R6
+    00000142 7610                   ADD         #16,R6
+    00000144 440B                   JSR         @R4
+    00000146 2F66                   MOV.L       R6,@-R15
+    00000148 7F14                   ADD         #20,R15
+    0000014A 61F6                   MOV.L       @R15+,R1
+    0000014C 61F6                   MOV.L       @R15+,R1
+    0000014E 1F13                   MOV.L       R1,@(12,R15); r.y
+    00000150 7FF8                   ADD         #-8,R15
+    00000152 65F3                   MOV         R15,R5
+    00000154 7508                   ADD         #8,R5
+    00000156 5151                   MOV.L       @(4,R5),R1
+    00000158 6652                   MOV.L       @R5,R6
+    0000015A 2F16                   MOV.L       R1,@-R15
+    0000015C 2F66                   MOV.L       R6,@-R15
+    0000015E 7FF0                   ADD         #-16,R15
+    00000160 E048                   MOV         #72,R0     ; H'00000048
+    00000162 06FE                   MOV.L       @(R0,R15),R6
+    00000164 6263                   MOV         R6,R2
+    00000166 4200                   SHLL        R2
+    00000168 322A                   SUBC        R2,R2
+    0000016A 65F3                   MOV         R15,R5
+    0000016C 7508                   ADD         #8,R5
+    0000016E 2F22                   MOV.L       R2,@R15
+    00000170 1F61                   MOV.L       R6,@(4,R15)
+    00000172 2F56                   MOV.L       R5,@-R15
+    00000174 470B                   JSR         @R7
+    00000176 E10A                   MOV         #10,R1     ; H'0000000A
+    00000178 7F0C                   ADD         #12,R15
+    0000017A 66F3                   MOV         R15,R6
+    0000017C 7610                   ADD         #16,R6
+    0000017E 440B                   JSR         @R4
+    00000180 2F66                   MOV.L       R6,@-R15
+    00000182 7F14                   ADD         #20,R15
+    00000184 67F6                   MOV.L       @R15+,R7
+    00000186 67F6                   MOV.L       @R15+,R7
+                vec.c         27          return ivec3f(divff(t.x, m), divff(t.y, m), divff(t.z, m));
+    00000188 51F7                   MOV.L       @(28,R15),R1
+    0000018A 62F3                   MOV         R15,R2
+    0000018C 1F74                   MOV.L       R7,@(16,R15); r.z
+    0000018E 7208                   ADD         #8,R2
+    00000190 4E0B                   JSR         @R14
+    00000192 E00C                   MOV         #12,R0     ; H'0000000C
+    00000194 7F14                   ADD         #20,R15
+    00000196 4F26                   LDS.L       @R15+,PR
+                vec.c         28    }
+    00000198 000B                   RTS
+    0000019A 6EF6                   MOV.L       @R15+,R14
+                vec.c         29    
+                vec.c         30    #ifndef MACRO_DOTP
+                vec.c         31    fixed dotp(vec3f t, vec3f v) {
+                vec.c         32          return mulff(t.x, v.x) + mulff(t.y, v.y) + mulff(t.z, v.z);
+                vec.c         33    }
+                vec.c         34    fixed dotp2(vec3f t, vec3f v) {
+                vec.c         35          return mulff(t.x, v.x) + mulff(t.y, v.y);
+                vec.c         36    }
+                vec.c         37    #endif
+                vec.c         38    
+                vec.c         39    vec3f crossp(vec3f t, vec3f v) {
+    0000019C              _crossp:                         ; function: crossp
+                                                           ; frame size=48
+    0000019C 2F96                   MOV.L       R9,@-R15
+    0000019E 4F22                   STS.L       PR,@-R15
+    000001A0 4F12                   STS.L       MACL,@-R15
+    000001A2 4F02                   STS.L       MACH,@-R15
+    000001A4 7FE4                   ADD         #-28,R15
+    000001A6 55FD                   MOV.L       @(52,R15),R5
+    000001A8 E044                   MOV         #68,R0     ; H'00000044
+    000001AA 09FE                   MOV.L       @(R0,R15),R9
+    000001AC 64F3                   MOV         R15,R4
+    000001AE 395D                   DMULS.L     R5,R9
+    000001B0 7408                   ADD         #8,R4
+    000001B2 010A                   STS         MACH,R1
+    000001B4 051A                   STS         MACL,R5
+    000001B6 2F12                   MOV.L       R1,@R15
+    000001B8 1F51                   MOV.L       R5,@(4,R15)
+    000001BA 2F46                   MOV.L       R4,@-R15
+    000001BC D46B                   MOV.L       L26+6,R4   ; __shard64
+    000001BE 440B                   JSR         @R4
+    000001C0 E10A                   MOV         #10,R1     ; H'0000000A
+    000001C2 7F0C                   ADD         #12,R15
+    000001C4 69F6                   MOV.L       @R15+,R9
+    000001C6 65F6                   MOV.L       @R15+,R5
+    000001C8 7FF0                   ADD         #-16,R15
+    000001CA 57FE                   MOV.L       @(56,R15),R7
+    000001CC E040                   MOV         #64,R0     ; H'00000040
+    000001CE 02FE                   MOV.L       @(R0,R15),R2
+    000001D0 61F3                   MOV         R15,R1
+    000001D2 327D                   DMULS.L     R7,R2
+    000001D4 7108                   ADD         #8,R1
+    000001D6 090A                   STS         MACH,R9
+    000001D8 021A                   STS         MACL,R2
+    000001DA 2F92                   MOV.L       R9,@R15
+    000001DC 1F21                   MOV.L       R2,@(4,R15)
+    000001DE 2F16                   MOV.L       R1,@-R15
+    000001E0 440B                   JSR         @R4
+    000001E2 E10A                   MOV         #10,R1     ; H'0000000A
+    000001E4 7F0C                   ADD         #12,R15
+    000001E6 66F6                   MOV.L       @R15+,R6
+    000001E8 66F6                   MOV.L       @R15+,R6
+    000001EA 3568                   SUB         R6,R5
+    000001EC 2F52                   MOV.L       R5,@R15    ; r.x
+    000001EE 7FF0                   ADD         #-16,R15
+    000001F0 53FF                   MOV.L       @(60,R15),R3
+    000001F2 69F3                   MOV         R15,R9
+    000001F4 337D                   DMULS.L     R7,R3
+    000001F6 7908                   ADD         #8,R9
+    000001F8 050A                   STS         MACH,R5
+    000001FA 071A                   STS         MACL,R7
+    000001FC 2F52                   MOV.L       R5,@R15
+    000001FE 1F71                   MOV.L       R7,@(4,R15)
+    00000200 2F96                   MOV.L       R9,@-R15
+    00000202 440B                   JSR         @R4
+    00000204 E10A                   MOV         #10,R1     ; H'0000000A
+    00000206 7F0C                   ADD         #12,R15
+    00000208 69F6                   MOV.L       @R15+,R9
+    0000020A 62F6                   MOV.L       @R15+,R2
+    0000020C 7FF0                   ADD         #-16,R15
+    0000020E E044                   MOV         #68,R0     ; H'00000044
+    00000210 03FE                   MOV.L       @(R0,R15),R3
+    00000212 57FC                   MOV.L       @(48,R15),R7
+    00000214 337D                   DMULS.L     R7,R3
+    00000216 060A                   STS         MACH,R6
+    00000218 2F62                   MOV.L       R6,@R15
+    0000021A 66F3                   MOV         R15,R6
+    0000021C 091A                   STS         MACL,R9
+    0000021E 7608                   ADD         #8,R6
+    00000220 1F91                   MOV.L       R9,@(4,R15)
+    00000222 2F66                   MOV.L       R6,@-R15
+    00000224 440B                   JSR         @R4
+    00000226 E10A                   MOV         #10,R1     ; H'0000000A
+    00000228 7F0C                   ADD         #12,R15
+    0000022A 69F6                   MOV.L       @R15+,R9
+    0000022C 69F6                   MOV.L       @R15+,R9
+    0000022E 3298                   SUB         R9,R2
+    00000230 1F21                   MOV.L       R2,@(4,R15); r.y
+    00000232 7FF0                   ADD         #-16,R15
+    00000234 E040                   MOV         #64,R0     ; H'00000040
+    00000236 03FE                   MOV.L       @(R0,R15),R3
+    00000238 337D                   DMULS.L     R7,R3
+    0000023A 67F3                   MOV         R15,R7
+    0000023C 7708                   ADD         #8,R7
+    0000023E 050A                   STS         MACH,R5
+    00000240 061A                   STS         MACL,R6
+    00000242 2F52                   MOV.L       R5,@R15
+    00000244 1F61                   MOV.L       R6,@(4,R15)
+    00000246 2F76                   MOV.L       R7,@-R15
+    00000248 440B                   JSR         @R4
+    0000024A E10A                   MOV         #10,R1     ; H'0000000A
+    0000024C 7F0C                   ADD         #12,R15
+    0000024E 62F6                   MOV.L       @R15+,R2
+    00000250 67F6                   MOV.L       @R15+,R7
+    00000252 7FF0                   ADD         #-16,R15
+    00000254 53FD                   MOV.L       @(52,R15),R3
+    00000256 59FF                   MOV.L       @(60,R15),R9
+    00000258 393D                   DMULS.L     R3,R9
+    0000025A 020A                   STS         MACH,R2
+    0000025C 2F22                   MOV.L       R2,@R15
+    0000025E 62F3                   MOV         R15,R2
+    00000260 061A                   STS         MACL,R6
+    00000262 7208                   ADD         #8,R2
+    00000264 1F61                   MOV.L       R6,@(4,R15)
+    00000266 2F26                   MOV.L       R2,@-R15
+    00000268 440B                   JSR         @R4
+    0000026A E10A                   MOV         #10,R1     ; H'0000000A
+    0000026C 7F0C                   ADD         #12,R15
+    0000026E 64F6                   MOV.L       @R15+,R4
+    00000270 64F6                   MOV.L       @R15+,R4
+    00000272 3748                   SUB         R4,R7
+                vec.c         40          return ivec3f(mulff(t.y, v.z)-mulff(t.z, v.y), mulff(t.z, v.x)-mulff(t.x, v.z), mulff(t.x, v.y)-mulff(t.y, v.x));
+    00000274 51F7                   MOV.L       @(28,R15),R1
+    00000276 D43C                   MOV.L       L26+2,R4   ; __quick_odd_mvn
+    00000278 1F72                   MOV.L       R7,@(8,R15); r.z
+    0000027A 62F3                   MOV         R15,R2
+    0000027C 440B                   JSR         @R4
+    0000027E E00C                   MOV         #12,R0     ; H'0000000C
+    00000280 7F0C                   ADD         #12,R15
+    00000282 4F06                   LDS.L       @R15+,MACH
+    00000284 4F16                   LDS.L       @R15+,MACL
+    00000286 4F26                   LDS.L       @R15+,PR
+                vec.c         41    }
+    00000288 000B                   RTS
+    0000028A 69F6                   MOV.L       @R15+,R9
+                vec.c         42    
+                vec.c         43    vec3f addvv(vec3f t, vec3f v) {
+    0000028C              _addvv:                          ; function: addvv
+                                                           ; frame size=16
+    0000028C 4F22                   STS.L       PR,@-R15
+    0000028E 7FF4                   ADD         #-12,R15
+    00000290 51F5                   MOV.L       @(20,R15),R1
+    00000292 52F8                   MOV.L       @(32,R15),R2
+    00000294 54F6                   MOV.L       @(24,R15),R4
+    00000296 55F9                   MOV.L       @(36,R15),R5
+    00000298 312C                   ADD         R2,R1
+    0000029A 345C                   ADD         R5,R4
+    0000029C 55F7                   MOV.L       @(28,R15),R5
+    0000029E 56FA                   MOV.L       @(40,R15),R6
+    000002A0 2F12                   MOV.L       R1,@R15    ; r.x
+    000002A2 356C                   ADD         R6,R5
+                vec.c         44          return ivec3f(t.x+v.x, t.y+v.y, t.z+v.z);
+    000002A4 51F4                   MOV.L       @(16,R15),R1
+    000002A6 D730                   MOV.L       L26+2,R7   ; __quick_odd_mvn
+    000002A8 1F41                   MOV.L       R4,@(4,R15); r.y
+    000002AA 1F52                   MOV.L       R5,@(8,R15); r.z
+    000002AC 62F3                   MOV         R15,R2
+    000002AE 470B                   JSR         @R7
+    000002B0 E00C                   MOV         #12,R0     ; H'0000000C
+    000002B2 7F0C                   ADD         #12,R15
+    000002B4 4F26                   LDS.L       @R15+,PR
+                vec.c         45    }
+    000002B6 000B                   RTS
+    000002B8 0009                   NOP
+                vec.c         46    
+                vec.c         47    vec3f subvv(vec3f t, vec3f v) {
+    000002BA              _subvv:                          ; function: subvv
+                                                           ; frame size=16
+    000002BA 4F22                   STS.L       PR,@-R15
+    000002BC 7FF4                   ADD         #-12,R15
+    000002BE 51F5                   MOV.L       @(20,R15),R1
+    000002C0 52F8                   MOV.L       @(32,R15),R2
+    000002C2 54F6                   MOV.L       @(24,R15),R4
+    000002C4 55F9                   MOV.L       @(36,R15),R5
+    000002C6 3128                   SUB         R2,R1
+    000002C8 3458                   SUB         R5,R4
+    000002CA 55F7                   MOV.L       @(28,R15),R5
+    000002CC 56FA                   MOV.L       @(40,R15),R6
+    000002CE 2F12                   MOV.L       R1,@R15    ; r.x
+    000002D0 3568                   SUB         R6,R5
+                vec.c         48          return ivec3f(t.x-v.x, t.y-v.y, t.z-v.z);
+    000002D2 51F4                   MOV.L       @(16,R15),R1
+    000002D4 D724                   MOV.L       L26+2,R7   ; __quick_odd_mvn
+    000002D6 1F41                   MOV.L       R4,@(4,R15); r.y
+    000002D8 1F52                   MOV.L       R5,@(8,R15); r.z
+    000002DA 62F3                   MOV         R15,R2
+    000002DC 470B                   JSR         @R7
+    000002DE E00C                   MOV         #12,R0     ; H'0000000C
+    000002E0 7F0C                   ADD         #12,R15
+    000002E2 4F26                   LDS.L       @R15+,PR
+                vec.c         49    }
+    000002E4 000B                   RTS
+    000002E6 0009                   NOP
+                vec.c         50    
+                vec.c         51    vec3f mulvf(vec3f t, fixed f) {
+    000002E8              _mulvf:                          ; function: mulvf
+                                                           ; frame size=44
+    000002E8 4F22                   STS.L       PR,@-R15
+    000002EA 4F12                   STS.L       MACL,@-R15
+    000002EC 4F02                   STS.L       MACH,@-R15
+    000002EE 7FE4                   ADD         #-28,R15
+    000002F0 51FB                   MOV.L       @(44,R15),R1
+    000002F2 66F3                   MOV         R15,R6
+    000002F4 341D                   DMULS.L     R1,R4
+    000002F6 7608                   ADD         #8,R6
+    000002F8 050A                   STS         MACH,R5
+    000002FA 071A                   STS         MACL,R7
+    000002FC 2F52                   MOV.L       R5,@R15
+    000002FE 1F71                   MOV.L       R7,@(4,R15)
+    00000300 2F66                   MOV.L       R6,@-R15
+    00000302 D21A                   MOV.L       L26+6,R2   ; __shard64
+    00000304 420B                   JSR         @R2
+    00000306 E10A                   MOV         #10,R1     ; H'0000000A
+    00000308 7F0C                   ADD         #12,R15
+    0000030A 67F6                   MOV.L       @R15+,R7
+    0000030C 67F6                   MOV.L       @R15+,R7
+    0000030E 2F72                   MOV.L       R7,@R15    ; r.x
+    00000310 7FF0                   ADD         #-16,R15
+    00000312 51FC                   MOV.L       @(48,R15),R1
+    00000314 341D                   DMULS.L     R1,R4
+    00000316 61F3                   MOV         R15,R1
+    00000318 7108                   ADD         #8,R1
+    0000031A 050A                   STS         MACH,R5
+    0000031C 071A                   STS         MACL,R7
+    0000031E 2F52                   MOV.L       R5,@R15
+    00000320 1F71                   MOV.L       R7,@(4,R15)
+    00000322 2F16                   MOV.L       R1,@-R15
+    00000324 420B                   JSR         @R2
+    00000326 E10A                   MOV         #10,R1     ; H'0000000A
+    00000328 7F0C                   ADD         #12,R15
+    0000032A 66F6                   MOV.L       @R15+,R6
+    0000032C 66F6                   MOV.L       @R15+,R6
+    0000032E 1F61                   MOV.L       R6,@(4,R15); r.y
+    00000330 7FF0                   ADD         #-16,R15
+    00000332 57FD                   MOV.L       @(52,R15),R7
+    00000334 347D                   DMULS.L     R7,R4
+    00000336 041A                   STS         MACL,R4
+    00000338 1F41                   MOV.L       R4,@(4,R15)
+    0000033A 64F3                   MOV         R15,R4
+    0000033C 060A                   STS         MACH,R6
+    0000033E 7408                   ADD         #8,R4
+    00000340 2F62                   MOV.L       R6,@R15
+    00000342 2F46                   MOV.L       R4,@-R15
+    00000344 420B                   JSR         @R2
+    00000346 E10A                   MOV         #10,R1     ; H'0000000A
+    00000348 7F0C                   ADD         #12,R15
+    0000034A 62F6                   MOV.L       @R15+,R2
+    0000034C 62F6                   MOV.L       @R15+,R2
+    0000034E D506                   MOV.L       L26+2,R5   ; __quick_odd_mvn
+                vec.c         52          return ivec3f(mulff(t.x, f), mulff(t.y, f), mulff(t.z, f));
+    00000350 51F6                   MOV.L       @(24,R15),R1
+    00000352 1F22                   MOV.L       R2,@(8,R15); r.z
+    00000354 62F3                   MOV         R15,R2
+    00000356 450B                   JSR         @R5
+    00000358 E00C                   MOV         #12,R0     ; H'0000000C
+    0000035A 7F0C                   ADD         #12,R15
+    0000035C 4F06                   LDS.L       @R15+,MACH
+    0000035E 4F16                   LDS.L       @R15+,MACL
+    00000360 4F26                   LDS.L       @R15+,PR
+                vec.c         53    }
+    00000362 000B                   RTS
+    00000364 0009                   NOP
+    00000366              L26:
+    00000366 00000002               .RES.W      1
+    00000368 <00000000>             .DATA.L     __quick_odd_mvn
+    0000036C <00000000>             .DATA.L     __shard64
+    00000370 <00000000>             .DATA.L     _sqrt_f
+    00000374 <00000000>             .DATA.L     __shlld64
+    00000378 <00000000>             .DATA.L     __div64s
+                vec.c         54    
+                vec.c         55    vec3f divvf(vec3f t, fixed f) {
+    0000037C              _divvf:                          ; function: divvf
+                                                           ; frame size=60
+    0000037C 4F22                   STS.L       PR,@-R15
+    0000037E 7FEC                   ADD         #-20,R15
+    00000380 6243                   MOV         R4,R2
+    00000382 4200                   SHLL        R2
+    00000384 322A                   SUBC        R2,R2
+    00000386 2F22                   MOV.L       R2,@R15
+    00000388 1F41                   MOV.L       R4,@(4,R15)
+    0000038A 7FF8                   ADD         #-8,R15
+    0000038C 64F3                   MOV         R15,R4
+    0000038E 7408                   ADD         #8,R4
+    00000390 5141                   MOV.L       @(4,R4),R1
+    00000392 6542                   MOV.L       @R4,R5
+    00000394 2F16                   MOV.L       R1,@-R15
+    00000396 2F56                   MOV.L       R5,@-R15
+    00000398 7FF0                   ADD         #-16,R15
+    0000039A 57FF                   MOV.L       @(60,R15),R7
+    0000039C 6273                   MOV         R7,R2
+    0000039E 4200                   SHLL        R2
+    000003A0 322A                   SUBC        R2,R2
+    000003A2 64F3                   MOV         R15,R4
+    000003A4 7408                   ADD         #8,R4
+    000003A6 2F22                   MOV.L       R2,@R15
+    000003A8 1F71                   MOV.L       R7,@(4,R15)
+    000003AA 2F46                   MOV.L       R4,@-R15
+    000003AC D79E                   MOV.L       L27,R7     ; __shlld64
+    000003AE 470B                   JSR         @R7
+    000003B0 E10A                   MOV         #10,R1     ; H'0000000A
+    000003B2 7F0C                   ADD         #12,R15
+    000003B4 65F3                   MOV         R15,R5
+    000003B6 7510                   ADD         #16,R5
+    000003B8 D49C                   MOV.L       L27+4,R4   ; __div64s
+    000003BA 440B                   JSR         @R4
+    000003BC 2F56                   MOV.L       R5,@-R15
+    000003BE 7F14                   ADD         #20,R15
+    000003C0 66F6                   MOV.L       @R15+,R6
+    000003C2 66F6                   MOV.L       @R15+,R6
+    000003C4 1F62                   MOV.L       R6,@(8,R15); r.x
+    000003C6 7FF8                   ADD         #-8,R15
+    000003C8 65F3                   MOV         R15,R5
+    000003CA 7508                   ADD         #8,R5
+    000003CC 5151                   MOV.L       @(4,R5),R1
+    000003CE 6652                   MOV.L       @R5,R6
+    000003D0 2F16                   MOV.L       R1,@-R15
+    000003D2 2F66                   MOV.L       R6,@-R15
+    000003D4 7FF0                   ADD         #-16,R15
+    000003D6 E040                   MOV         #64,R0     ; H'00000040
+    000003D8 05FE                   MOV.L       @(R0,R15),R5
+    000003DA 6253                   MOV         R5,R2
+    000003DC 4200                   SHLL        R2
+    000003DE 322A                   SUBC        R2,R2
+    000003E0 1F51                   MOV.L       R5,@(4,R15)
+    000003E2 65F3                   MOV         R15,R5
+    000003E4 7508                   ADD         #8,R5
+    000003E6 2F22                   MOV.L       R2,@R15
+    000003E8 2F56                   MOV.L       R5,@-R15
+    000003EA 470B                   JSR         @R7
+    000003EC E10A                   MOV         #10,R1     ; H'0000000A
+    000003EE 7F0C                   ADD         #12,R15
+    000003F0 66F3                   MOV         R15,R6
+    000003F2 7610                   ADD         #16,R6
+    000003F4 440B                   JSR         @R4
+    000003F6 2F66                   MOV.L       R6,@-R15
+    000003F8 7F14                   ADD         #20,R15
+    000003FA 61F6                   MOV.L       @R15+,R1
+    000003FC 61F6                   MOV.L       @R15+,R1
+    000003FE 1F13                   MOV.L       R1,@(12,R15); r.y
+    00000400 7FF8                   ADD         #-8,R15
+    00000402 65F3                   MOV         R15,R5
+    00000404 7508                   ADD         #8,R5
+    00000406 5151                   MOV.L       @(4,R5),R1
+    00000408 6652                   MOV.L       @R5,R6
+    0000040A 2F16                   MOV.L       R1,@-R15
+    0000040C 2F66                   MOV.L       R6,@-R15
+    0000040E 7FF0                   ADD         #-16,R15
+    00000410 E044                   MOV         #68,R0     ; H'00000044
+    00000412 06FE                   MOV.L       @(R0,R15),R6
+    00000414 6263                   MOV         R6,R2
+    00000416 4200                   SHLL        R2
+    00000418 322A                   SUBC        R2,R2
+    0000041A 65F3                   MOV         R15,R5
+    0000041C 7508                   ADD         #8,R5
+    0000041E 2F22                   MOV.L       R2,@R15
+    00000420 1F61                   MOV.L       R6,@(4,R15)
+    00000422 2F56                   MOV.L       R5,@-R15
+    00000424 470B                   JSR         @R7
+    00000426 E10A                   MOV         #10,R1     ; H'0000000A
+    00000428 7F0C                   ADD         #12,R15
+    0000042A 66F3                   MOV         R15,R6
+    0000042C 7610                   ADD         #16,R6
+    0000042E 440B                   JSR         @R4
+    00000430 2F66                   MOV.L       R6,@-R15
+    00000432 7F14                   ADD         #20,R15
+    00000434 67F6                   MOV.L       @R15+,R7
+    00000436 67F6                   MOV.L       @R15+,R7
+    00000438 1F74                   MOV.L       R7,@(16,R15); r.z
+                vec.c         56          return ivec3f(divff(t.x, f), divff(t.y, f), divff(t.z, f));
+    0000043A 51F6                   MOV.L       @(24,R15),R1
+    0000043C 62F3                   MOV         R15,R2
+    0000043E D77C                   MOV.L       L27+8,R7   ; __quick_odd_mvn
+    00000440 7208                   ADD         #8,R2
+    00000442 470B                   JSR         @R7
+    00000444 E00C                   MOV         #12,R0     ; H'0000000C
+    00000446 7F14                   ADD         #20,R15
+    00000448 4F26                   LDS.L       @R15+,PR
+                vec.c         57    }
+    0000044A 000B                   RTS
+    0000044C 0009                   NOP
+                vec.c         58    
+                vec.c         59    vec3f divvi(vec3f t, int f) {
+    0000044E              _divvi:                          ; function: divvi
+                                                           ; frame size=16
+    0000044E 4F22                   STS.L       PR,@-R15
+    00000450 7FF4                   ADD         #-12,R15
+    00000452 D278                   MOV.L       L27+12,R2  ; __divls
+    00000454 51F5                   MOV.L       @(20,R15),R1
+    00000456 420B                   JSR         @R2
+    00000458 6043                   MOV         R4,R0
+    0000045A 6503                   MOV         R0,R5
+    0000045C 51F6                   MOV.L       @(24,R15),R1
+    0000045E 420B                   JSR         @R2
+    00000460 6043                   MOV         R4,R0
+    00000462 6703                   MOV         R0,R7
+    00000464 51F7                   MOV.L       @(28,R15),R1
+    00000466 6043                   MOV         R4,R0
+    00000468 2F52                   MOV.L       R5,@R15    ; r.x
+    0000046A 420B                   JSR         @R2
+    0000046C 1F71                   MOV.L       R7,@(4,R15); r.y
+    0000046E 6403                   MOV         R0,R4
+                vec.c         60          return ivec3f(divfi(t.x, f), divfi(t.y, f), divfi(t.z, f));
+    00000470 51F4                   MOV.L       @(16,R15),R1
+    00000472 D66F                   MOV.L       L27+8,R6   ; __quick_odd_mvn
+    00000474 1F42                   MOV.L       R4,@(8,R15); r.z
+    00000476 62F3                   MOV         R15,R2
+    00000478 460B                   JSR         @R6
+    0000047A E00C                   MOV         #12,R0     ; H'0000000C
+    0000047C 7F0C                   ADD         #12,R15
+    0000047E 4F26                   LDS.L       @R15+,PR
+                vec.c         61    }
+    00000480 000B                   RTS
+    00000482 0009                   NOP
+                vec.c         62    
+                vec.c         63    #ifndef MACRO_ADDSUBPV
+                vec.c         64    void addpvv(vec3f *t, vec3f v) {
+                vec.c         65          (t->x)+=v.x;
+                vec.c         66        (t->y)+=v.y;
+                vec.c         67        (t->z)+=v.z;
+                vec.c         68    }
+                vec.c         69    
+                vec.c         70    void subpvv(vec3f *t, vec3f v) {
+                vec.c         71          (t->x)-=v.x;
+                vec.c         72        (t->y)-=v.y;
+                vec.c         73        (t->z)-=v.z;
+                vec.c         74    }
+                vec.c         75    #endif
+                vec.c         76    
+                vec.c         77    // mulpvf: multiply vector t with lambda f in place
+                vec.c         78    
+                vec.c         79    void mulpvf(vec3f *t, fixed f) {
+    00000484              _mulpvf:                         ; function: mulpvf
+                                                           ; frame size=16
+    00000484 2FC6                   MOV.L       R12,@-R15
+    00000486 2FD6                   MOV.L       R13,@-R15
+    00000488 2FE6                   MOV.L       R14,@-R15
+    0000048A 4F22                   STS.L       PR,@-R15
+    0000048C DC6A                   MOV.L       L27+16,R12 ; _mulpff
+    0000048E 6E43                   MOV         R4,R14
+                vec.c         80          mulpff(&(t->x), f);
+    00000490 4C0B                   JSR         @R12
+    00000492 6D53                   MOV         R5,R13
+                vec.c         81        mulpff(&(t->y), f);
+    00000494 64E3                   MOV         R14,R4
+    00000496 7404                   ADD         #4,R4
+    00000498 65D3                   MOV         R13,R5
+                vec.c         82        mulpff(&(t->z), f);
+    0000049A 4C0B                   JSR         @R12
+    0000049C 7E08                   ADD         #8,R14
+    0000049E 64E3                   MOV         R14,R4
+    000004A0 4C0B                   JSR         @R12
+    000004A2 65D3                   MOV         R13,R5
+    000004A4 4F26                   LDS.L       @R15+,PR
+    000004A6 6EF6                   MOV.L       @R15+,R14
+    000004A8 6DF6                   MOV.L       @R15+,R13
+                vec.c         83    }
+    000004AA 000B                   RTS
+    000004AC 6CF6                   MOV.L       @R15+,R12
+                vec.c         84    
+                vec.c         85    
+                vec.c         86    /*  |cos ?   -sin ?   0| |x|   |x cos ? - y sin ?|   |x'|
+                vec.c         87        |sin ?    cos ?   0| |y| = |x sin ? + y cos ?| = |y'|
+                vec.c         88        |  0       0      1| |z|   |        z        |   |z'|
+                vec.c         89    
+                vec.c         90    
+                vec.c         91        | cos ?    0   sin ?| |x|   | x cos ? + z sin ?|   |x'|
+                vec.c         92        |   0      1       0| |y| = |         y        | = |y'|
+                vec.c         93        |-sin ?    0   cos ?| |z|   |-x sin ? + z cos ?|   |z'|
+                vec.c         94    
+                vec.c         95    
+                vec.c         96        |1     0           0| |x|   |        x        |   |x'|
+                vec.c         97        |0   cos ?    -sin ?| |y| = |y cos ? - z sin ?| = |y'|
+                vec.c         98        |0   sin ?     cos ?| |z|   |y sin ? + z cos ?|   |z'| */
+                vec.c         99    
+                vec.c        100    
+                vec.c        101    // py2vec3f: transform pitch and yaw into a rotated normal vector
+                vec.c        102    
+                vec.c        103    vec3f py2vec3f(fixed pitch, fixed yaw) {
+    000004AE              _py2vec3f:                       ; function: py2vec3f
+                                                           ; frame size=84
+    000004AE 2FB6                   MOV.L       R11,@-R15
+    000004B0 2FC6                   MOV.L       R12,@-R15
+    000004B2 2FD6                   MOV.L       R13,@-R15
+    000004B4 2FE6                   MOV.L       R14,@-R15
+    000004B6 4F22                   STS.L       PR,@-R15
+    000004B8 4F12                   STS.L       MACL,@-R15
+    000004BA 4F02                   STS.L       MACH,@-R15
+    000004BC 7FDC                   ADD         #-36,R15
+    000004BE D15F                   MOV.L       L27+20,R1  ; _sin_f
+    000004C0 6D43                   MOV         R4,R13
+    000004C2 6453                   MOV         R5,R4
+                vec.c        104        vec3f resp;
+                vec.c        105        vec3f v;  
+                vec.c        106    
+                vec.c        107          fixed sy, cy, sp, cp;
+                vec.c        108    
+                vec.c        109          sy = sin_f(yaw); sp = sin_f(pitch); cy = cos_f(yaw); cp = cos_f(pitch);
+    000004C4 410B                   JSR         @R1
+    000004C6 6E53                   MOV         R5,R14
+    000004C8 D55C                   MOV.L       L27+20,R5  ; _sin_f
+    000004CA 64D3                   MOV         R13,R4
+    000004CC 450B                   JSR         @R5
+    000004CE 6B03                   MOV         R0,R11
+    000004D0 D65B                   MOV.L       L27+24,R6  ; _cos_f
+    000004D2 64E3                   MOV         R14,R4
+    000004D4 460B                   JSR         @R6
+    000004D6 6C03                   MOV         R0,R12
+    000004D8 D759                   MOV.L       L27+24,R7  ; _cos_f
+    000004DA 64D3                   MOV         R13,R4
+    000004DC 470B                   JSR         @R7
+    000004DE 6E03                   MOV         R0,R14
+    000004E0 E104                   MOV         #4,R1      ; H'00000004
+    000004E2 ED00                   MOV         #0,R13     ; H'00000000
+    000004E4 4118                   SHLL8       R1
+    000004E6 2FD2                   MOV.L       R13,@R15   ; r.x
+    000004E8 1FD1                   MOV.L       R13,@(4,R15); r.y
+    000004EA 1F12                   MOV.L       R1,@(8,R15); r.z
+                vec.c        110    
+                vec.c        111          v = ivec3f(0, 0, int2f(1));
+    000004EC 61F3                   MOV         R15,R1
+    000004EE DD50                   MOV.L       L27+8,R13  ; __quick_odd_mvn
+    000004F0 6703                   MOV         R0,R7
+    000004F2 710C                   ADD         #12,R1
+    000004F4 62F3                   MOV         R15,R2
+    000004F6 4D0B                   JSR         @R13
+    000004F8 E00C                   MOV         #12,R0     ; H'0000000C
+    000004FA 54F3                   MOV.L       @(12,R15),R4; v.x
+    000004FC 2F42                   MOV.L       R4,@R15    ; r.x
+    000004FE 7FF0                   ADD         #-16,R15
+    00000500 52F8                   MOV.L       @(32,R15),R2; v.y
+    00000502 66F3                   MOV         R15,R6
+    00000504 372D                   DMULS.L     R2,R7
+    00000506 7608                   ADD         #8,R6
+    00000508 050A                   STS         MACH,R5
+    0000050A 021A                   STS         MACL,R2
+    0000050C 2F52                   MOV.L       R5,@R15
+    0000050E 1F21                   MOV.L       R2,@(4,R15)
+    00000510 2F66                   MOV.L       R6,@-R15
+    00000512 D44C                   MOV.L       L27+28,R4  ; __shard64
+    00000514 440B                   JSR         @R4
+    00000516 E10A                   MOV         #10,R1     ; H'0000000A
+    00000518 7F0C                   ADD         #12,R15
+    0000051A 61F6                   MOV.L       @R15+,R1
+    0000051C 65F6                   MOV.L       @R15+,R5
+    0000051E 7FF0                   ADD         #-16,R15
+    00000520 52F9                   MOV.L       @(36,R15),R2; v.z
+    00000522 66F3                   MOV         R15,R6
+    00000524 3C2D                   DMULS.L     R2,R12
+    00000526 7608                   ADD         #8,R6
+    00000528 010A                   STS         MACH,R1
+    0000052A 021A                   STS         MACL,R2
+    0000052C 2F12                   MOV.L       R1,@R15
+    0000052E 1F21                   MOV.L       R2,@(4,R15)
+    00000530 2F66                   MOV.L       R6,@-R15
+    00000532 440B                   JSR         @R4
+    00000534 E10A                   MOV         #10,R1     ; H'0000000A
+    00000536 7F0C                   ADD         #12,R15
+    00000538 61F6                   MOV.L       @R15+,R1
+    0000053A 61F6                   MOV.L       @R15+,R1
+    0000053C 3518                   SUB         R1,R5
+    0000053E 1F51                   MOV.L       R5,@(4,R15); r.y
+    00000540 7FF0                   ADD         #-16,R15
+    00000542 53F8                   MOV.L       @(32,R15),R3; v.y
+    00000544 66F3                   MOV         R15,R6
+    00000546 3C3D                   DMULS.L     R3,R12
+    00000548 7608                   ADD         #8,R6
+    0000054A 050A                   STS         MACH,R5
+    0000054C 0C1A                   STS         MACL,R12
+    0000054E 2F52                   MOV.L       R5,@R15
+    00000550 1FC1                   MOV.L       R12,@(4,R15)
+    00000552 2F66                   MOV.L       R6,@-R15
+    00000554 440B                   JSR         @R4
+    00000556 E10A                   MOV         #10,R1     ; H'0000000A
+    00000558 7F0C                   ADD         #12,R15
+    0000055A 6CF6                   MOV.L       @R15+,R12
+    0000055C 62F6                   MOV.L       @R15+,R2
+    0000055E 7FF0                   ADD         #-16,R15
+    00000560 53F9                   MOV.L       @(36,R15),R3; v.z
+    00000562 61F3                   MOV         R15,R1
+    00000564 373D                   DMULS.L     R3,R7
+    00000566 7108                   ADD         #8,R1
+    00000568 050A                   STS         MACH,R5
+    0000056A 0C1A                   STS         MACL,R12
+    0000056C 2F52                   MOV.L       R5,@R15
+    0000056E 1FC1                   MOV.L       R12,@(4,R15)
+    00000570 2F16                   MOV.L       R1,@-R15
+    00000572 440B                   JSR         @R4
+    00000574 E10A                   MOV         #10,R1     ; H'0000000A
+    00000576 7F0C                   ADD         #12,R15
+    00000578 66F6                   MOV.L       @R15+,R6
+    0000057A 66F6                   MOV.L       @R15+,R6
+    0000057C E00C                   MOV         #12,R0     ; H'0000000C
+    0000057E 326C                   ADD         R6,R2
+                vec.c        112    
+                vec.c        113          // pitch (around X)             
+                vec.c        114    
+                vec.c        115        resp = ivec3f(v.x,
+                vec.c        116                      mulff(v.y, cp)-mulff(v.z, sp),
+                vec.c        117                      mulff(v.y, sp)+mulff(v.z, cp));
+    00000580 61F3                   MOV         R15,R1
+    00000582 1F22                   MOV.L       R2,@(8,R15); r.z
+    00000584 7118                   ADD         #24,R1
+    00000586 4D0B                   JSR         @R13
+    00000588 62F3                   MOV         R15,R2
+    0000058A 7FF0                   ADD         #-16,R15
+    0000058C 53FA                   MOV.L       @(40,R15),R3; resp.x
+    0000058E 3E3D                   DMULS.L     R3,R14
+    00000590 0C0A                   STS         MACH,R12
+    00000592 2FC2                   MOV.L       R12,@R15
+    00000594 6CF3                   MOV         R15,R12
+    00000596 071A                   STS         MACL,R7
+    00000598 7C08                   ADD         #8,R12
+    0000059A 1F71                   MOV.L       R7,@(4,R15)
+    0000059C 2FC6                   MOV.L       R12,@-R15
+    0000059E 440B                   JSR         @R4
+    000005A0 E10A                   MOV         #10,R1     ; H'0000000A
+    000005A2 7F0C                   ADD         #12,R15
+    000005A4 6CF6                   MOV.L       @R15+,R12
+    000005A6 62F6                   MOV.L       @R15+,R2
+    000005A8 7FF0                   ADD         #-16,R15
+    000005AA 56FC                   MOV.L       @(48,R15),R6; resp.z
+    000005AC 3B6D                   DMULS.L     R6,R11
+    000005AE 0C1A                   STS         MACL,R12
+    000005B0 1FC1                   MOV.L       R12,@(4,R15)
+    000005B2 6CF3                   MOV         R15,R12
+    000005B4 050A                   STS         MACH,R5
+    000005B6 7C08                   ADD         #8,R12
+    000005B8 2F52                   MOV.L       R5,@R15
+    000005BA 2FC6                   MOV.L       R12,@-R15
+    000005BC 440B                   JSR         @R4
+    000005BE E10A                   MOV         #10,R1     ; H'0000000A
+    000005C0 7F0C                   ADD         #12,R15
+    000005C2 6CF6                   MOV.L       @R15+,R12
+    000005C4 6CF6                   MOV.L       @R15+,R12
+    000005C6 55F7                   MOV.L       @(28,R15),R5; resp.y
+    000005C8 32CC                   ADD         R12,R2
+    000005CA 2F22                   MOV.L       R2,@R15    ; r.x
+    000005CC 1F51                   MOV.L       R5,@(4,R15); r.y
+    000005CE 7FF0                   ADD         #-16,R15
+    000005D0 3E6D                   DMULS.L     R6,R14
+    000005D2 6CF3                   MOV         R15,R12
+    000005D4 7C08                   ADD         #8,R12
+    000005D6 0E0A                   STS         MACH,R14
+    000005D8 071A                   STS         MACL,R7
+    000005DA 2FE2                   MOV.L       R14,@R15
+    000005DC 1F71                   MOV.L       R7,@(4,R15)
+    000005DE 2FC6                   MOV.L       R12,@-R15
+    000005E0 440B                   JSR         @R4
+    000005E2 E10A                   MOV         #10,R1     ; H'0000000A
+    000005E4 7F0C                   ADD         #12,R15
+    000005E6 6EF6                   MOV.L       @R15+,R14
+    000005E8 67F6                   MOV.L       @R15+,R7
+    000005EA 7FF0                   ADD         #-16,R15
+    000005EC 53FA                   MOV.L       @(40,R15),R3; resp.x
+    000005EE 3B3D                   DMULS.L     R3,R11
+    000005F0 0B1A                   STS         MACL,R11
+    000005F2 1FB1                   MOV.L       R11,@(4,R15)
+    000005F4 6BF3                   MOV         R15,R11
+    000005F6 0E0A                   STS         MACH,R14
+    000005F8 7B08                   ADD         #8,R11
+    000005FA 2FE2                   MOV.L       R14,@R15
+    000005FC 2FB6                   MOV.L       R11,@-R15
+    000005FE 440B                   JSR         @R4
+    00000600 E10A                   MOV         #10,R1     ; H'0000000A
+    00000602 7F0C                   ADD         #12,R15
+    00000604 6EF6                   MOV.L       @R15+,R14
+    00000606 6EF6                   MOV.L       @R15+,R14
+    00000608 37E8                   SUB         R14,R7
+                vec.c        118    
+                vec.c        119          // yaw (around Y);
+                vec.c        120    
+                vec.c        121          return ivec3f(mulff(resp.x, cy)+mulff(resp.z, sy),
+    0000060A E040                   MOV         #64,R0     ; H'00000040
+    0000060C 01FE                   MOV.L       @(R0,R15),R1
+    0000060E 1F72                   MOV.L       R7,@(8,R15); r.z
+    00000610 62F3                   MOV         R15,R2
+    00000612 4D0B                   JSR         @R13
+    00000614 E00C                   MOV         #12,R0     ; H'0000000C
+    00000616 7F24                   ADD         #36,R15
+    00000618 4F06                   LDS.L       @R15+,MACH
+    0000061A 4F16                   LDS.L       @R15+,MACL
+    0000061C 4F26                   LDS.L       @R15+,PR
+    0000061E 6EF6                   MOV.L       @R15+,R14
+    00000620 6DF6                   MOV.L       @R15+,R13
+    00000622 6CF6                   MOV.L       @R15+,R12
+                vec.c        122                      resp.y,
+                vec.c        123                      mulff(resp.z, cy)-mulff(resp.x, sy));
+                vec.c        124    }
+    00000624 000B                   RTS
+    00000626 6BF6                   MOV.L       @R15+,R11
+    00000628              L27:
+    00000628 <00000000>             .DATA.L     __shlld64
+    0000062C <00000000>             .DATA.L     __div64s
+    00000630 <00000000>             .DATA.L     __quick_odd_mvn
+    00000634 <00000000>             .DATA.L     __divls
+    00000638 <00000000>             .DATA.L     _mulpff
+    0000063C <00000000>             .DATA.L     _sin_f
+    00000640 <00000000>             .DATA.L     _cos_f
+    00000644 <00000000>             .DATA.L     __shard64
+                vec.c        125    
+                vec.c        126    // rot: rotate vector t around axes x (pitch) and y (yaw)
+                vec.c        127    
+                vec.c        128    vec3f rot(vec3f t, fixed pitch, fixed yaw) {
+    00000648              _rot:                            ; function: rot
+                                                           ; frame size=60
+    00000648 2FB6                   MOV.L       R11,@-R15
+    0000064A 2FC6                   MOV.L       R12,@-R15
+    0000064C 2FD6                   MOV.L       R13,@-R15
+    0000064E 2FE6                   MOV.L       R14,@-R15
+    00000650 4F22                   STS.L       PR,@-R15
+    00000652 4F12                   STS.L       MACL,@-R15
+    00000654 4F02                   STS.L       MACH,@-R15
+    00000656 7FF4                   ADD         #-12,R15
+    00000658 D1B5                   MOV.L       L28+12,R1  ; _sin_f
+    0000065A 6D43                   MOV         R4,R13
+    0000065C 6453                   MOV         R5,R4
+                vec.c        129          vec3f resp, resy;       
+                vec.c        130    
+                vec.c        131          fixed sy, cy, sp, cp;
+                vec.c        132    
+                vec.c        133          sy = sin_f(yaw); sp = sin_f(pitch); cy = cos_f(yaw); cp = cos_f(pitch);
+    0000065E 410B                   JSR         @R1
+    00000660 6E53                   MOV         R5,R14
+    00000662 D5B3                   MOV.L       L28+12,R5  ; _sin_f
+    00000664 64D3                   MOV         R13,R4
+    00000666 450B                   JSR         @R5
+    00000668 6C03                   MOV         R0,R12
+    0000066A D6B2                   MOV.L       L28+16,R6  ; _cos_f
+    0000066C 64E3                   MOV         R14,R4
+    0000066E 460B                   JSR         @R6
+    00000670 6B03                   MOV         R0,R11
+    00000672 D7B0                   MOV.L       L28+16,R7  ; _cos_f
+    00000674 64D3                   MOV         R13,R4
+    00000676 470B                   JSR         @R7
+    00000678 6E03                   MOV         R0,R14
+    0000067A 6D03                   MOV         R0,R13
+                vec.c        134    
+                vec.c        135          resy.x = mulff(t.x, cy) + mulff(t.z, sy);
+                vec.c        136        resy.y = t.y;
+                vec.c        137          resy.z = mulff(t.z, cy) - mulff(t.x, sy);
+    0000067C 7FF0                   ADD         #-16,R15
+    0000067E E044                   MOV         #68,R0     ; H'00000044
+    00000680 02FE                   MOV.L       @(R0,R15),R2
+    00000682 64F3                   MOV         R15,R4
+    00000684 3E2D                   DMULS.L     R2,R14
+    00000686 7408                   ADD         #8,R4
+    00000688 010A                   STS         MACH,R1
+    0000068A 021A                   STS         MACL,R2
+    0000068C 2F12                   MOV.L       R1,@R15
+    0000068E 1F21                   MOV.L       R2,@(4,R15)
+    00000690 2F46                   MOV.L       R4,@-R15
+    00000692 D7A9                   MOV.L       L28+20,R7  ; __shard64
+    00000694 470B                   JSR         @R7
+    00000696 E10A                   MOV         #10,R1     ; H'0000000A
+    00000698 7F0C                   ADD         #12,R15
+    0000069A 61F6                   MOV.L       @R15+,R1
+    0000069C 62F6                   MOV.L       @R15+,R2
+    0000069E 7FF0                   ADD         #-16,R15
+    000006A0 54FF                   MOV.L       @(60,R15),R4
+    000006A2 66F3                   MOV         R15,R6
+    000006A4 3C4D                   DMULS.L     R4,R12
+    000006A6 7608                   ADD         #8,R6
+    000006A8 050A                   STS         MACH,R5
+    000006AA 011A                   STS         MACL,R1
+    000006AC 2F52                   MOV.L       R5,@R15
+    000006AE 1F11                   MOV.L       R1,@(4,R15)
+    000006B0 2F66                   MOV.L       R6,@-R15
+    000006B2 470B                   JSR         @R7
+    000006B4 E10A                   MOV         #10,R1     ; H'0000000A
+    000006B6 7F0C                   ADD         #12,R15
+    000006B8 61F6                   MOV.L       @R15+,R1
+    000006BA 61F6                   MOV.L       @R15+,R1
+    000006BC 3218                   SUB         R1,R2
+                vec.c        138    
+                vec.c        139        resp.x = resy.x;
+    000006BE 7FF0                   ADD         #-16,R15
+    000006C0 3E4D                   DMULS.L     R4,R14
+    000006C2 66F3                   MOV         R15,R6
+    000006C4 7608                   ADD         #8,R6
+    000006C6 0E0A                   STS         MACH,R14
+    000006C8 051A                   STS         MACL,R5
+    000006CA 2FE2                   MOV.L       R14,@R15
+    000006CC 1F51                   MOV.L       R5,@(4,R15)
+    000006CE 2F66                   MOV.L       R6,@-R15
+    000006D0 470B                   JSR         @R7
+    000006D2 E10A                   MOV         #10,R1     ; H'0000000A
+    000006D4 7F0C                   ADD         #12,R15
+    000006D6 6EF6                   MOV.L       @R15+,R14
+    000006D8 64F6                   MOV.L       @R15+,R4
+    000006DA 7FF0                   ADD         #-16,R15
+    000006DC E044                   MOV         #68,R0     ; H'00000044
+    000006DE 03FE                   MOV.L       @(R0,R15),R3
+    000006E0 66F3                   MOV         R15,R6
+    000006E2 3C3D                   DMULS.L     R3,R12
+    000006E4 7608                   ADD         #8,R6
+    000006E6 0E0A                   STS         MACH,R14
+    000006E8 051A                   STS         MACL,R5
+    000006EA 2FE2                   MOV.L       R14,@R15
+    000006EC 1F51                   MOV.L       R5,@(4,R15)
+    000006EE 2F66                   MOV.L       R6,@-R15
+    000006F0 470B                   JSR         @R7
+    000006F2 E10A                   MOV         #10,R1     ; H'0000000A
+    000006F4 7F0C                   ADD         #12,R15
+    000006F6 6CF6                   MOV.L       @R15+,R12
+    000006F8 6CF6                   MOV.L       @R15+,R12
+    000006FA 34CC                   ADD         R12,R4
+    000006FC 2F42                   MOV.L       R4,@R15    ; resp.x
+                vec.c        140          resp.y = mulff(resy.y, cp) - mulff(resy.z, sp);
+    000006FE 7FF0                   ADD         #-16,R15
+    00000700 E040                   MOV         #64,R0     ; H'00000040
+    00000702 03FE                   MOV.L       @(R0,R15),R3
+    00000704 65F3                   MOV         R15,R5
+    00000706 3D3D                   DMULS.L     R3,R13
+    00000708 7508                   ADD         #8,R5
+    0000070A 0C0A                   STS         MACH,R12
+    0000070C 0E1A                   STS         MACL,R14
+    0000070E 2FC2                   MOV.L       R12,@R15
+    00000710 1FE1                   MOV.L       R14,@(4,R15)
+    00000712 2F56                   MOV.L       R5,@-R15
+    00000714 470B                   JSR         @R7
+    00000716 E10A                   MOV         #10,R1     ; H'0000000A
+    00000718 7F0C                   ADD         #12,R15
+    0000071A 6CF6                   MOV.L       @R15+,R12
+    0000071C 65F6                   MOV.L       @R15+,R5
+    0000071E 7FF0                   ADD         #-16,R15
+    00000720 3B2D                   DMULS.L     R2,R11
+    00000722 6EF3                   MOV         R15,R14
+    00000724 7E08                   ADD         #8,R14
+    00000726 060A                   STS         MACH,R6
+    00000728 0C1A                   STS         MACL,R12
+    0000072A 2F62                   MOV.L       R6,@R15
+    0000072C 1FC1                   MOV.L       R12,@(4,R15)
+    0000072E 2FE6                   MOV.L       R14,@-R15
+    00000730 470B                   JSR         @R7
+    00000732 E10A                   MOV         #10,R1     ; H'0000000A
+    00000734 7F0C                   ADD         #12,R15
+    00000736 6CF6                   MOV.L       @R15+,R12
+    00000738 6CF6                   MOV.L       @R15+,R12
+    0000073A 35C8                   SUB         R12,R5
+    0000073C 1F51                   MOV.L       R5,@(4,R15); resp.y
+                vec.c        141          resp.z = mulff(resy.y, sp) + mulff(resy.z, cp);
+    0000073E 7FF0                   ADD         #-16,R15
+    00000740 E040                   MOV         #64,R0     ; H'00000040
+    00000742 03FE                   MOV.L       @(R0,R15),R3
+    00000744 3B3D                   DMULS.L     R3,R11
+    00000746 0B0A                   STS         MACH,R11
+    00000748 2FB2                   MOV.L       R11,@R15
+    0000074A 6BF3                   MOV         R15,R11
+    0000074C 0E1A                   STS         MACL,R14
+    0000074E 7B08                   ADD         #8,R11
+    00000750 1FE1                   MOV.L       R14,@(4,R15)
+    00000752 2FB6                   MOV.L       R11,@-R15
+    00000754 470B                   JSR         @R7
+    00000756 E10A                   MOV         #10,R1     ; H'0000000A
+    00000758 7F0C                   ADD         #12,R15
+    0000075A 6BF6                   MOV.L       @R15+,R11
+    0000075C 6CF6                   MOV.L       @R15+,R12
+    0000075E 7FF0                   ADD         #-16,R15
+    00000760 3D2D                   DMULS.L     R2,R13
+    00000762 0D0A                   STS         MACH,R13
+    00000764 2FD2                   MOV.L       R13,@R15
+    00000766 6DF3                   MOV         R15,R13
+    00000768 0B1A                   STS         MACL,R11
+    0000076A 7D08                   ADD         #8,R13
+    0000076C 1FB1                   MOV.L       R11,@(4,R15)
+    0000076E 2FD6                   MOV.L       R13,@-R15
+    00000770 470B                   JSR         @R7
+    00000772 E10A                   MOV         #10,R1     ; H'0000000A
+    00000774 7F0C                   ADD         #12,R15
+    00000776 62F6                   MOV.L       @R15+,R2
+    00000778 62F6                   MOV.L       @R15+,R2
+    0000077A DD70                   MOV.L       L28+24,R13 ; __quick_odd_mvn
+    0000077C 3C2C                   ADD         R2,R12
+                vec.c        142    
+                vec.c        143          return resp;
+    0000077E 51FA                   MOV.L       @(40,R15),R1
+    00000780 1FC2                   MOV.L       R12,@(8,R15); resp.z
+    00000782 62F3                   MOV         R15,R2
+    00000784 4D0B                   JSR         @R13
+    00000786 E00C                   MOV         #12,R0     ; H'0000000C
+    00000788 7F0C                   ADD         #12,R15
+    0000078A 4F06                   LDS.L       @R15+,MACH
+    0000078C 4F16                   LDS.L       @R15+,MACL
+    0000078E 4F26                   LDS.L       @R15+,PR
+    00000790 6EF6                   MOV.L       @R15+,R14
+    00000792 6DF6                   MOV.L       @R15+,R13
+    00000794 6CF6                   MOV.L       @R15+,R12
+                vec.c        144    }
+    00000796 000B                   RTS
+    00000798 6BF6                   MOV.L       @R15+,R11
+                vec.c        145    
+                vec.c        146    // itrianglef: initialize trianglef
+                vec.c        147    
+                vec.c        148    trianglef itrianglef(vec3f _a, vec3f _b, vec3f _c, texture_t *_tx, tr_id_t _id, bool _flip) {
+    0000079A              _itrianglef:                     ; function: itrianglef
+                                                           ; frame size=56
+    0000079A 2FC6                   MOV.L       R12,@-R15
+    0000079C 4F22                   STS.L       PR,@-R15
+    0000079E 7FD0                   ADD         #-48,R15
+                vec.c        149        trianglef r;
+                vec.c        150          r.a = _a;
+    000007A0 6C53                   MOV         R5,R12
+    000007A2 D766                   MOV.L       L28+24,R7  ; __quick_odd_mvn
+    000007A4 62F3                   MOV         R15,R2
+    000007A6 E50C                   MOV         #12,R5     ; H'0000000C
+    000007A8 61F3                   MOV         R15,R1
+    000007AA 723C                   ADD         #60,R2
+    000007AC 470B                   JSR         @R7
+    000007AE 6053                   MOV         R5,R0
+                vec.c        151          r.b = _b;
+    000007B0 61F3                   MOV         R15,R1
+    000007B2 62F3                   MOV         R15,R2
+    000007B4 710C                   ADD         #12,R1
+    000007B6 7248                   ADD         #72,R2
+    000007B8 470B                   JSR         @R7
+    000007BA 6053                   MOV         R5,R0
+                vec.c        152          r.c = _c;
+    000007BC 61F3                   MOV         R15,R1
+    000007BE 62F3                   MOV         R15,R2
+    000007C0 7118                   ADD         #24,R1
+    000007C2 7254                   ADD         #84,R2
+    000007C4 470B                   JSR         @R7
+    000007C6 6053                   MOV         R5,R0
+                vec.c        153          r.tx = _tx;
+                vec.c        154          r.id = _id;
+                vec.c        155          r.flip_texture = _flip;
+    000007C8 E02C                   MOV         #44,R0     ; H'0000002C
+    000007CA 1FCA                   MOV.L       R12,@(40,R15); r.id
+    000007CC 0F64                   MOV.B       R6,@(R0,R15); r.flip_texture
+                vec.c        156        return r;
+    000007CE 51FE                   MOV.L       @(56,R15),R1
+    000007D0 DC5B                   MOV.L       L28+28,R12 ; __quick_evn_mvn
+    000007D2 1F49                   MOV.L       R4,@(36,R15); r.tx
+    000007D4 62F3                   MOV         R15,R2
+    000007D6 4C0B                   JSR         @R12
+    000007D8 E030                   MOV         #48,R0     ; H'00000030
+    000007DA 7F30                   ADD         #48,R15
+    000007DC 4F26                   LDS.L       @R15+,PR
+                vec.c        157    }
+    000007DE 000B                   RTS
+    000007E0 6CF6                   MOV.L       @R15+,R12
+                vec.c        158    
+                vec.c        159    // move: transform triangle (offset with vector q then rotated around origin)
+                vec.c        160    
+                vec.c        161    trianglef move(trianglef q, vec3f v, fixed pitch, fixed yaw) {
+    000007E2              _move:                           ; function: move
+                                                           ; frame size=140
+    000007E2 2FC6                   MOV.L       R12,@-R15
+    000007E4 2FD6                   MOV.L       R13,@-R15
+    000007E6 2FE6                   MOV.L       R14,@-R15
+    000007E8 4F22                   STS.L       PR,@-R15
+    000007EA 7FD0                   ADD         #-48,R15
+                vec.c        162          return itrianglef(rot(subvv(q.a, v), -pitch, -yaw),
+    000007EC 6C4B                   NEG         R4,R12
+    000007EE 6D5B                   NEG         R5,R13
+    000007F0 7FDC                   ADD         #-36,R15
+    000007F2 62F3                   MOV         R15,R2
+    000007F4 DE51                   MOV.L       L28+24,R14 ; __quick_odd_mvn
+    000007F6 E70C                   MOV         #12,R7     ; H'0000000C
+    000007F8 61F3                   MOV         R15,R1
+    000007FA 9093                   MOV.W       L28,R0     ; H'0098
+    000007FC 320C                   ADD         R0,R2
+    000007FE 4E0B                   JSR         @R14
+    00000800 6073                   MOV         R7,R0
+    00000802 7FF4                   ADD         #-12,R15
+    00000804 62F3                   MOV         R15,R2
+    00000806 61F3                   MOV         R15,R1
+    00000808 908D                   MOV.W       L28+2,R0   ; H'008C
+    0000080A 320C                   ADD         R0,R2
+    0000080C 4E0B                   JSR         @R14
+    0000080E 6073                   MOV         R7,R0
+    00000810 61F3                   MOV         R15,R1
+    00000812 7118                   ADD         #24,R1
+    00000814 BD51                   BSR         _subvv
+    00000816 2F16                   MOV.L       R1,@-R15
+    00000818 7F1C                   ADD         #28,R15
+    0000081A 64F3                   MOV         R15,R4
+    0000081C 740C                   ADD         #12,R4
+    0000081E 2F46                   MOV.L       R4,@-R15
+    00000820 64C3                   MOV         R12,R4
+    00000822 BF11                   BSR         _rot
+    00000824 65D3                   MOV         R13,R5
+    00000826 7FEC                   ADD         #-20,R15
+    00000828 62F3                   MOV         R15,R2
+    0000082A E70C                   MOV         #12,R7     ; H'0000000C
+    0000082C 61F3                   MOV         R15,R1
+    0000082E 907B                   MOV.W       L28+4,R0   ; H'00A4
+    00000830 320C                   ADD         R0,R2
+    00000832 4E0B                   JSR         @R14
+    00000834 6073                   MOV         R7,R0
+    00000836 7FF4                   ADD         #-12,R15
+    00000838 62F3                   MOV         R15,R2
+    0000083A 65F3                   MOV         R15,R5
+    0000083C 61F3                   MOV         R15,R1
+    0000083E 9072                   MOV.W       L28+2,R0   ; H'008C
+    00000840 320C                   ADD         R0,R2
+    00000842 6073                   MOV         R7,R0
+    00000844 4E0B                   JSR         @R14
+    00000846 7518                   ADD         #24,R5
+    00000848 BD37                   BSR         _subvv
+    0000084A 2F56                   MOV.L       R5,@-R15
+    0000084C 7F1C                   ADD         #28,R15
+    0000084E 66F3                   MOV         R15,R6
+    00000850 760C                   ADD         #12,R6
+    00000852 2F66                   MOV.L       R6,@-R15
+    00000854 64C3                   MOV         R12,R4
+    00000856 BEF7                   BSR         _rot
+    00000858 65D3                   MOV         R13,R5
+    0000085A 7FEC                   ADD         #-20,R15
+    0000085C 62F3                   MOV         R15,R2
+    0000085E E70C                   MOV         #12,R7     ; H'0000000C
+    00000860 61F3                   MOV         R15,R1
+    00000862 9062                   MOV.W       L28+6,R0   ; H'00B0
+    00000864 320C                   ADD         R0,R2
+    00000866 4E0B                   JSR         @R14
+    00000868 6073                   MOV         R7,R0
+    0000086A 7FF4                   ADD         #-12,R15
+    0000086C 62F3                   MOV         R15,R2
+    0000086E 61F3                   MOV         R15,R1
+    00000870 9059                   MOV.W       L28+2,R0   ; H'008C
+    00000872 320C                   ADD         R0,R2
+    00000874 4E0B                   JSR         @R14
+    00000876 6073                   MOV         R7,R0
+    00000878 67F3                   MOV         R15,R7
+    0000087A 7718                   ADD         #24,R7
+    0000087C BD1D                   BSR         _subvv
+    0000087E 2F76                   MOV.L       R7,@-R15
+    00000880 7F1C                   ADD         #28,R15
+    00000882 6EF3                   MOV         R15,R14
+    00000884 7E0C                   ADD         #12,R14
+    00000886 2FE6                   MOV.L       R14,@-R15
+    00000888 64C3                   MOV         R12,R4
+    0000088A BEDD                   BSR         _rot
+    0000088C 65D3                   MOV         R13,R5
+    0000088E 7F10                   ADD         #16,R15
+    00000890 64F3                   MOV         R15,R4
+    00000892 7424                   ADD         #36,R4
+    00000894 2F46                   MOV.L       R4,@-R15
+    00000896 9045                   MOV.W       L28,R0     ; H'0098
+    00000898 06FC                   MOV.B       @(R0,R15),R6
+    0000089A 9047                   MOV.W       L28+8,R0   ; H'0094
+    0000089C 05FE                   MOV.L       @(R0,R15),R5
+    0000089E 9046                   MOV.W       L28+10,R0  ; H'0090
+    000008A0 BF7B                   BSR         _itrianglef
+    000008A2 04FE                   MOV.L       @(R0,R15),R4
+    000008A4 7F28                   ADD         #40,R15
+    000008A6 E040                   MOV         #64,R0     ; H'00000040
+    000008A8 01FE                   MOV.L       @(R0,R15),R1
+    000008AA D625                   MOV.L       L28+28,R6  ; __quick_evn_mvn
+    000008AC 62F3                   MOV         R15,R2
+    000008AE 460B                   JSR         @R6
+    000008B0 E030                   MOV         #48,R0     ; H'00000030
+    000008B2 7F30                   ADD         #48,R15
+    000008B4 4F26                   LDS.L       @R15+,PR
+    000008B6 6EF6                   MOV.L       @R15+,R14
+    000008B8 6DF6                   MOV.L       @R15+,R13
+                vec.c        163                      rot(subvv(q.b, v), -pitch, -yaw),
+                vec.c        164                      rot(subvv(q.c, v), -pitch, -yaw),
+                vec.c        165                      q.tx, q.id, q.flip_texture);
+                vec.c        166    }
+    000008BA 000B                   RTS
+    000008BC 6CF6                   MOV.L       @R15+,R12
+                vec.c        167    
+                vec.c        168    vec3f normal(trianglef q) {
+    000008BE              _normal:                         ; function: normal
+                                                           ; frame size=72
+    000008BE 2FE6                   MOV.L       R14,@-R15
+    000008C0 4F22                   STS.L       PR,@-R15
+    000008C2 7FDC                   ADD         #-36,R15
+                vec.c        169          return crossp(subvv(q.b, q.a), subvv(q.c, q.a));
+    000008C4 62F3                   MOV         R15,R2
+    000008C6 DE1D                   MOV.L       L28+24,R14 ; __quick_odd_mvn
+    000008C8 E70C                   MOV         #12,R7     ; H'0000000C
+    000008CA 61F3                   MOV         R15,R1
+    000008CC 7230                   ADD         #48,R2
+    000008CE 4E0B                   JSR         @R14
+    000008D0 6073                   MOV         R7,R0
+    000008D2 7FF4                   ADD         #-12,R15
+    000008D4 62F3                   MOV         R15,R2
+    000008D6 61F3                   MOV         R15,R1
+    000008D8 7254                   ADD         #84,R2
+    000008DA 4E0B                   JSR         @R14
+    000008DC 6073                   MOV         R7,R0
+    000008DE 61F3                   MOV         R15,R1
+    000008E0 7118                   ADD         #24,R1
+    000008E2 BCEA                   BSR         _subvv
+    000008E4 2F16                   MOV.L       R1,@-R15
+    000008E6 7F04                   ADD         #4,R15
+    000008E8 62F3                   MOV         R15,R2
+    000008EA E60C                   MOV         #12,R6     ; H'0000000C
+    000008EC 61F3                   MOV         R15,R1
+    000008EE 723C                   ADD         #60,R2
+    000008F0 4E0B                   JSR         @R14
+    000008F2 6063                   MOV         R6,R0
+    000008F4 7FF4                   ADD         #-12,R15
+    000008F6 62F3                   MOV         R15,R2
+    000008F8 61F3                   MOV         R15,R1
+    000008FA 7254                   ADD         #84,R2
+    000008FC 4E0B                   JSR         @R14
+    000008FE 6063                   MOV         R6,R0
+    00000900 64F3                   MOV         R15,R4
+    00000902 7418                   ADD         #24,R4
+    00000904 BCD9                   BSR         _subvv
+    00000906 2F46                   MOV.L       R4,@-R15
+    00000908 7F1C                   ADD         #28,R15
+    0000090A 65F3                   MOV         R15,R5
+    0000090C 7518                   ADD         #24,R5
+    0000090E BC45                   BSR         _crossp
+    00000910 2F56                   MOV.L       R5,@-R15
+    00000912 7F1C                   ADD         #28,R15
+    00000914 51F5                   MOV.L       @(20,R15),R1
+    00000916 62F3                   MOV         R15,R2
+    00000918 4E0B                   JSR         @R14
+    0000091A E00C                   MOV         #12,R0     ; H'0000000C
+    0000091C 7F0C                   ADD         #12,R15
+    0000091E 4F26                   LDS.L       @R15+,PR
+                vec.c        170    }
+    00000920 000B                   RTS
+    00000922 6EF6                   MOV.L       @R15+,R14
+    00000924              L28:
+    00000924 0098                   .DATA.W     H'0098
+    00000926 008C                   .DATA.W     H'008C
+    00000928 00A4                   .DATA.W     H'00A4
+    0000092A 00B0                   .DATA.W     H'00B0
+    0000092C 0094                   .DATA.W     H'0094
+    0000092E 0090                   .DATA.W     H'0090
+    00000930 <00000000>             .DATA.L     _sin_f
+    00000934 <00000000>             .DATA.L     _cos_f
+    00000938 <00000000>             .DATA.L     __shard64
+    0000093C <00000000>             .DATA.L     __quick_odd_mvn
+    00000940 <00000000>             .DATA.L     __quick_evn_mvn
+SH SERIES C/C++ Compiler (V.9.04.02.001)                                                         21-Sep-2024 11:42:24  PAGE    1
+
+
+******** STATISTICS INFORMATION ********
+
+
+********** ERROR INFORMATION ***********
+
+NUMBER OF ERRORS:           0
+NUMBER OF WARNINGS:         0
+
+
+
+
+******* SOURCE LINE INFORMATION ********
+
+COMPILED SOURCE LINE:      170
+
+
+
+******* SECTION SIZE INFORMATION *******
+
+PROGRAM  SECTION (P):                                 00000944 Byte(s)
+CONSTANT SECTION (C):                                 00000000 Byte(s)
+DATA     SECTION (D):                                 00000000 Byte(s)
+BSS      SECTION (B):                                 00000000 Byte(s)
+
+TOTAL PROGRAM  SECTION: 00000944 Byte(s)
+TOTAL CONSTANT SECTION: 00000000 Byte(s)
+TOTAL DATA     SECTION: 00000000 Byte(s)
+TOTAL BSS      SECTION: 00000000 Byte(s)
+
+    TOTAL PROGRAM SIZE: 00000944 Byte(s)
+
+
+
+********** LABEL INFORMATION ***********
+
+NUMBER OF EXTERNAL REFERENCE SYMBOLS:           10
+NUMBER OF EXTERNAL DEFINITION SYMBOLS:          16
+NUMBER OF INTERNAL/EXTERNAL SYMBOLS:            29
+
+
+
+*** COMMAND PARAMETER ***
+
+-subcommand=C:\Users\csani\AppData\Local\Temp\hmk372B.tmp
+-cpu=sh3
+-include="C:\CasioSDK\OS\FX\include","C:\CasioSDK\Projects\VIMS3D"
+-objectfile="C:\CasioSDK\Projects\VIMS3D\Debug\vec.obj"
+-show=source
+-listfile="C:\CasioSDK\Projects\VIMS3D\Debug\vec.lst"
+-size
+-inline
+-chgincpath
+-errorpath
+"C:\CasioSDK\Projects\VIMS3D\vec.c"
+-lang=c
+-nologo
+-debug

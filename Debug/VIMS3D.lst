@@ -1,0 +1,178 @@
+SH SERIES C/C++ Compiler (V.9.04.02.001)                                                         21-Sep-2024 11:42:24  PAGE    1
+
+************ OBJECT LISTING ************
+
+FILE NAME: C:\CasioSDK\Projects\VIMS3D\VIMS3D.c
+
+SCT OFFSET   CODE       C LABEL     INSTRUCTION OPERAND    COMMENT
+
+             VIMS3D.c          1    #include "fxlib.h"
+             VIMS3D.c          2    #include "game.h"
+             VIMS3D.c          3    
+             VIMS3D.c          4    /*
+             VIMS3D.c          5     Very Impressive Mesh System 3D (VIMS3D): a C 3D rendering engine
+             VIMS3D.c          6    
+             VIMS3D.c          7     The VIMS renders very impressive meshes (wow), with even some billboarding capability :)
+             VIMS3D.c          8    
+             VIMS3D.c          9      TODO: ability to render EVEN MORE meshes
+             VIMS3D.c         10            maybe grayscale?
+             VIMS3D.c         11            BETTER PERFORMANCE, probably impossible
+             VIMS3D.c         12                  also gint and perhaps a C++ port
+             VIMS3D.c         13    
+             VIMS3D.c         14      fun fact: I've tried to do this with a raytracer,
+             VIMS3D.c         15                it took 500ms to draw 4 triangles with the resolution halved, it's now ~80ms for 96... (600x performance yay)
+             VIMS3D.c         16    */ 
+             VIMS3D.c         17    
+             VIMS3D.c         18    extern volatile unsigned int quit;
+             VIMS3D.c         19    
+             VIMS3D.c         20    int main(void) {
+P   00000000              _main:                           ; function: main
+                                                           ; frame size=8
+    00000000 4F22                   STS.L       PR,@-R15
+    00000002 7FFC                   ADD         #-4,R15
+             VIMS3D.c         21          unsigned int key;
+             VIMS3D.c         22    
+             VIMS3D.c         23        start();
+    00000004 D20A                   MOV.L       L16,R2     ; _start
+    00000006 420B                   JSR         @R2
+    00000008 0009                   NOP
+    0000000A A003                   BRA         L11
+    0000000C 0009                   NOP
+    0000000E              L12:
+             VIMS3D.c         24    
+             VIMS3D.c         25        while(quit != 2) {
+             VIMS3D.c         26                  GetKey(&key);
+    0000000E D209                   MOV.L       L16+4,R2   ; _GetKey
+    00000010 420B                   JSR         @R2
+    00000012 64F3                   MOV         R15,R4
+    00000014              L11:
+    00000014 D608                   MOV.L       L16+8,R6   ; _quit
+    00000016 6062                   MOV.L       @R6,R0     ; quit
+    00000018 8802                   CMP/EQ      #2,R0
+    0000001A 8BF8                   BF          L12
+    0000001C 7F04                   ADD         #4,R15
+    0000001E 4F26                   LDS.L       @R15+,PR
+             VIMS3D.c         27        }
+             VIMS3D.c         28    }
+    00000020 000B                   RTS
+    00000022 0009                   NOP
+             VIMS3D.c         29    
+             VIMS3D.c         30    int AddIn_main(int isAppli, unsigned short OptionNum)
+    00000024              _AddIn_main:                     ; function: AddIn_main
+                                                           ; frame size=4
+    00000024 4F22                   STS.L       PR,@-R15
+             VIMS3D.c         31    {
+             VIMS3D.c         32        main();
+    00000026 BFEB                   BSR         _main
+    00000028 0009                   NOP
+             VIMS3D.c         33        return 1;
+    0000002A 4F26                   LDS.L       @R15+,PR
+             VIMS3D.c         34    }
+    0000002C 000B                   RTS
+    0000002E E001                   MOV         #1,R0      ; H'00000001
+    00000030              L16:
+    00000030 <00000000>             .DATA.L     _start
+    00000034 <00000000>             .DATA.L     _GetKey
+    00000038 <00000000>             .DATA.L     _quit
+             VIMS3D.c         35    
+             VIMS3D.c         36    //****************************************************************************
+             VIMS3D.c         37    //**************                                              ****************
+             VIMS3D.c         38    //**************                 Notice!                      ****************
+             VIMS3D.c         39    //**************                                              ****************
+             VIMS3D.c         40    //**************  Please do not change the following source.  ****************
+             VIMS3D.c         41    //**************                                              ****************
+             VIMS3D.c         42    //****************************************************************************
+             VIMS3D.c         43    
+             VIMS3D.c         44    #pragma section _BR_Size
+             VIMS3D.c         45    unsigned long BR_Size;
+             VIMS3D.c         46    #pragma section
+             VIMS3D.c         47    
+             VIMS3D.c         48    #pragma section _TOP
+             VIMS3D.c         49    
+             VIMS3D.c         50    //****************************************************************************
+             VIMS3D.c         51    //  InitializeSystem
+             VIMS3D.c         52    //
+             VIMS3D.c         53    //  param   :   isAppli   : 1 = Application / 0 = eActivity
+             VIMS3D.c         54    //              OptionNum : Option Number (only eActivity)
+             VIMS3D.c         55    //
+             VIMS3D.c         56    //  retval  :   1 = No error / 0 = Error
+             VIMS3D.c         57    //
+             VIMS3D.c         58    //****************************************************************************
+             VIMS3D.c         59    int InitializeSystem(int isAppli, unsigned short OptionNum)
+P_T 00000000              _InitializeSystem:               ; function: InitializeSystem
+                                                           ; frame size=0
+    00000000 D601                   MOV.L       L17+2,R6   ; _INIT_ADDIN_APPLICATION
+             VIMS3D.c         60    {
+             VIMS3D.c         61        return INIT_ADDIN_APPLICATION(isAppli, OptionNum);
+    00000002 462B                   JMP         @R6
+    00000004 655D                   EXTU.W      R5,R5
+    00000006              L17:
+    00000006 00000002               .RES.W      1
+    00000008 <00000000>             .DATA.L     _INIT_ADDIN_APPLICATION
+             VIMS3D.c         62    }
+             VIMS3D.c         63    
+             VIMS3D.c         64    #pragma section
+B_B 00000000              _BR_Size:                        ; static: BR_Size
+    00000000 00000004               .RES.L      1
+SH SERIES C/C++ Compiler (V.9.04.02.001)                                                         21-Sep-2024 11:42:24  PAGE    1
+
+
+******** STATISTICS INFORMATION ********
+
+
+********** ERROR INFORMATION ***********
+
+NUMBER OF ERRORS:           0
+NUMBER OF WARNINGS:         0
+
+
+
+
+******* SOURCE LINE INFORMATION ********
+
+COMPILED SOURCE LINE:       64
+
+
+
+******* SECTION SIZE INFORMATION *******
+
+PROGRAM  SECTION (P):                                 0000003C Byte(s)
+PROGRAM  SECTION (P_TOP):                             0000000C Byte(s)
+CONSTANT SECTION (C):                                 00000000 Byte(s)
+DATA     SECTION (D):                                 00000000 Byte(s)
+BSS      SECTION (B):                                 00000000 Byte(s)
+BSS      SECTION (B_BR_Size):                         00000004 Byte(s)
+
+TOTAL PROGRAM  SECTION: 00000048 Byte(s)
+TOTAL CONSTANT SECTION: 00000000 Byte(s)
+TOTAL DATA     SECTION: 00000000 Byte(s)
+TOTAL BSS      SECTION: 00000004 Byte(s)
+
+    TOTAL PROGRAM SIZE: 0000004C Byte(s)
+
+
+
+********** LABEL INFORMATION ***********
+
+NUMBER OF EXTERNAL REFERENCE SYMBOLS:            4
+NUMBER OF EXTERNAL DEFINITION SYMBOLS:           4
+NUMBER OF INTERNAL/EXTERNAL SYMBOLS:            12
+
+
+
+*** COMMAND PARAMETER ***
+
+-subcommand=C:\Users\csani\AppData\Local\Temp\hmk36BC.tmp
+-cpu=sh3
+-include="C:\CasioSDK\OS\FX\include","C:\CasioSDK\Projects\VIMS3D"
+-objectfile="C:\CasioSDK\Projects\VIMS3D\Debug\VIMS3D.obj"
+-show=source
+-listfile="C:\CasioSDK\Projects\VIMS3D\Debug\VIMS3D.lst"
+-size
+-inline
+-chgincpath
+-errorpath
+"C:\CasioSDK\Projects\VIMS3D\VIMS3D.c"
+-lang=c
+-nologo
+-debug

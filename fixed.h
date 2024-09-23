@@ -1,0 +1,134 @@
+#ifndef _FIXED_H
+#define _FIXED_H
+
+#include <math.h>
+
+#include "VIMS_defs.h"
+
+/*
+FIXED POINT MATH LIBRARY
+
+precision: 22+10; 32bit (4byte) =>  FIXED_MAX = 2097151.9990234375
+									FIXED_MIN = -2097152
+									FIXED_EPSILON = 0.0009765625
+
+operation names:
+ add/sub/mul/div + (p = in-place e.g. +=) + first operand type + second operand type
+
+the following operations do not need extra functions (use the built-in operators):
+	add/sub ff
+	mul/div fi
+*/
+
+#define FIXED_MAX ((fixed)0x7FFFFFFF)
+#define FIXED_MIN ((fixed)0x80000000)
+#define FIXED_EPSILON ((fixed)1)
+#define FIXED_PRECISION 10
+#define FIXED_CONST (1<<FIXED_PRECISION)
+#define FIXED_WHOLE_MASK ((fixed)(0xFFFFFFFF>>FIXED_PRECISION)<<FIXED_PRECISION)
+#define FIXED_FRAC_MASK ((fixed)0xFFFFFFFF^FIXED_WHOLE_MASK)
+
+#define DEG2RAD_MULT (3.1415926535898f/180.0f)
+#define RAD2DEG_MULT (180.0f/3.1415926535898f)
+
+typedef int16_t fixed_half_t;
+typedef int32_t fixed_full_t;
+typedef int64_t fixed_double_t;
+typedef fixed_full_t fixed;
+
+#define MACRO_VAL2F
+#define MACRO_F2VAL
+#define MACRO_MULDIVF
+#define MACRO_ADDSUBF
+#define MACRO_FLOORF
+
+#ifdef MACRO_VAL2F
+#define int2f(i) (((fixed)(int)(i))<<FIXED_PRECISION)
+#define float2f(f) ((fixed)(((float)(f))*FIXED_CONST))
+#else
+#pragma inline(int2f)
+fixed int2f(int i);
+#pragma inline(float2f)
+fixed float2f(float f);
+#endif 
+
+#ifdef MACRO_F2VAL
+#define f2int(t) ((t)>>FIXED_PRECISION)
+#define f2float(t) (((float)(t))/FIXED_CONST)
+#else
+#pragma inline(f2int)
+int f2int(fixed t);
+#pragma inline(f2float)
+float f2float(fixed t);
+#endif
+
+#ifdef MACRO_MULDIVF
+#define mulff(t, f) ((fixed)(((fixed_double_t)(t)*(fixed_double_t)(f))>>FIXED_PRECISION))
+#define mulfi(t, i) ((fixed)((t)*(i)))
+#define divff(t, f) ((fixed)((((fixed_double_t)(t))<<FIXED_PRECISION)/(f)))
+#define divfi(t, i) ((fixed)((t)/(i)))
+#define shrfi(t, bits) ((fixed)((t)>>(bits)))
+#define shlfi(t, bits) ((fixed)((t)<<(bits)))
+#else
+#pragma inline(mulff)
+fixed mulff(fixed t, fixed f);
+fixed mulfi(fixed t, int i);
+#pragma inline(divff)
+fixed divff(fixed t, fixed f);
+fixed divfi(fixed t, int i);
+fixed shrfi(fixed t, int bits);
+fixed shlfi(fixed t, int bits);
+#endif 
+
+#define divshiftfi shrfi
+#define mulshiftfi shlfi
+
+// these work with normal + and -
+#ifdef MACRO_ADDSUBF
+#define addff(t, f) ((t)+(f))
+#define addpff(t, f) ((*(t))+=(f))
+#define subff(t, f) ((t)-(f))
+#define subpff(t, f) ((*(t))-=(f))
+#else
+fixed addff(fixed t, fixed f);
+void addpff(fixed *t, fixed f);
+fixed subff(fixed t, fixed f);
+void subpff(fixed *t, fixed f);
+#endif
+
+fixed addfi(fixed t, int i);
+void addpfi(fixed *t, int i);
+
+fixed subfi(fixed t, int i);
+void subpfi(fixed *t, int i);
+
+#pragma inline(mulpff)
+void mulpff(fixed *t, fixed f);
+void mulpfi(fixed *t, int i);
+
+#pragma inline(divpff)
+void divpff(fixed *t, fixed f);
+void divpfi(fixed *t, int i);
+
+// these clash with <math.h> without the underscores
+
+#ifdef MACRO_FLOORF
+#define floor_f(t) ((t) & FIXED_WHOLE_MASK)
+#else
+#pragma inline(floor_f)
+fixed floor_f(fixed t);
+#endif
+
+#pragma inline(abs_f)
+fixed abs_f(fixed t);
+#pragma inline(mod_f)
+fixed mod_f(fixed t, fixed f);
+
+fixed sqrt_f(fixed t);
+
+fixed cos_f(fixed t);
+fixed sin_f(fixed t);
+fixed tan_f(fixed t);
+fixed cot_f(fixed t);
+
+#endif

@@ -1,0 +1,1075 @@
+SH SERIES C/C++ Compiler (V.9.04.02.001)                                                         21-Sep-2024 11:42:24  PAGE    1
+
+************ OBJECT LISTING ************
+
+FILE NAME: C:\CasioSDK\Projects\VIMS3D\meshrender.c
+
+SCT OFFSET   CODE       C LABEL     INSTRUCTION OPERAND    COMMENT
+
+           meshrender          1    #include "meshrender.h"
+           meshrender          2    
+           meshrender          3    /*
+           meshrender          4     MESHRENDER.C:
+           meshrender          5      functions for handling meshes
+           meshrender          6      supported:
+           meshrender          7          mesh addition, deletion, rotation, translation
+           meshrender          8      the render process starts here
+           meshrender          9        fills triangle buffers and calls g_rasterize_buf for each mesh
+           meshrender         10        this adds some overhead but drastically reduces memory usage
+           meshrender         11    */
+           meshrender         12    
+           meshrender         13    // max number of meshes
+           meshrender         14    #define MBUF_SIZ 12
+           meshrender         15    
+           meshrender         16    mesh *mbuf;
+           meshrender         17    unsigned short mbuf_idx = 0;
+           meshrender         18    signed short zindex_max = 0;
+           meshrender         19    uint32_t m_uuid = 1;                          // nothing gets uuid 0
+           meshrender         20    
+           meshrender         21    // shouldn't run two draws at the same time
+           meshrender         22    volatile int lock = 0;
+           meshrender         23    
+           meshrender         24    // global coordination variables
+           meshrender         25    fixed p, y; // pitch, yaw
+           meshrender         26    vec3f o; // origin point (camera)
+           meshrender         27    
+           meshrender         28    // the pixel depth buffer, reset before meshes are rendered
+           meshrender         29    extern int16_t *depthbuf[64];
+           meshrender         30    
+           meshrender         31    // initialize all buffers (static alloc for buffers is not possible)
+           meshrender         32    int m_init(void) {
+P   00000000              _m_init:                         ; function: m_init
+                                                           ; frame size=4
+    00000000 4F22                   STS.L       PR,@-R15
+           meshrender         33          mbuf = (mesh *)malloc(MBUF_SIZ*sizeof(mesh));
+    00000002 D1A4                   MOV.L       L72+8,R1   ; _malloc
+    00000004 94B5                   MOV.W       L71,R4     ; H'0210
+    00000006 410B                   JSR         @R1
+    00000008 0009                   NOP
+           meshrender         34    
+           meshrender         35          if (mbuf == NULL) return G_EALLOC;      
+    0000000A 2008                   TST         R0,R0
+    0000000C D5A2                   MOV.L       L72+12,R5  ; _mbuf
+    0000000E 6403                   MOV         R0,R4
+    00000010 8F02                   BF/S        L12
+    00000012 2502                   MOV.L       R0,@R5     ; mbuf
+    00000014 A00D                   BRA         L13
+    00000016 E0FF                   MOV         #-1,R0     ; H'FFFFFFFF
+    00000018              L12:
+    00000018 D7A0                   MOV.L       L72+16,R7  ; _memset
+    0000001A 96AA                   MOV.W       L71,R6     ; H'0210
+    0000001C 470B                   JSR         @R7
+    0000001E E500                   MOV         #0,R5      ; H'00000000
+    00000020 D29F                   MOV.L       L72+20,R2  ; _mbuf_idx
+    00000022 E100                   MOV         #0,R1      ; H'00000000
+    00000024 D49F                   MOV.L       L72+24,R4  ; _zindex_max
+    00000026 D5A0                   MOV.L       L72+28,R5  ; _m_uuid
+    00000028 2211                   MOV.W       R1,@R2     ; mbuf_idx
+    0000002A E201                   MOV         #1,R2      ; H'00000001
+    0000002C 2411                   MOV.W       R1,@R4     ; zindex_max
+    0000002E 2522                   MOV.L       R2,@R5     ; m_uuid
+           meshrender         36    
+           meshrender         37          m_clrbuf();
+           meshrender         38    
+           meshrender         39          return G_SUCCESS;
+    00000030 E000                   MOV         #0,R0      ; H'00000000
+    00000032              L13:
+    00000032 4F26                   LDS.L       @R15+,PR
+           meshrender         40    }
+    00000034 000B                   RTS
+    00000036 0009                   NOP
+           meshrender         41    
+           meshrender         42    // clear buffers, initialize 
+           meshrender         43    int m_clrbuf(void) {
+    00000038              _m_clrbuf:                       ; function: m_clrbuf
+                                                           ; frame size=4
+    00000038 4F22                   STS.L       PR,@-R15
+    0000003A D197                   MOV.L       L72+12,R1  ; _mbuf
+           meshrender         44          memset((char *)mbuf, 0, MBUF_SIZ*sizeof(mesh));
+    0000003C D797                   MOV.L       L72+16,R7  ; _memset
+    0000003E 6412                   MOV.L       @R1,R4     ; mbuf
+    00000040 9697                   MOV.W       L71,R6     ; H'0210
+    00000042 470B                   JSR         @R7
+    00000044 E500                   MOV         #0,R5      ; H'00000000
+    00000046 D296                   MOV.L       L72+20,R2  ; _mbuf_idx
+           meshrender         45          mbuf_idx = 0;
+    00000048 E100                   MOV         #0,R1      ; H'00000000
+           meshrender         46          zindex_max = 0;
+    0000004A D496                   MOV.L       L72+24,R4  ; _zindex_max
+    0000004C D596                   MOV.L       L72+28,R5  ; _m_uuid
+    0000004E 2211                   MOV.W       R1,@R2     ; mbuf_idx
+           meshrender         47          m_uuid = 1;
+    00000050 E201                   MOV         #1,R2      ; H'00000001
+    00000052 2411                   MOV.W       R1,@R4     ; zindex_max
+    00000054 4F26                   LDS.L       @R15+,PR
+           meshrender         48    }
+    00000056 000B                   RTS
+    00000058 2522                   MOV.L       R2,@R5     ; m_uuid
+           meshrender         49    
+           meshrender         50    mesh_id_t m_addmesh(mesh m) {
+    0000005A              _m_addmesh:                      ; function: m_addmesh
+                                                           ; frame size=12
+    0000005A 2FE6                   MOV.L       R14,@-R15
+    0000005C 4F22                   STS.L       PR,@-R15
+    0000005E 4F12                   STS.L       MACL,@-R15
+           meshrender         51          if (mbuf_idx < MBUF_SIZ-1) {
+    00000060 D78F                   MOV.L       L72+20,R7  ; _mbuf_idx
+    00000062 E50B                   MOV         #11,R5     ; H'0000000B
+    00000064 6671                   MOV.W       @R7,R6     ; mbuf_idx
+    00000066 3652                   CMP/HS      R5,R6
+    00000068 8D1B                   BT/S        L17
+    0000006A E0FD                   MOV         #-3,R0     ; H'FFFFFFFD
+           meshrender         52                  mbuf[mbuf_idx] = m;
+    0000006C 666D                   EXTU.W      R6,R6
+    0000006E E42C                   MOV         #44,R4     ; H'0000002C
+    00000070 0467                   MUL.L       R6,R4
+    00000072 62F3                   MOV         R15,R2
+    00000074 720C                   ADD         #12,R2
+    00000076 6043                   MOV         R4,R0
+    00000078 DE87                   MOV.L       L72+12,R14 ; _mbuf
+    0000007A 051A                   STS         MACL,R5
+    0000007C 61E2                   MOV.L       @R14,R1    ; mbuf
+    0000007E D68B                   MOV.L       L72+32,R6  ; __quick_odd_mvn
+    00000080 460B                   JSR         @R6
+    00000082 315C                   ADD         R5,R1
+           meshrender         53                  mbuf[mbuf_idx++].id = m_uuid;
+    00000084 6571                   MOV.W       @R7,R5     ; mbuf_idx
+    00000086 615D                   EXTU.W      R5,R1
+    00000088 0417                   MUL.L       R1,R4
+    0000008A 7501                   ADD         #1,R5
+    0000008C 2751                   MOV.W       R5,@R7     ; mbuf_idx
+    0000008E 67E2                   MOV.L       @R14,R7    ; mbuf
+    00000090 DE85                   MOV.L       L72+28,R14 ; _m_uuid
+    00000092 001A                   STS         MACL,R0
+    00000094 61E2                   MOV.L       @R14,R1    ; m_uuid
+    00000096 772A                   ADD         #42,R7
+    00000098 0715                   MOV.W       R1,@(R0,R7); mbuf[].id
+           meshrender         54                  return m_uuid++;
+    0000009A 60E2                   MOV.L       @R14,R0    ; m_uuid
+    0000009C 6203                   MOV         R0,R2
+    0000009E 7201                   ADD         #1,R2
+    000000A0 2E22                   MOV.L       R2,@R14    ; m_uuid
+    000000A2              L17:
+    000000A2 4F16                   LDS.L       @R15+,MACL
+    000000A4 4F26                   LDS.L       @R15+,PR
+           meshrender         55          }
+           meshrender         56          return G_EBUFFULL;
+           meshrender         57    }
+    000000A6 000B                   RTS
+    000000A8 6EF6                   MOV.L       @R15+,R14
+           meshrender         58    
+           meshrender         59    int m_removemesh(mesh_id_t id) {
+    000000AA              _m_removemesh:                   ; function: m_removemesh
+                                                           ; frame size=20
+    000000AA 2FC6                   MOV.L       R12,@-R15
+    000000AC 2FD6                   MOV.L       R13,@-R15
+    000000AE 2FE6                   MOV.L       R14,@-R15
+    000000B0 4F22                   STS.L       PR,@-R15
+    000000B2 4F12                   STS.L       MACL,@-R15
+    000000B4 D77A                   MOV.L       L72+20,R7  ; _mbuf_idx
+    000000B6 DC78                   MOV.L       L72+12,R12 ; _mbuf
+    000000B8 6271                   MOV.W       @R7,R2     ; mbuf_idx
+    000000BA 66C2                   MOV.L       @R12,R6    ; mbuf
+    000000BC 652D                   EXTU.W      R2,R5
+    000000BE 762A                   ADD         #42,R6
+           meshrender         60          int i, j;
+           meshrender         61          for(i = 0; i < mbuf_idx; i++) {
+    000000C0 644F                   EXTS.W      R4,R4
+    000000C2 ED00                   MOV         #0,R13     ; H'00000000
+    000000C4              L19:
+    000000C4 3D53                   CMP/GE      R5,R13
+    000000C6 891D                   BT          L21
+           meshrender         62                  if (mbuf[i].id == id) {
+    000000C8 6261                   MOV.W       @R6,R2     ; mbuf[].id
+    000000CA 3240                   CMP/EQ      R4,R2
+    000000CC 8902                   BT          L23
+    000000CE 7D01                   ADD         #1,R13
+    000000D0 AFF8                   BRA         L19
+    000000D2 762C                   ADD         #44,R6
+    000000D4              L23:
+           meshrender         63                          for (j = i; j < (mbuf_idx-1); j++) {
+    000000D4 E22C                   MOV         #44,R2     ; H'0000002C
+    000000D6 02D7                   MUL.L       R13,R2
+    000000D8 A009                   BRA         L24
+    000000DA 0E1A                   STS         MACL,R14
+    000000DC              L25:
+           meshrender         64                                  mbuf[j] = mbuf[j+1];
+    000000DC 61C2                   MOV.L       @R12,R1    ; mbuf
+    000000DE D573                   MOV.L       L72+32,R5  ; __quick_odd_mvn
+    000000E0 31EC                   ADD         R14,R1
+    000000E2 6213                   MOV         R1,R2
+    000000E4 722C                   ADD         #44,R2
+    000000E6 450B                   JSR         @R5
+    000000E8 E02C                   MOV         #44,R0     ; H'0000002C
+    000000EA 7E2C                   ADD         #44,R14
+    000000EC 7D01                   ADD         #1,R13
+    000000EE              L24:
+    000000EE D76C                   MOV.L       L72+20,R7  ; _mbuf_idx
+    000000F0 6671                   MOV.W       @R7,R6     ; mbuf_idx
+    000000F2 666D                   EXTU.W      R6,R6
+    000000F4 6263                   MOV         R6,R2
+    000000F6 72FF                   ADD         #-1,R2
+    000000F8 3D23                   CMP/GE      R2,R13
+    000000FA 8BEF                   BF          L25
+           meshrender         65                          }
+           meshrender         66                          mbuf_idx--;
+    000000FC 76FF                   ADD         #-1,R6
+    000000FE 2761                   MOV.W       R6,@R7     ; mbuf_idx
+           meshrender         67                          return G_SUCCESS;
+    00000100 A001                   BRA         L27
+    00000102 E000                   MOV         #0,R0      ; H'00000000
+    00000104              L21:
+           meshrender         68                  }
+           meshrender         69          }
+           meshrender         70          return G_ENEXIST;
+    00000104 E0FC                   MOV         #-4,R0     ; H'FFFFFFFC
+    00000106              L27:
+    00000106 4F16                   LDS.L       @R15+,MACL
+    00000108 4F26                   LDS.L       @R15+,PR
+    0000010A 6EF6                   MOV.L       @R15+,R14
+    0000010C 6DF6                   MOV.L       @R15+,R13
+           meshrender         71    }
+    0000010E 000B                   RTS
+    00000110 6CF6                   MOV.L       @R15+,R12
+           meshrender         72    
+           meshrender         73    int m_coord(vec3f _pos, fixed _pitch, fixed _yaw) {
+    00000112              _m_coord:                        ; function: m_coord
+                                                           ; frame size=4
+    00000112 4F22                   STS.L       PR,@-R15
+    00000114 D166                   MOV.L       L72+36,R1  ; _o
+    00000116 62F3                   MOV         R15,R2
+    00000118 D664                   MOV.L       L72+32,R6  ; __quick_odd_mvn
+    0000011A 7204                   ADD         #4,R2
+    0000011C 460B                   JSR         @R6
+    0000011E E00C                   MOV         #12,R0     ; H'0000000C
+           meshrender         74          o = _pos;
+           meshrender         75          p = _pitch;
+    00000120 D164                   MOV.L       L72+40,R1  ; _p
+    00000122 2142                   MOV.L       R4,@R1     ; p
+           meshrender         76          y = _yaw;
+    00000124 D464                   MOV.L       L72+44,R4  ; _y
+    00000126 4F26                   LDS.L       @R15+,PR
+           meshrender         77    }     
+    00000128 000B                   RTS
+    0000012A 2452                   MOV.L       R5,@R4     ; y
+           meshrender         78    
+           meshrender         79    mesh imesh(trianglef *arr, texture_ptr_t *tx_arr, uint8_t arrlen, vec3f pos, vec3f ctr) {
+    0000012C              _imesh:                          ; function: imesh
+                                                           ; frame size=48
+    0000012C 4F22                   STS.L       PR,@-R15
+    0000012E 7FD4                   ADD         #-44,R15
+           meshrender         80          mesh m;
+           meshrender         81          m.mesh_arr = arr;
+           meshrender         82          m.tx_arr = tx_arr;
+    00000130 1F51                   MOV.L       R5,@(4,R15); m.tx_arr
+           meshrender         83          m.arrlen = arrlen;
+    00000132 6063                   MOV         R6,R0
+    00000134 D75D                   MOV.L       L72+32,R7  ; __quick_odd_mvn
+           meshrender         84          m.pos = pos;
+    00000136 61F3                   MOV         R15,R1
+    00000138 62F3                   MOV         R15,R2
+    0000013A E50C                   MOV         #12,R5     ; H'0000000C
+    0000013C 2F42                   MOV.L       R4,@R15    ; m.mesh_arr
+    0000013E 80F8                   MOV.B       R0,@(8,R15); m.arrlen
+    00000140 710C                   ADD         #12,R1
+    00000142 7234                   ADD         #52,R2
+    00000144 470B                   JSR         @R7
+    00000146 6053                   MOV         R5,R0
+           meshrender         85          m.id = 0;
+    00000148 E100                   MOV         #0,R1      ; H'00000000
+    0000014A E02A                   MOV         #42,R0     ; H'0000002A
+    0000014C 0F15                   MOV.W       R1,@(R0,R15); m.id
+           meshrender         86          m.ctr = ctr;
+    0000014E 61F3                   MOV         R15,R1
+    00000150 62F3                   MOV         R15,R2
+    00000152 711C                   ADD         #28,R1
+    00000154 7240                   ADD         #64,R2
+    00000156 470B                   JSR         @R7
+    00000158 6053                   MOV         R5,R0
+           meshrender         87          m.yaw = 0;
+    0000015A E400                   MOV         #0,R4      ; H'00000000
+           meshrender         88          m.is_billboard = 0;
+    0000015C E028                   MOV         #40,R0     ; H'00000028
+    0000015E 0F44                   MOV.B       R4,@(R0,R15); m.is_billboard
+           meshrender         89          return m;
+    00000160 51FC                   MOV.L       @(48,R15),R1
+    00000162 1F46                   MOV.L       R4,@(24,R15); m.yaw
+    00000164 62F3                   MOV         R15,R2
+    00000166 470B                   JSR         @R7
+    00000168 E02C                   MOV         #44,R0     ; H'0000002C
+    0000016A 7F2C                   ADD         #44,R15
+    0000016C 4F26                   LDS.L       @R15+,PR
+           meshrender         90    }
+    0000016E 000B                   RTS
+    00000170 0009                   NOP
+    00000172              L71:
+    00000172 0210                   .DATA.W     H'0210
+           meshrender         91    
+           meshrender         92    /*
+           meshrender         93     tx_pseudo_arr should be a ptr a ptr to a texture defined in "texturemap.h"
+           meshrender         94    */
+           meshrender         95    
+           meshrender         96    mesh ibill(trianglef *arr, texture_ptr_t *tx_pseudo_arr, vec3f pos) {
+    00000174              _ibill:                          ; function: ibill
+                                                           ; frame size=52
+    00000174 4F22                   STS.L       PR,@-R15
+    00000176 7FD4                   ADD         #-44,R15
+           meshrender         97          mesh m;
+           meshrender         98          m.mesh_arr = arr;
+           meshrender         99          m.tx_arr = tx_pseudo_arr;
+           meshrender        100          m.arrlen = 2;
+    00000178 E002                   MOV         #2,R0      ; H'00000002
+           meshrender        101          m.pos = pos;
+    0000017A 61F3                   MOV         R15,R1
+    0000017C 62F3                   MOV         R15,R2
+    0000017E D64B                   MOV.L       L72+32,R6  ; __quick_odd_mvn
+    00000180 2F42                   MOV.L       R4,@R15    ; m.mesh_arr
+    00000182 1F51                   MOV.L       R5,@(4,R15); m.tx_arr
+    00000184 80F8                   MOV.B       R0,@(8,R15); m.arrlen
+    00000186 710C                   ADD         #12,R1
+    00000188 7234                   ADD         #52,R2
+    0000018A E00C                   MOV         #12,R0     ; H'0000000C
+           meshrender        102          m.id = 0;
+           meshrender        103          m.ctr = ivec3f(0, 0, 0);
+    0000018C 460B                   JSR         @R6
+    0000018E 64F3                   MOV         R15,R4
+    00000190 E100                   MOV         #0,R1      ; H'00000000
+    00000192 E02A                   MOV         #42,R0     ; H'0000002A
+    00000194 741C                   ADD         #28,R4
+    00000196 0F15                   MOV.W       R1,@(R0,R15); m.id
+    00000198 2F46                   MOV.L       R4,@-R15
+    0000019A D748                   MOV.L       L72+48,R7  ; _ivec3f
+    0000019C E600                   MOV         #0,R6      ; H'00000000
+    0000019E 6563                   MOV         R6,R5
+    000001A0 470B                   JSR         @R7
+    000001A2 6463                   MOV         R6,R4
+    000001A4 7F04                   ADD         #4,R15
+           meshrender        104          m.yaw = 0;
+    000001A6 E100                   MOV         #0,R1      ; H'00000000
+           meshrender        105          m.is_billboard = 1;
+    000001A8 E501                   MOV         #1,R5      ; H'00000001
+    000001AA E028                   MOV         #40,R0     ; H'00000028
+    000001AC 1F16                   MOV.L       R1,@(24,R15); m.yaw
+    000001AE 0F54                   MOV.B       R5,@(R0,R15); m.is_billboard
+           meshrender        106          return m;
+    000001B0 51FC                   MOV.L       @(48,R15),R1
+    000001B2 D73E                   MOV.L       L72+32,R7  ; __quick_odd_mvn
+    000001B4 62F3                   MOV         R15,R2
+    000001B6 470B                   JSR         @R7
+    000001B8 E02C                   MOV         #44,R0     ; H'0000002C
+    000001BA 7F2C                   ADD         #44,R15
+    000001BC 4F26                   LDS.L       @R15+,PR
+           meshrender        107    }
+    000001BE 000B                   RTS
+    000001C0 0009                   NOP
+           meshrender        108    
+           meshrender        109    int m_movemesh(mesh_id_t id, vec3f v) {
+    000001C2              _m_movemesh:                     ; function: m_movemesh
+                                                           ; frame size=36
+    000001C2 4F22                   STS.L       PR,@-R15
+    000001C4 4F12                   STS.L       MACL,@-R15
+    000001C6 D136                   MOV.L       L72+20,R1  ; _mbuf_idx
+    000001C8 D233                   MOV.L       L72+12,R2  ; _mbuf
+    000001CA 6711                   MOV.W       @R1,R7     ; mbuf_idx
+           meshrender        110          int i, j;
+           meshrender        111          for(i = 0; i < mbuf_idx; i++) {
+    000001CC 644F                   EXTS.W      R4,R4
+    000001CE 617D                   EXTU.W      R7,R1
+    000001D0 6722                   MOV.L       @R2,R7     ; mbuf
+    000001D2 E600                   MOV         #0,R6      ; H'00000000
+    000001D4 6573                   MOV         R7,R5
+    000001D6 752A                   ADD         #42,R5
+    000001D8              L32:
+    000001D8 3613                   CMP/GE      R1,R6
+    000001DA 891D                   BT          L34
+           meshrender        112                  if (mbuf[i].id == id) {
+    000001DC 6251                   MOV.W       @R5,R2     ; mbuf[].id
+    000001DE 3240                   CMP/EQ      R4,R2
+    000001E0 8902                   BT          L36
+    000001E2 7601                   ADD         #1,R6
+    000001E4 AFF8                   BRA         L32
+    000001E6 752C                   ADD         #44,R5
+    000001E8              L36:
+           meshrender        113                          mbuf[i].pos = addvv(mbuf[i].pos, v);
+    000001E8 E42C                   MOV         #44,R4     ; H'0000002C
+    000001EA 0467                   MUL.L       R6,R4
+    000001EC 041A                   STS         MACL,R4
+    000001EE 347C                   ADD         R7,R4
+    000001F0 7FF4                   ADD         #-12,R15
+    000001F2 62F3                   MOV         R15,R2
+    000001F4 D62D                   MOV.L       L72+32,R6  ; __quick_odd_mvn
+    000001F6 E50C                   MOV         #12,R5     ; H'0000000C
+    000001F8 61F3                   MOV         R15,R1
+    000001FA 7214                   ADD         #20,R2
+    000001FC 460B                   JSR         @R6
+    000001FE 6053                   MOV         R5,R0
+    00000200 7FF4                   ADD         #-12,R15
+    00000202 740C                   ADD         #12,R4
+    00000204 61F3                   MOV         R15,R1
+    00000206 6243                   MOV         R4,R2
+    00000208 460B                   JSR         @R6
+    0000020A 6053                   MOV         R5,R0
+    0000020C D52C                   MOV.L       L72+52,R5  ; _addvv
+    0000020E 450B                   JSR         @R5
+    00000210 2F46                   MOV.L       R4,@-R15
+    00000212 7F1C                   ADD         #28,R15
+           meshrender        114                          return G_SUCCESS;
+    00000214 A001                   BRA         L37
+    00000216 E000                   MOV         #0,R0      ; H'00000000
+    00000218              L34:
+           meshrender        115                  }
+           meshrender        116          }
+           meshrender        117          return G_ENEXIST;
+    00000218 E0FC                   MOV         #-4,R0     ; H'FFFFFFFC
+    0000021A              L37:
+    0000021A 4F16                   LDS.L       @R15+,MACL
+    0000021C 4F26                   LDS.L       @R15+,PR
+           meshrender        118    }
+    0000021E 000B                   RTS
+    00000220 0009                   NOP
+           meshrender        119    
+           meshrender        120    int m_rotmesh(mesh_id_t id, fixed yaw) {
+    00000222              _m_rotmesh:                      ; function: m_rotmesh
+                                                           ; frame size=12
+    00000222 2FD6                   MOV.L       R13,@-R15
+    00000224 2FE6                   MOV.L       R14,@-R15
+    00000226 4F12                   STS.L       MACL,@-R15
+    00000228 D71D                   MOV.L       L72+20,R7  ; _mbuf_idx
+    0000022A DD1B                   MOV.L       L72+12,R13 ; _mbuf
+    0000022C 6271                   MOV.W       @R7,R2     ; mbuf_idx
+    0000022E 66D2                   MOV.L       @R13,R6    ; mbuf
+    00000230 614F                   EXTS.W      R4,R1
+    00000232 672D                   EXTU.W      R2,R7
+    00000234 6463                   MOV         R6,R4
+           meshrender        121          int i, j;
+           meshrender        122          for(i = 0; i < mbuf_idx; i++) {
+    00000236 6E53                   MOV         R5,R14
+    00000238 E500                   MOV         #0,R5      ; H'00000000
+    0000023A 742A                   ADD         #42,R4
+    0000023C              L39:
+    0000023C 3573                   CMP/GE      R7,R5
+    0000023E 8920                   BT          L41
+           meshrender        123                  if (mbuf[i].id == id) {
+    00000240 6241                   MOV.W       @R4,R2     ; mbuf[].id
+    00000242 3210                   CMP/EQ      R1,R2
+    00000244 8902                   BT          L43
+    00000246 7501                   ADD         #1,R5
+    00000248 AFF8                   BRA         L39
+    0000024A 742C                   ADD         #44,R4
+    0000024C              L43:
+           meshrender        124                          mbuf[i].yaw += yaw;
+    0000024C E12C                   MOV         #44,R1     ; H'0000002C
+    0000024E 0157                   MUL.L       R5,R1
+    00000250 921C                   MOV.W       L72,R2     ; H'0C90
+    00000252 041A                   STS         MACL,R4
+    00000254 364C                   ADD         R4,R6
+    00000256 5766                   MOV.L       @(24,R6),R7; mbuf[].yaw
+    00000258 37EC                   ADD         R14,R7
+    0000025A 1676                   MOV.L       R7,@(24,R6); mbuf[].yaw
+           meshrender        125                          if (mbuf[i].yaw > float2f(180*DEG2RAD_MULT)) {
+    0000025C 65D2                   MOV.L       @R13,R5    ; mbuf
+    0000025E 354C                   ADD         R4,R5
+    00000260 5656                   MOV.L       @(24,R5),R6; mbuf[].yaw
+    00000262 3627                   CMP/GT      R2,R6
+    00000264 8B05                   BF          L45
+           meshrender        126                                  mbuf[i].yaw -= float2f(360*DEG2RAD_MULT);
+    00000266 9212                   MOV.W       L72+2,R2   ; H'E6DF
+    00000268 362C                   ADD         R2,R6
+    0000026A 1566                   MOV.L       R6,@(24,R5); mbuf[].yaw
+    0000026C 65D2                   MOV.L       @R13,R5    ; mbuf
+    0000026E 354C                   ADD         R4,R5
+    00000270 5656                   MOV.L       @(24,R5),R6; mbuf[].yaw
+    00000272              L45:
+           meshrender        127                          }
+           meshrender        128                          if (mbuf[i].yaw < float2f(-180*DEG2RAD_MULT)) {
+    00000272 920D                   MOV.W       L72+4,R2   ; H'F370
+    00000274 3623                   CMP/GE      R2,R6
+    00000276 8902                   BT          L47
+           meshrender        129                                  mbuf[i].yaw += float2f(360*DEG2RAD_MULT);
+    00000278 920B                   MOV.W       L72+6,R2   ; H'1921
+    0000027A 362C                   ADD         R2,R6
+    0000027C 1566                   MOV.L       R6,@(24,R5); mbuf[].yaw
+    0000027E              L47:
+           meshrender        130                          }
+           meshrender        131                          return G_SUCCESS;
+    0000027E A001                   BRA         L48
+    00000280 E000                   MOV         #0,R0      ; H'00000000
+    00000282              L41:
+           meshrender        132                  }
+           meshrender        133          }
+           meshrender        134          return G_ENEXIST;
+    00000282 E0FC                   MOV         #-4,R0     ; H'FFFFFFFC
+    00000284              L48:
+    00000284 4F16                   LDS.L       @R15+,MACL
+    00000286 6EF6                   MOV.L       @R15+,R14
+           meshrender        135    }
+    00000288 000B                   RTS
+    0000028A 6DF6                   MOV.L       @R15+,R13
+    0000028C              L72:
+    0000028C 0C90                   .DATA.W     H'0C90
+    0000028E E6DF                   .DATA.W     H'E6DF
+    00000290 F370                   .DATA.W     H'F370
+    00000292 1921                   .DATA.W     H'1921
+    00000294 <00000000>             .DATA.L     _malloc
+    00000298 <00000000>             .DATA.L     _mbuf
+    0000029C <00000000>             .DATA.L     _memset
+    000002A0 <00000000>             .DATA.L     _mbuf_idx
+    000002A4 <00000000>             .DATA.L     _zindex_max
+    000002A8 <00000000>             .DATA.L     _m_uuid
+    000002AC <00000000>             .DATA.L     __quick_odd_mvn
+    000002B0 <00000000>             .DATA.L     _o
+    000002B4 <00000000>             .DATA.L     _p
+    000002B8 <00000000>             .DATA.L     _y
+    000002BC <00000000>             .DATA.L     _ivec3f
+    000002C0 <00000000>             .DATA.L     _addvv
+           meshrender        136    
+           meshrender        137    char buf[64]; // for sprintf
+           meshrender        138    
+           meshrender        139    int m_rendermeshes(int debug_overlay) {
+    000002C4              _m_rendermeshes:                 ; function: m_rendermeshes
+                                                           ; frame size=152
+    000002C4 2F86                   MOV.L       R8,@-R15
+    000002C6 2F96                   MOV.L       R9,@-R15
+    000002C8 2FA6                   MOV.L       R10,@-R15
+    000002CA 2FB6                   MOV.L       R11,@-R15
+    000002CC 2FC6                   MOV.L       R12,@-R15
+    000002CE 2FD6                   MOV.L       R13,@-R15
+    000002D0 2FE6                   MOV.L       R14,@-R15
+    000002D2 4F22                   STS.L       PR,@-R15
+    000002D4 7FC8                   ADD         #-56,R15
+           meshrender        140          int m_iter, t_iter, dx, dy;
+           meshrender        141          unsigned int time_s, time_e2, deltaticks, tr_cnt = 0;
+           meshrender        142          trianglef curr; 
+           meshrender        143          
+           meshrender        144          time_s = RTC_GetTicks();
+    000002D6 D1A1                   MOV.L       L74,R1     ; _RTC_GetTicks
+    000002D8 410B                   JSR         @R1
+    000002DA 1F4C                   MOV.L       R4,@(48,R15); debug_overlay
+           meshrender        145    
+           meshrender        146          Bdisp_AllClr_VRAM();
+    000002DC D5A0                   MOV.L       L74+4,R5   ; _Bdisp_AllClr_VRAM
+    000002DE E800                   MOV         #0,R8      ; H'00000000
+    000002E0 450B                   JSR         @R5
+    000002E2 1F0D                   MOV.L       R0,@(52,R15)
+           meshrender        147    
+           meshrender        148          for (dx = 0; dx < 128; dx++) {
+    000002E4 6183                   MOV         R8,R1
+    000002E6 E480                   MOV         #-128,R4   ; H'FFFFFF80
+    000002E8 977C                   MOV.W       L73,R7     ; H'7FFF
+    000002EA 644C                   EXTU.B      R4,R4
+    000002EC              L50:
+    000002EC E540                   MOV         #64,R5     ; H'00000040
+    000002EE D69D                   MOV.L       L74+8,R6   ; _depthbuf
+    000002F0              L51:
+           meshrender        149                  for (dy = 0; dy < 64; dy++) {
+           meshrender        150                          depthbuf[dy][dx] = 0x7FFF;
+    000002F0 6266                   MOV.L       @R6+,R2    ; depthbuf[]
+    000002F2 4510                   DT          R5
+    000002F4 321C                   ADD         R1,R2
+    000002F6 8FFB                   BF/S        L51
+    000002F8 2271                   MOV.W       R7,@R2
+    000002FA 4410                   DT          R4
+    000002FC 8FF6                   BF/S        L50
+    000002FE 7102                   ADD         #2,R1
+           meshrender        151                  }
+           meshrender        152          }
+           meshrender        153          
+           meshrender        154          g_draw_horizon();
+    00000300 D299                   MOV.L       L74+12,R2  ; _g_draw_horizon
+           meshrender        155    
+           meshrender        156          for (m_iter = 0; m_iter < mbuf_idx; m_iter++) {
+    00000302 420B                   JSR         @R2
+    00000304 EB00                   MOV         #0,R11     ; H'00000000
+    00000306 A092                   BRA         L54
+    00000308 6CB3                   MOV         R11,R12
+    0000030A              L55:
+           meshrender        157                  g_clrbuf();             
+    0000030A D298                   MOV.L       L74+16,R2  ; _g_clrbuf
+           meshrender        158    
+           meshrender        159                  for (t_iter = 0; t_iter < mbuf[m_iter].arrlen; t_iter++) {
+    0000030C 420B                   JSR         @R2
+    0000030E ED00                   MOV         #0,R13     ; H'00000000
+    00000310 69D3                   MOV         R13,R9
+    00000312 A07E                   BRA         L56
+    00000314 6AD3                   MOV         R13,R10
+    00000316              L57:
+           meshrender        160                          if (mbuf[m_iter].is_billboard) {
+    00000316 E028                   MOV         #40,R0     ; H'00000028
+    00000318 02EC                   MOV.B       @(R0,R14),R2; mbuf[].is_billboard
+    0000031A D795                   MOV.L       L74+20,R7  ; __quick_odd_mvn
+    0000031C 2228                   TST         R2,R2
+    0000031E 8906                   BT          L58
+           meshrender        161                                  mbuf[m_iter].yaw = -y;
+    00000320 D294                   MOV.L       L74+24,R2  ; _y
+    00000322 D495                   MOV.L       L74+28,R4  ; _mbuf
+    00000324 6622                   MOV.L       @R2,R6     ; y
+    00000326 656B                   NEG         R6,R5
+    00000328 1E56                   MOV.L       R5,@(24,R14); mbuf[].yaw
+    0000032A 6E42                   MOV.L       @R4,R14    ; mbuf
+    0000032C 3ECC                   ADD         R12,R14
+    0000032E              L58:
+           meshrender        162                          }
+           meshrender        163                          curr = move(mbuf[m_iter].mesh_arr[t_iter], mbuf[m_iter].ctr, 0, mbuf[m_iter].yaw);
+    0000032E 7FF4                   ADD         #-12,R15
+    00000330 62E3                   MOV         R14,R2
+    00000332 61F3                   MOV         R15,R1
+    00000334 721C                   ADD         #28,R2
+    00000336 470B                   JSR         @R7
+    00000338 E00C                   MOV         #12,R0     ; H'0000000C
+    0000033A 7FD0                   ADD         #-48,R15
+    0000033C 62E2                   MOV.L       @R14,R2    ; mbuf[].mesh_arr
+    0000033E D48F                   MOV.L       L74+32,R4  ; __quick_evn_mvn
+    00000340 61F3                   MOV         R15,R1
+    00000342 329C                   ADD         R9,R2
+    00000344 440B                   JSR         @R4
+    00000346 E030                   MOV         #48,R0     ; H'00000030
+    00000348 55E6                   MOV.L       @(24,R14),R5; mbuf[].yaw
+    0000034A 6EF3                   MOV         R15,R14
+    0000034C 7E3C                   ADD         #60,R14
+    0000034E 2FE6                   MOV.L       R14,@-R15
+    00000350 DE8B                   MOV.L       L74+36,R14 ; _move
+    00000352 4E0B                   JSR         @R14
+    00000354 E400                   MOV         #0,R4      ; H'00000000
+    00000356 7F28                   ADD         #40,R15
+           meshrender        164                          curr = move(curr, subvv(ivec3f(0,0,0), mbuf[m_iter].ctr), 0, 0);
+    00000358 D587                   MOV.L       L74+28,R5  ; _mbuf
+    0000035A D685                   MOV.L       L74+20,R6  ; __quick_odd_mvn
+    0000035C 6252                   MOV.L       @R5,R2     ; mbuf
+    0000035E 61F3                   MOV         R15,R1
+    00000360 721C                   ADD         #28,R2
+    00000362 32CC                   ADD         R12,R2
+    00000364 460B                   JSR         @R6
+    00000366 E00C                   MOV         #12,R0     ; H'0000000C
+    00000368 7FF4                   ADD         #-12,R15
+    0000036A 61F3                   MOV         R15,R1
+    0000036C D785                   MOV.L       L74+40,R7  ; _ivec3f
+    0000036E 2F16                   MOV.L       R1,@-R15
+    00000370 E600                   MOV         #0,R6      ; H'00000000
+    00000372 6563                   MOV         R6,R5
+    00000374 470B                   JSR         @R7
+    00000376 6463                   MOV         R6,R4
+    00000378 7F04                   ADD         #4,R15
+    0000037A 64F3                   MOV         R15,R4
+    0000037C D682                   MOV.L       L74+44,R6  ; _subvv
+    0000037E 7418                   ADD         #24,R4
+    00000380 460B                   JSR         @R6
+    00000382 2F46                   MOV.L       R4,@-R15
+    00000384 7FEC                   ADD         #-20,R15
+    00000386 62F3                   MOV         R15,R2
+    00000388 D67C                   MOV.L       L74+32,R6  ; __quick_evn_mvn
+    0000038A 65F3                   MOV         R15,R5
+    0000038C 61F3                   MOV         R15,R1
+    0000038E 723C                   ADD         #60,R2
+    00000390 E030                   MOV         #48,R0     ; H'00000030
+    00000392 460B                   JSR         @R6
+    00000394 753C                   ADD         #60,R5
+    00000396 2F56                   MOV.L       R5,@-R15
+    00000398 E500                   MOV         #0,R5      ; H'00000000
+    0000039A 4E0B                   JSR         @R14
+    0000039C 6453                   MOV         R5,R4
+    0000039E 7F34                   ADD         #52,R15
+           meshrender        165                          curr = move(curr, mbuf[m_iter].pos, 0, 0);
+    000003A0 D775                   MOV.L       L74+28,R7  ; _mbuf
+    000003A2 61F3                   MOV         R15,R1
+    000003A4 6272                   MOV.L       @R7,R2     ; mbuf
+    000003A6 D772                   MOV.L       L74+20,R7  ; __quick_odd_mvn
+    000003A8 720C                   ADD         #12,R2
+    000003AA 32CC                   ADD         R12,R2
+    000003AC 470B                   JSR         @R7
+    000003AE E00C                   MOV         #12,R0     ; H'0000000C
+    000003B0 7FD0                   ADD         #-48,R15
+    000003B2 62F3                   MOV         R15,R2
+    000003B4 D471                   MOV.L       L74+32,R4  ; __quick_evn_mvn
+    000003B6 66F3                   MOV         R15,R6
+    000003B8 61F3                   MOV         R15,R1
+    000003BA 723C                   ADD         #60,R2
+    000003BC E030                   MOV         #48,R0     ; H'00000030
+    000003BE 440B                   JSR         @R4
+    000003C0 763C                   ADD         #60,R6
+    000003C2 2F66                   MOV.L       R6,@-R15
+    000003C4 E500                   MOV         #0,R5      ; H'00000000
+    000003C6 4E0B                   JSR         @R14
+    000003C8 6453                   MOV         R5,R4
+           meshrender        166                          curr.tx = mbuf[m_iter].tx_arr[mbuf[m_iter].is_billboard?0:t_iter];
+    000003CA D76B                   MOV.L       L74+28,R7  ; _mbuf
+    000003CC E028                   MOV         #40,R0     ; H'00000028
+    000003CE 6E72                   MOV.L       @R7,R14    ; mbuf
+    000003D0 3ECC                   ADD         R12,R14
+    000003D2 55E1                   MOV.L       @(4,R14),R5; mbuf[].tx_arr
+    000003D4 0EEC                   MOV.B       @(R0,R14),R14; mbuf[].is_billboard
+    000003D6 2EE8                   TST         R14,R14
+    000003D8 8F05                   BF/S        L61
+    000003DA 7F40                   ADD         #64,R15
+    000003DC 60A3                   MOV         R10,R0
+    000003DE 025E                   MOV.L       @(R0,R5),R2; mbuf[].tx_arr[]
+    000003E0 A009                   BRA         L62
+    000003E2 1F29                   MOV.L       R2,@(36,R15); curr.tx
+    000003E4              L73:
+    000003E4 7FFF                   .DATA.W     H'7FFF
+    000003E6              L61:
+           meshrender        167                          if (mbuf[m_iter].is_billboard) {
+           meshrender        168                                  curr.flip_texture = t_iter == 0 ? FALSE : TRUE;
+    000003E6 2DD8                   TST         R13,R13
+    000003E8 6752                   MOV.L       @R5,R7     ; mbuf[].tx_arr[]
+    000003EA E201                   MOV         #1,R2      ; H'00000001
+    000003EC 8F01                   BF/S        L64
+    000003EE 1F79                   MOV.L       R7,@(36,R15); curr.tx
+    000003F0 E200                   MOV         #0,R2      ; H'00000000
+    000003F2              L64:
+    000003F2 E02C                   MOV         #44,R0     ; H'0000002C
+    000003F4 0F24                   MOV.B       R2,@(R0,R15); curr.flip_texture
+    000003F6              L62:
+           meshrender        169                          }
+           meshrender        170                          g_addtriangle(curr);
+    000003F6 7FD0                   ADD         #-48,R15
+    000003F8 62F3                   MOV         R15,R2
+    000003FA DE60                   MOV.L       L74+32,R14 ; __quick_evn_mvn
+    000003FC 61F3                   MOV         R15,R1
+    000003FE 7230                   ADD         #48,R2
+    00000400 4E0B                   JSR         @R14
+    00000402 E030                   MOV         #48,R0     ; H'00000030
+    00000404 DE61                   MOV.L       L74+48,R14 ; _g_addtriangle
+    00000406 4E0B                   JSR         @R14
+    00000408 0009                   NOP
+    0000040A 7F30                   ADD         #48,R15
+    0000040C 7D01                   ADD         #1,R13
+    0000040E 7A04                   ADD         #4,R10
+    00000410 7930                   ADD         #48,R9
+    00000412              L56:
+    00000412 D159                   MOV.L       L74+28,R1  ; _mbuf
+    00000414 6E12                   MOV.L       @R1,R14    ; mbuf
+    00000416 3ECC                   ADD         R12,R14
+    00000418 84E8                   MOV.B       @(8,R14),R0; mbuf[].arrlen
+    0000041A 620C                   EXTU.B      R0,R2
+    0000041C 3D23                   CMP/GE      R2,R13
+    0000041E 8901                   BT          L75
+    00000420 AF79                   BRA         L57
+    00000422 0009                   NOP
+    00000424              L75:
+           meshrender        171                  }
+           meshrender        172    
+           meshrender        173                  tr_cnt += g_rasterize_buf();
+    00000424 D25A                   MOV.L       L74+52,R2  ; _g_rasterize_buf
+    00000426 420B                   JSR         @R2
+    00000428 7B01                   ADD         #1,R11
+    0000042A 380C                   ADD         R0,R8
+    0000042C 7C2C                   ADD         #44,R12
+    0000042E              L54:
+    0000042E D159                   MOV.L       L74+56,R1  ; _mbuf_idx
+    00000430 6611                   MOV.W       @R1,R6     ; mbuf_idx
+    00000432 626D                   EXTU.W      R6,R2
+    00000434 3B23                   CMP/GE      R2,R11
+    00000436 8901                   BT          L76
+    00000438 AF67                   BRA         L55
+    0000043A 0009                   NOP
+    0000043C              L76:
+           meshrender        174                  
+           meshrender        175                  /* if (debug_overlay) {
+           meshrender        176                          sprintf((char *)buf, "%d", m_iter);
+           meshrender        177                          g_text3d(buf, subvv(ivec3f(0,int2f(16),0), mbuf[m_iter].pos), TEXT_SMALL | TEXT_INVERTED);
+           meshrender        178                  } */
+           meshrender        179          }
+           meshrender        180          
+           meshrender        181          time_e2 = RTC_GetTicks();
+    0000043C D247                   MOV.L       L74,R2     ; _RTC_GetTicks
+    0000043E 420B                   JSR         @R2
+    00000440 0009                   NOP
+           meshrender        182    
+           meshrender        183          deltaticks = time_e2-time_s;
+    00000442 51FD                   MOV.L       @(52,R15),R1
+           meshrender        184          if (deltaticks < 1) deltaticks = 1; 
+    00000444 E401                   MOV         #1,R4      ; H'00000001
+    00000446 3018                   SUB         R1,R0
+    00000448 3042                   CMP/HS      R4,R0
+    0000044A 8D01                   BT/S        L68
+    0000044C 6D03                   MOV         R0,R13
+    0000044E ED01                   MOV         #1,R13     ; H'00000001
+    00000450              L68:
+           meshrender        185    
+           meshrender        186          //if (deltaticks > 128) deltaticks -= 128; // the emulator sometimes skips a whole second :)
+           meshrender        187    
+           meshrender        188          if (debug_overlay) {
+    00000450 56FC                   MOV.L       @(48,R15),R6; debug_overlay
+    00000452 2668                   TST         R6,R6
+    00000454 8977                   BT          L70
+           meshrender        189                  sprintf(buf, "%4.1fms (%2.1ffps) %dt/%dm", (deltaticks)*(1000.0/128.0), 1000.0/((deltaticks)*(1000.0/128.0)), tr_cnt, m_iter);
+    00000456 7FF8                   ADD         #-8,R15
+    00000458 EE00                   MOV         #0,R14     ; H'00000000
+    0000045A 2FE6                   MOV.L       R14,@-R15
+    0000045C D54E                   MOV.L       L74+60,R5  ; H'401F4000
+    0000045E 2F56                   MOV.L       R5,@-R15
+    00000460 7FF8                   ADD         #-8,R15
+    00000462 66F3                   MOV         R15,R6
+    00000464 2F66                   MOV.L       R6,@-R15
+    00000466 D74D                   MOV.L       L74+64,R7  ; __utod_a
+    00000468 470B                   JSR         @R7
+    0000046A 60D3                   MOV         R13,R0
+    0000046C 7F04                   ADD         #4,R15
+    0000046E 69F3                   MOV         R15,R9
+    00000470 7910                   ADD         #16,R9
+    00000472 DA4B                   MOV.L       L74+68,R10 ; __muld_a
+    00000474 4A0B                   JSR         @R10
+    00000476 2F96                   MOV.L       R9,@-R15
+    00000478 7F14                   ADD         #20,R15
+    0000047A 62F6                   MOV.L       @R15+,R2
+    0000047C 69F6                   MOV.L       @R15+,R9
+    0000047E 2FB6                   MOV.L       R11,@-R15
+    00000480 2F86                   MOV.L       R8,@-R15
+    00000482 7FF8                   ADD         #-8,R15
+    00000484 2F96                   MOV.L       R9,@-R15
+    00000486 2F26                   MOV.L       R2,@-R15
+    00000488 2FE6                   MOV.L       R14,@-R15
+    0000048A DB46                   MOV.L       L74+72,R11 ; H'408F4000
+    0000048C 2FB6                   MOV.L       R11,@-R15
+    0000048E 6CF3                   MOV         R15,R12
+    00000490 7C10                   ADD         #16,R12
+    00000492 DE45                   MOV.L       L74+76,R14 ; __divd_a
+    00000494 4E0B                   JSR         @R14
+    00000496 2FC6                   MOV.L       R12,@-R15
+    00000498 7F14                   ADD         #20,R15
+    0000049A 2F96                   MOV.L       R9,@-R15
+    0000049C 2F26                   MOV.L       R2,@-R15
+    0000049E D443                   MOV.L       L74+80,R4  ; L77
+    000004A0 2F46                   MOV.L       R4,@-R15
+    000004A2 DB43                   MOV.L       L74+84,R11 ; _buf
+    000004A4 D943                   MOV.L       L74+88,R9  ; _sprintf
+    000004A6 490B                   JSR         @R9
+    000004A8 64B3                   MOV         R11,R4
+    000004AA 7F1C                   ADD         #28,R15
+    000004AC DA42                   MOV.L       L74+92,R10 ; _PrintMini
+    000004AE E700                   MOV         #0,R7      ; H'00000000
+           meshrender        190                  PrintMini(0, 0, (unsigned char *)buf, 0);
+    000004B0 66B3                   MOV         R11,R6
+    000004B2 6573                   MOV         R7,R5
+    000004B4 4A0B                   JSR         @R10
+    000004B6 6473                   MOV         R7,R4
+           meshrender        191          
+           meshrender        192                  sprintf(buf, "%4.1f %4.1f %4.1f %4.1fp %4.1fy", f2float(o.x),
+           meshrender        193                                                                                                                  f2float(o.y),
+           meshrender        194                                                                                                                  f2float(o.z), f2float(p)*RAD2DEG_MULT, f2float(y)*RAD2DEG_MULT);
+    000004B8 DC2E                   MOV.L       L74+24,R12 ; _y
+    000004BA DE40                   MOV.L       L74+96,R14 ; __itos
+    000004BC 60C2                   MOV.L       @R12,R0    ; y
+    000004BE DC40                   MOV.L       L74+100,R12; H'44800000
+    000004C0 4E0B                   JSR         @R14
+    000004C2 7FF8                   ADD         #-8,R15
+    000004C4 D73F                   MOV.L       L74+104,R7 ; __divs
+    000004C6 6103                   MOV         R0,R1
+    000004C8 470B                   JSR         @R7
+    000004CA 60C3                   MOV         R12,R0
+    000004CC 6103                   MOV         R0,R1
+    000004CE D83E                   MOV.L       L74+108,R8 ; __muls
+    000004D0 D03E                   MOV.L       L74+112,R0 ; H'42652EE0
+    000004D2 480B                   JSR         @R8
+    000004D4 66F3                   MOV         R15,R6
+    000004D6 D43E                   MOV.L       L74+116,R4 ; __stod_a
+    000004D8 440B                   JSR         @R4
+    000004DA 2F66                   MOV.L       R6,@-R15
+    000004DC 7FFC                   ADD         #-4,R15
+    000004DE D23D                   MOV.L       L74+120,R2 ; _p
+    000004E0 4E0B                   JSR         @R14
+    000004E2 6022                   MOV.L       @R2,R0     ; p
+    000004E4 6103                   MOV         R0,R1
+    000004E6 470B                   JSR         @R7
+    000004E8 60C3                   MOV         R12,R0
+    000004EA 6103                   MOV         R0,R1
+    000004EC D037                   MOV.L       L74+112,R0 ; H'42652EE0
+    000004EE 480B                   JSR         @R8
+    000004F0 0009                   NOP
+    000004F2 68F3                   MOV         R15,R8
+    000004F4 440B                   JSR         @R4
+    000004F6 2F86                   MOV.L       R8,@-R15
+    000004F8 7FFC                   ADD         #-4,R15
+    000004FA D537                   MOV.L       L74+124,R5 ; _o
+    000004FC 68F3                   MOV         R15,R8
+    000004FE 4E0B                   JSR         @R14
+    00000500 5052                   MOV.L       @(8,R5),R0 ; o.z
+    00000502 6103                   MOV         R0,R1
+    00000504 470B                   JSR         @R7
+    00000506 60C3                   MOV         R12,R0
+    00000508 440B                   JSR         @R4
+    0000050A 2F86                   MOV.L       R8,@-R15
+    0000050C 7FFC                   ADD         #-4,R15
+    0000050E 5051                   MOV.L       @(4,R5),R0 ; o.y
+    00000510 4E0B                   JSR         @R14
+    00000512 62F3                   MOV         R15,R2
+    00000514 6103                   MOV         R0,R1
+    00000516 470B                   JSR         @R7
+    00000518 60C3                   MOV         R12,R0
+    0000051A 440B                   JSR         @R4
+    0000051C 2F26                   MOV.L       R2,@-R15
+    0000051E 7FFC                   ADD         #-4,R15
+    00000520 4E0B                   JSR         @R14
+    00000522 6052                   MOV.L       @R5,R0     ; o.x
+    00000524 6103                   MOV         R0,R1
+    00000526 60C3                   MOV         R12,R0
+    00000528 470B                   JSR         @R7
+    0000052A 6CF3                   MOV         R15,R12
+    0000052C 440B                   JSR         @R4
+    0000052E 2FC6                   MOV.L       R12,@-R15
+    00000530 7F04                   ADD         #4,R15
+    00000532 D22A                   MOV.L       L74+128,R2 ; L78
+    00000534 2F26                   MOV.L       R2,@-R15
+    00000536 490B                   JSR         @R9
+    00000538 64B3                   MOV         R11,R4
+    0000053A 7F2C                   ADD         #44,R15
+    0000053C E700                   MOV         #0,R7      ; H'00000000
+           meshrender        195                  PrintMini(0, 6, (unsigned char *)buf, 0);
+    0000053E 66B3                   MOV         R11,R6
+    00000540 E506                   MOV         #6,R5      ; H'00000006
+    00000542 4A0B                   JSR         @R10
+    00000544 6473                   MOV         R7,R4
+    00000546              L70:
+           meshrender        196          }
+           meshrender        197    
+           meshrender        198    #ifdef CROSSHAIR
+           meshrender        199          Bdisp_AreaReverseVRAM(61, 32, 67, 32);
+           meshrender        200          Bdisp_AreaReverseVRAM(64, 29, 64, 35);
+           meshrender        201          Bdisp_AreaReverseVRAM(64, 32, 64, 32); //crosshair
+           meshrender        202    #endif
+           meshrender        203    
+           meshrender        204          return deltaticks;
+    00000546 60D3                   MOV         R13,R0
+    00000548 7F38                   ADD         #56,R15
+    0000054A 4F26                   LDS.L       @R15+,PR
+    0000054C 6EF6                   MOV.L       @R15+,R14
+    0000054E 6DF6                   MOV.L       @R15+,R13
+    00000550 6CF6                   MOV.L       @R15+,R12
+    00000552 6BF6                   MOV.L       @R15+,R11
+    00000554 6AF6                   MOV.L       @R15+,R10
+    00000556 69F6                   MOV.L       @R15+,R9
+           meshrender        205    }
+    00000558 000B                   RTS
+    0000055A 68F6                   MOV.L       @R15+,R8
+    0000055C              L74:
+    0000055C <00000000>             .DATA.L     _RTC_GetTicks
+    00000560 <00000000>             .DATA.L     _Bdisp_AllClr_VRAM
+    00000564 <00000000>             .DATA.L     _depthbuf
+    00000568 <00000000>             .DATA.L     _g_draw_horizon
+    0000056C <00000000>             .DATA.L     _g_clrbuf
+    00000570 <00000000>             .DATA.L     __quick_odd_mvn
+    00000574 <00000000>             .DATA.L     _y
+    00000578 <00000000>             .DATA.L     _mbuf
+    0000057C <00000000>             .DATA.L     __quick_evn_mvn
+    00000580 <00000000>             .DATA.L     _move
+    00000584 <00000000>             .DATA.L     _ivec3f
+    00000588 <00000000>             .DATA.L     _subvv
+    0000058C <00000000>             .DATA.L     _g_addtriangle
+    00000590 <00000000>             .DATA.L     _g_rasterize_buf
+    00000594 <00000000>             .DATA.L     _mbuf_idx
+    00000598 401F4000               .DATA.L     H'401F4000
+    0000059C <00000000>             .DATA.L     __utod_a
+    000005A0 <00000000>             .DATA.L     __muld_a
+    000005A4 408F4000               .DATA.L     H'408F4000
+    000005A8 <00000000>             .DATA.L     __divd_a
+    000005AC <00000000>             .DATA.L     L77
+    000005B0 <00000000>             .DATA.L     _buf
+    000005B4 <00000000>             .DATA.L     _sprintf
+    000005B8 <00000000>             .DATA.L     _PrintMini
+    000005BC <00000000>             .DATA.L     __itos
+    000005C0 44800000               .DATA.L     H'44800000
+    000005C4 <00000000>             .DATA.L     __divs
+    000005C8 <00000000>             .DATA.L     __muls
+    000005CC 42652EE0               .DATA.L     H'42652EE0
+    000005D0 <00000000>             .DATA.L     __stod_a
+    000005D4 <00000000>             .DATA.L     _p
+    000005D8 <00000000>             .DATA.L     _o
+    000005DC <00000000>             .DATA.L     L78
+           meshrender        206    
+           meshrender        207    
+D   00000000              _mbuf_idx:                       ; static: mbuf_idx
+    00000000 0000                   .DATA.W     H'0000
+    00000002              _zindex_max:                     ; static: zindex_max
+    00000002 0000                   .DATA.W     H'0000
+    00000004              _m_uuid:                         ; static: m_uuid
+    00000004 00000001               .DATA.L     H'00000001
+    00000008              _lock:                           ; static: lock
+    00000008 00000000               .DATA.L     H'00000000
+C   00000000              L77:
+    00000000 25342E3166             .SDATA      "%4.1fms (%2.1ffps) %dt/%dm"
+             6D73202825   
+             322E316666   
+             7073292025   
+             64742F2564   
+             6D           
+    0000001A 00                     .DATA.B     H'00
+    0000001B 00                     .DATAB.B    1,0
+    0000001C              L78:
+    0000001C 25342E3166             .SDATA      "%4.1f %4.1f %4.1f %4.1fp %4.1fy"
+             2025342E31   
+             662025342E   
+             3166202534   
+             2E31667020   
+             25342E3166   
+             79           
+    0000003B 00                     .DATA.B     H'00
+B   00000000              _mbuf:                           ; static: mbuf
+    00000000 00000004               .RES.L      1
+    00000004              _p:                              ; static: p
+    00000004 00000004               .RES.L      1
+    00000008              _y:                              ; static: y
+    00000008 00000004               .RES.L      1
+    0000000C              _o:                              ; static: o
+    0000000C 00000004               .RES.L      3
+    00000018              _buf:                            ; static: buf
+    00000018 00000001               .RES.B      64
+SH SERIES C/C++ Compiler (V.9.04.02.001)                                                         21-Sep-2024 11:42:24  PAGE    1
+
+
+******** STATISTICS INFORMATION ********
+
+
+********** ERROR INFORMATION ***********
+
+NUMBER OF ERRORS:           0
+NUMBER OF WARNINGS:         0
+
+
+
+
+******* SOURCE LINE INFORMATION ********
+
+COMPILED SOURCE LINE:      207
+
+
+
+******* SECTION SIZE INFORMATION *******
+
+PROGRAM  SECTION (P):                                 000005E0 Byte(s)
+CONSTANT SECTION (C):                                 0000003C Byte(s)
+DATA     SECTION (D):                                 0000000C Byte(s)
+BSS      SECTION (B):                                 00000058 Byte(s)
+
+TOTAL PROGRAM  SECTION: 000005E0 Byte(s)
+TOTAL CONSTANT SECTION: 0000003C Byte(s)
+TOTAL DATA     SECTION: 0000000C Byte(s)
+TOTAL BSS      SECTION: 00000058 Byte(s)
+
+    TOTAL PROGRAM SIZE: 00000680 Byte(s)
+
+
+
+********** LABEL INFORMATION ***********
+
+NUMBER OF EXTERNAL REFERENCE SYMBOLS:           24
+NUMBER OF EXTERNAL DEFINITION SYMBOLS:          19
+NUMBER OF INTERNAL/EXTERNAL SYMBOLS:            82
+
+
+
+*** COMMAND PARAMETER ***
+
+-subcommand=C:\Users\csani\AppData\Local\Temp\hmk3941.tmp
+-cpu=sh3
+-include="C:\CasioSDK\OS\FX\include","C:\CasioSDK\Projects\VIMS3D"
+-objectfile="C:\CasioSDK\Projects\VIMS3D\Debug\meshrender.obj"
+-show=source
+-listfile="C:\CasioSDK\Projects\VIMS3D\Debug\meshrender.lst"
+-size
+-inline
+-chgincpath
+-errorpath
+"C:\CasioSDK\Projects\VIMS3D\meshrender.c"
+-lang=c
+-nologo
+-debug

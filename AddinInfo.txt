@@ -1,0 +1,12 @@
+//------------------------------------------------------------------
+// Addin-Application header control file, created with the CASIO SDK
+//------------------------------------------------------------------
+[OUTPUT]     : "VIMS3D.G1A"
+[BINDATA]    : "FXADDINror.bin"
+[DISPNAME]   : "VIMS3D"
+[APPNAME]    : "@VIMS3D"
+[VERSION]    : "00.03.0000"
+[APL_ICON]   : "MainIcon.bmp"
+[MODULE_NUM] : 0
+[MOD1_TITLE] : "VIMS3D"
+[MOD1_ICON]  : "eActivityIcon.bmp"

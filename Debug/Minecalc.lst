@@ -1,0 +1,184 @@
+SH SERIES C/C++ Compiler (V.9.04.02.001)                                                         23-Aug-2024 14:07:37  PAGE    1
+
+************ OBJECT LISTING ************
+
+FILE NAME: C:\CasioSDK\Projects\Minecalc3\Minecalc.c
+
+SCT OFFSET   CODE       C LABEL     INSTRUCTION OPERAND    COMMENT
+
+           Minecalc.c          1    #include "fxlib.h"
+           Minecalc.c          2    #include "game.h"
+           Minecalc.c          3    
+           Minecalc.c          4    /*
+           Minecalc.c          5     A C rewrite of Minecraft
+           Minecalc.c          6     Can render up to 720 triangles at once = only 60 blocks ):
+           Minecalc.c          7    
+           Minecalc.c          8      TODO: ability to render more triangles -> zindex stored in blocks with a common trianglef ptr
+           Minecalc.c          9            maybe grayscale?
+           Minecalc.c         10            BETTER PERFORMANCE (at least 10 fps with a loaded 8*8*16 chunk (!)) //probably impossible
+           Minecalc.c         11    
+           Minecalc.c         12      fun fact: I've tried to do this with a raytracer,
+           Minecalc.c         13                it took 500ms to draw 4 triangles with the resolution halved, it's now ~80ms for 96... (600x performance yay)
+           Minecalc.c         14    */ 
+           Minecalc.c         15    
+           Minecalc.c         16    extern volatile unsigned int quit;
+           Minecalc.c         17    
+           Minecalc.c         18    int main(void) {
+P   00000000              _main:                           ; function: main
+                                                           ; frame size=8
+    00000000 4F22                   STS.L       PR,@-R15
+    00000002 7FFC                   ADD         #-4,R15
+           Minecalc.c         19          unsigned int key;
+           Minecalc.c         20    
+           Minecalc.c         21        start();
+    00000004 D20A                   MOV.L       L16,R2     ; _start
+    00000006 420B                   JSR         @R2
+    00000008 0009                   NOP
+    0000000A A003                   BRA         L11
+    0000000C 0009                   NOP
+    0000000E              L12:
+           Minecalc.c         22    
+           Minecalc.c         23        while(quit != 2) {
+           Minecalc.c         24                  GetKey(&key);
+    0000000E D209                   MOV.L       L16+4,R2   ; _GetKey
+    00000010 420B                   JSR         @R2
+    00000012 64F3                   MOV         R15,R4
+    00000014              L11:
+    00000014 D608                   MOV.L       L16+8,R6   ; _quit
+    00000016 6062                   MOV.L       @R6,R0     ; quit
+    00000018 8802                   CMP/EQ      #2,R0
+    0000001A 8BF8                   BF          L12
+    0000001C 7F04                   ADD         #4,R15
+    0000001E 4F26                   LDS.L       @R15+,PR
+           Minecalc.c         25        }
+           Minecalc.c         26    }
+    00000020 000B                   RTS
+    00000022 0009                   NOP
+           Minecalc.c         27    
+           Minecalc.c         28    int AddIn_main(int isAppli, unsigned short OptionNum)
+    00000024              _AddIn_main:                     ; function: AddIn_main
+                                                           ; frame size=4
+    00000024 4F22                   STS.L       PR,@-R15
+           Minecalc.c         29    {
+           Minecalc.c         30        main();
+    00000026 BFEB                   BSR         _main
+    00000028 0009                   NOP
+           Minecalc.c         31        return 1;
+    0000002A 4F26                   LDS.L       @R15+,PR
+           Minecalc.c         32    }
+    0000002C 000B                   RTS
+    0000002E E001                   MOV         #1,R0      ; H'00000001
+    00000030              L16:
+    00000030 <00000000>             .DATA.L     _start
+    00000034 <00000000>             .DATA.L     _GetKey
+    00000038 <00000000>             .DATA.L     _quit
+           Minecalc.c         33    
+           Minecalc.c         34    
+           Minecalc.c         35    
+           Minecalc.c         36    
+           Minecalc.c         37    
+           Minecalc.c         38    
+           Minecalc.c         39    //****************************************************************************
+           Minecalc.c         40    //**************                                              ****************
+           Minecalc.c         41    //**************                 Notice!                      ****************
+           Minecalc.c         42    //**************                                              ****************
+           Minecalc.c         43    //**************  Please do not change the following source.  ****************
+           Minecalc.c         44    //**************                                              ****************
+           Minecalc.c         45    //****************************************************************************
+           Minecalc.c         46    
+           Minecalc.c         47    
+           Minecalc.c         48    #pragma section _BR_Size
+           Minecalc.c         49    unsigned long BR_Size;
+           Minecalc.c         50    #pragma section
+           Minecalc.c         51    
+           Minecalc.c         52    
+           Minecalc.c         53    #pragma section _TOP
+           Minecalc.c         54    
+           Minecalc.c         55    //****************************************************************************
+           Minecalc.c         56    //  InitializeSystem
+           Minecalc.c         57    //
+           Minecalc.c         58    //  param   :   isAppli   : 1 = Application / 0 = eActivity
+           Minecalc.c         59    //              OptionNum : Option Number (only eActivity)
+           Minecalc.c         60    //
+           Minecalc.c         61    //  retval  :   1 = No error / 0 = Error
+           Minecalc.c         62    //
+           Minecalc.c         63    //****************************************************************************
+           Minecalc.c         64    int InitializeSystem(int isAppli, unsigned short OptionNum)
+P_T 00000000              _InitializeSystem:               ; function: InitializeSystem
+                                                           ; frame size=0
+    00000000 D601                   MOV.L       L17+2,R6   ; _INIT_ADDIN_APPLICATION
+           Minecalc.c         65    {
+           Minecalc.c         66        return INIT_ADDIN_APPLICATION(isAppli, OptionNum);
+    00000002 462B                   JMP         @R6
+    00000004 655D                   EXTU.W      R5,R5
+    00000006              L17:
+    00000006 00000002               .RES.W      1
+    00000008 <00000000>             .DATA.L     _INIT_ADDIN_APPLICATION
+           Minecalc.c         67    }
+           Minecalc.c         68    
+           Minecalc.c         69    #pragma section
+           Minecalc.c         70    
+B_B 00000000              _BR_Size:                        ; static: BR_Size
+    00000000 00000004               .RES.L      1
+SH SERIES C/C++ Compiler (V.9.04.02.001)                                                         23-Aug-2024 14:07:37  PAGE    1
+
+
+******** STATISTICS INFORMATION ********
+
+
+********** ERROR INFORMATION ***********
+
+NUMBER OF ERRORS:           0
+NUMBER OF WARNINGS:         0
+
+
+
+
+******* SOURCE LINE INFORMATION ********
+
+COMPILED SOURCE LINE:       70
+
+
+
+******* SECTION SIZE INFORMATION *******
+
+PROGRAM  SECTION (P):                                 0000003C Byte(s)
+PROGRAM  SECTION (P_TOP):                             0000000C Byte(s)
+CONSTANT SECTION (C):                                 00000000 Byte(s)
+DATA     SECTION (D):                                 00000000 Byte(s)
+BSS      SECTION (B):                                 00000000 Byte(s)
+BSS      SECTION (B_BR_Size):                         00000004 Byte(s)
+
+TOTAL PROGRAM  SECTION: 00000048 Byte(s)
+TOTAL CONSTANT SECTION: 00000000 Byte(s)
+TOTAL DATA     SECTION: 00000000 Byte(s)
+TOTAL BSS      SECTION: 00000004 Byte(s)
+
+    TOTAL PROGRAM SIZE: 0000004C Byte(s)
+
+
+
+********** LABEL INFORMATION ***********
+
+NUMBER OF EXTERNAL REFERENCE SYMBOLS:            4
+NUMBER OF EXTERNAL DEFINITION SYMBOLS:           4
+NUMBER OF INTERNAL/EXTERNAL SYMBOLS:            12
+
+
+
+*** COMMAND PARAMETER ***
+
+-subcommand=C:\Users\csani\AppData\Local\Temp\hmk791E.tmp
+-cpu=sh3
+-include="C:\CasioSDK\OS\FX\include","C:\CasioSDK\Projects\Minecalc3"
+-objectfile="C:\CasioSDK\Projects\Minecalc3\Debug\Minecalc.obj"
+-show=source
+-listfile="C:\CasioSDK\Projects\Minecalc3\Debug\Minecalc.lst"
+-size
+-inline
+-chgincpath
+-errorpath
+"C:\CasioSDK\Projects\Minecalc3\Minecalc.c"
+-lang=c
+-nologo
+-debug

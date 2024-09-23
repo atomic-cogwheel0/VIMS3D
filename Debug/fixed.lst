@@ -1,0 +1,696 @@
+SH SERIES C/C++ Compiler (V.9.04.02.001)                                                         21-Sep-2024 11:42:24  PAGE    1
+
+************ OBJECT LISTING ************
+
+FILE NAME: C:\CasioSDK\Projects\VIMS3D\fixed.c
+
+SCT OFFSET   CODE       C LABEL     INSTRUCTION OPERAND    COMMENT
+
+              fixed.c          1    #include "fixed.h"
+              fixed.c          2    
+              fixed.c          3    /*
+              fixed.c          4    FIXED.C
+              fixed.c          5     functions for fixed point arithmetic
+              fixed.c          6     these are tested and correct (trigonometry is a bit inaccurate)
+              fixed.c          7    */
+              fixed.c          8    
+              fixed.c          9    // zero idea how this works
+              fixed.c         10    fixed sqrt_f(fixed f) {
+P   00000000              _sqrt_f:                         ; function: sqrt_f
+                                                           ; frame size=0
+              fixed.c         11        uint32_t t, q, b, r;
+              fixed.c         12          fixed res = 0;
+              fixed.c         13        r = f;
+              fixed.c         14        b = 0x40000000;
+    00000000 E240                   MOV         #64,R2     ; H'00000040
+    00000002 4218                   SHLL8       R2
+    00000004 4228                   SHLL16      R2
+    00000006 6643                   MOV         R4,R6
+              fixed.c         15        q = 0;
+    00000008 E500                   MOV         #0,R5      ; H'00000000
+    0000000A E140                   MOV         #64,R1     ; H'00000040
+    0000000C              L11:
+              fixed.c         16        while(b > 0x40) {
+              fixed.c         17            t = q + b;
+    0000000C 6453                   MOV         R5,R4
+    0000000E 342C                   ADD         R2,R4
+              fixed.c         18            if(r >= t) {
+    00000010 3642                   CMP/HS      R4,R6
+    00000012 8B02                   BF          L13
+              fixed.c         19                r -= t;
+    00000014 3648                   SUB         R4,R6
+              fixed.c         20                q = t + b; // equivalent to q += 2*b
+    00000016 342C                   ADD         R2,R4
+    00000018 6543                   MOV         R4,R5
+    0000001A              L13:
+              fixed.c         21            }
+              fixed.c         22            r <<= 1;
+    0000001A 4600                   SHLL        R6
+              fixed.c         23            b >>= 1;
+    0000001C 4201                   SHLR        R2
+    0000001E 3216                   CMP/HI      R1,R2
+    00000020 89F4                   BT          L11
+              fixed.c         24        }
+              fixed.c         25        q >>= 8;
+              fixed.c         26        return q;
+    00000022 4519                   SHLR8       R5
+              fixed.c         27    }
+    00000024 000B                   RTS
+    00000026 6053                   MOV         R5,R0
+              fixed.c         28    
+              fixed.c         29    #ifndef MACRO_VAL2F
+              fixed.c         30    fixed int2f(int i) {
+              fixed.c         31        return ((fixed)i)*FIXED_CONST;
+              fixed.c         32    }
+              fixed.c         33    
+              fixed.c         34    fixed float2f(float f) {
+              fixed.c         35        return (fixed)(f*FIXED_CONST);
+              fixed.c         36    }
+              fixed.c         37    #endif
+              fixed.c         38    
+              fixed.c         39    #ifndef MACRO_F2VAL
+              fixed.c         40    int f2int(fixed t) {
+              fixed.c         41        return t>>FIXED_PRECISION;
+              fixed.c         42    }
+              fixed.c         43    
+              fixed.c         44    float f2float(fixed t) {
+              fixed.c         45        return ((float)t)/FIXED_CONST;
+              fixed.c         46    }
+              fixed.c         47    #endif
+              fixed.c         48    
+              fixed.c         49    fixed abs_f(fixed t) {
+    00000028              _abs_f:                          ; function: abs_f
+                                                           ; frame size=0
+              fixed.c         50          return (t<0)?-t:t;
+    00000028 4411                   CMP/PZ      R4
+    0000002A 8D01                   BT/S        L18
+    0000002C 6043                   MOV         R4,R0
+    0000002E 604B                   NEG         R4,R0
+    00000030              L18:
+              fixed.c         51    }
+    00000030 000B                   RTS
+    00000032 0009                   NOP
+              fixed.c         52    
+              fixed.c         53    #ifndef MACRO_ADDSUBF
+              fixed.c         54    fixed addff(fixed t, fixed f) {
+              fixed.c         55        return t + f;
+              fixed.c         56    }
+              fixed.c         57    #endif
+              fixed.c         58    fixed addfi(fixed t, int i) {
+    00000034              _addfi:                          ; function: addfi
+                                                           ; frame size=0
+              fixed.c         59        return t + (i<<FIXED_PRECISION);
+    00000034 4518                   SHLL8       R5
+    00000036 4508                   SHLL2       R5
+    00000038 354C                   ADD         R4,R5
+              fixed.c         60    }
+    0000003A 000B                   RTS
+    0000003C 6053                   MOV         R5,R0
+              fixed.c         61    
+              fixed.c         62    #ifndef MACRO_ADDSUBF
+              fixed.c         63    fixed subff(fixed t, fixed f) {
+              fixed.c         64        return t - f;
+              fixed.c         65    }
+              fixed.c         66    #endif
+              fixed.c         67    fixed subfi(fixed t, int i) {
+    0000003E              _subfi:                          ; function: subfi
+                                                           ; frame size=0
+              fixed.c         68        return t - (i<<FIXED_PRECISION);
+    0000003E 4518                   SHLL8       R5
+    00000040 4508                   SHLL2       R5
+    00000042 3458                   SUB         R5,R4
+              fixed.c         69    }
+    00000044 000B                   RTS
+    00000046 6043                   MOV         R4,R0
+              fixed.c         70    
+              fixed.c         71    #ifndef MACRO_MULDIVF
+              fixed.c         72    fixed mulff(fixed t, fixed f) {
+              fixed.c         73        return (fixed)(((fixed_double_t)t * (fixed_double_t)f) >> FIXED_PRECISION);
+              fixed.c         74    }
+              fixed.c         75    fixed mulfi(fixed t, int i) {
+              fixed.c         76        return t * i;
+              fixed.c         77    }
+              fixed.c         78    
+              fixed.c         79    fixed divff(fixed t, fixed f) {
+              fixed.c         80        return (fixed)((((fixed_double_t)t)<<FIXED_PRECISION) / f);
+              fixed.c         81    }   
+              fixed.c         82    fixed divfi(fixed t, int i) {
+              fixed.c         83        return t / i;
+              fixed.c         84    }
+              fixed.c         85    
+              fixed.c         86    fixed shrfi(fixed t, int bits) {
+              fixed.c         87          return t >> bits;
+              fixed.c         88    }
+              fixed.c         89    fixed shlfi(fixed t, int bits) {
+              fixed.c         90        return t << bits;
+              fixed.c         91    }
+              fixed.c         92    #endif
+              fixed.c         93    
+              fixed.c         94    #ifndef MACRO_ADDSUBF
+              fixed.c         95    void addpff(fixed *t, fixed f) {
+              fixed.c         96        (*t) += f;
+              fixed.c         97    }
+              fixed.c         98    #endif
+              fixed.c         99    void addpfi(fixed *t, int i) {
+    00000048              _addpfi:                         ; function: addpfi
+                                                           ; frame size=0
+              fixed.c        100        (*t) += (i<<FIXED_PRECISION);
+    00000048 6242                   MOV.L       @R4,R2     ; *(t)
+    0000004A 4518                   SHLL8       R5
+    0000004C 4508                   SHLL2       R5
+    0000004E 325C                   ADD         R5,R2
+              fixed.c        101    }
+    00000050 000B                   RTS
+    00000052 2422                   MOV.L       R2,@R4     ; *(t)
+              fixed.c        102    
+              fixed.c        103    #ifndef MACRO_ADDSUBF
+              fixed.c        104    void subpff(fixed *t, fixed f) {
+              fixed.c        105        (*t) -= f;
+              fixed.c        106    }
+              fixed.c        107    #endif
+              fixed.c        108    void subpfi(fixed *t, int i) {
+    00000054              _subpfi:                         ; function: subpfi
+                                                           ; frame size=0
+              fixed.c        109        (*t) -= (i<<FIXED_PRECISION);
+    00000054 6242                   MOV.L       @R4,R2     ; *(t)
+    00000056 4518                   SHLL8       R5
+    00000058 4508                   SHLL2       R5
+    0000005A 3258                   SUB         R5,R2
+              fixed.c        110    }
+    0000005C 000B                   RTS
+    0000005E 2422                   MOV.L       R2,@R4     ; *(t)
+              fixed.c        111    
+              fixed.c        112    void mulpff(fixed *t, fixed f) {
+    00000060              _mulpff:                         ; function: mulpff
+                                                           ; frame size=40
+    00000060 4F22                   STS.L       PR,@-R15
+              fixed.c        113        (*t) = (fixed)(((fixed_double_t)t * (fixed_double_t)f) >> FIXED_PRECISION);
+    00000062 7FE8                   ADD         #-24,R15
+    00000064 6253                   MOV         R5,R2
+    00000066 4200                   SHLL        R2
+    00000068 322A                   SUBC        R2,R2
+    0000006A 2F22                   MOV.L       R2,@R15
+    0000006C 1F51                   MOV.L       R5,@(4,R15)
+    0000006E 7FF8                   ADD         #-8,R15
+    00000070 65F3                   MOV         R15,R5
+    00000072 E100                   MOV         #0,R1      ; H'00000000
+    00000074 7510                   ADD         #16,R5
+    00000076 2F12                   MOV.L       R1,@R15
+    00000078 1F41                   MOV.L       R4,@(4,R15)
+    0000007A D6B1                   MOV.L       L35,R6     ; __mul64
+    0000007C 460B                   JSR         @R6
+    0000007E 2F56                   MOV.L       R5,@-R15
+    00000080 7F14                   ADD         #20,R15
+    00000082 67F3                   MOV         R15,R7
+    00000084 7708                   ADD         #8,R7
+    00000086 2F76                   MOV.L       R7,@-R15
+    00000088 D5AE                   MOV.L       L35+4,R5   ; __shard64
+    0000008A 450B                   JSR         @R5
+    0000008C E10A                   MOV         #10,R1     ; H'0000000A
+    0000008E 7F0C                   ADD         #12,R15
+    00000090 66F6                   MOV.L       @R15+,R6
+    00000092 66F6                   MOV.L       @R15+,R6
+    00000094 4F26                   LDS.L       @R15+,PR
+              fixed.c        114    }
+    00000096 000B                   RTS
+    00000098 2462                   MOV.L       R6,@R4     ; *(t)
+              fixed.c        115    void mulpfi(fixed *t, int i) {
+    0000009A              _mulpfi:                         ; function: mulpfi
+                                                           ; frame size=4
+    0000009A 4F12                   STS.L       MACL,@-R15
+              fixed.c        116        (*t) *= i;
+    0000009C 6142                   MOV.L       @R4,R1     ; *(t)
+    0000009E 0517                   MUL.L       R1,R5
+    000000A0 061A                   STS         MACL,R6
+    000000A2 2462                   MOV.L       R6,@R4     ; *(t)
+              fixed.c        117    }
+    000000A4 000B                   RTS
+    000000A6 4F16                   LDS.L       @R15+,MACL
+              fixed.c        118    
+              fixed.c        119    void divpff(fixed *t, fixed f) {
+    000000A8              _divpff:                         ; function: divpff
+                                                           ; frame size=40
+    000000A8 4F22                   STS.L       PR,@-R15
+              fixed.c        120        (*t) = (fixed)((((fixed_double_t)t)<<FIXED_PRECISION) / f);
+    000000AA 7FF0                   ADD         #-16,R15
+    000000AC 6253                   MOV         R5,R2
+    000000AE 4200                   SHLL        R2
+    000000B0 322A                   SUBC        R2,R2
+    000000B2 2F22                   MOV.L       R2,@R15
+    000000B4 1F51                   MOV.L       R5,@(4,R15)
+    000000B6 7FF0                   ADD         #-16,R15
+    000000B8 65F3                   MOV         R15,R5
+    000000BA E100                   MOV         #0,R1      ; H'00000000
+    000000BC 7508                   ADD         #8,R5
+    000000BE 2F12                   MOV.L       R1,@R15
+    000000C0 1F41                   MOV.L       R4,@(4,R15)
+    000000C2 2F56                   MOV.L       R5,@-R15
+    000000C4 D6A0                   MOV.L       L35+8,R6   ; __shlld64
+    000000C6 460B                   JSR         @R6
+    000000C8 E10A                   MOV         #10,R1     ; H'0000000A
+    000000CA 7F0C                   ADD         #12,R15
+    000000CC 67F3                   MOV         R15,R7
+    000000CE 7710                   ADD         #16,R7
+    000000D0 D19E                   MOV.L       L35+12,R1  ; __div64s
+    000000D2 410B                   JSR         @R1
+    000000D4 2F76                   MOV.L       R7,@-R15
+    000000D6 7F14                   ADD         #20,R15
+    000000D8 65F6                   MOV.L       @R15+,R5
+    000000DA 65F6                   MOV.L       @R15+,R5
+    000000DC 4F26                   LDS.L       @R15+,PR
+              fixed.c        121    }   
+    000000DE 000B                   RTS
+    000000E0 2452                   MOV.L       R5,@R4     ; *(t)
+              fixed.c        122    void divpfi(fixed *t, int i) {
+    000000E2              _divpfi:                         ; function: divpfi
+                                                           ; frame size=4
+    000000E2 4F22                   STS.L       PR,@-R15
+              fixed.c        123        (*t) /= i;
+    000000E4 6142                   MOV.L       @R4,R1     ; *(t)
+    000000E6 D29A                   MOV.L       L35+16,R2  ; __divls
+    000000E8 420B                   JSR         @R2
+    000000EA 6053                   MOV         R5,R0
+    000000EC 4F26                   LDS.L       @R15+,PR
+              fixed.c        124    }
+    000000EE 000B                   RTS
+    000000F0 2402                   MOV.L       R0,@R4     ; *(t)
+              fixed.c        125    
+              fixed.c        126    // Bhaskara I sine approximation
+              fixed.c        127    
+              fixed.c        128    fixed sin_f(fixed t) {
+    000000F2              _sin_f:                          ; function: sin_f
+                                                           ; frame size=0
+              fixed.c        129          const fixed      hpi = float2f(1.570796f);
+              fixed.c        130    
+              fixed.c        131        return cos_f(t - hpi);
+    000000F2 92C6                   MOV.W       L34,R2     ; H'F9B8
+    000000F4 342C                   ADD         R2,R4
+              fixed.c        132    }
+              fixed.c        133    
+              fixed.c        134    fixed cos_f(fixed t) {
+    000000F6              _cos_f:                          ; function: cos_f
+                                                           ; frame size=88
+    000000F6 2F96                   MOV.L       R9,@-R15
+    000000F8 2FA6                   MOV.L       R10,@-R15
+    000000FA 2FB6                   MOV.L       R11,@-R15
+    000000FC 2FC6                   MOV.L       R12,@-R15
+    000000FE 2FD6                   MOV.L       R13,@-R15
+    00000100 2FE6                   MOV.L       R14,@-R15
+    00000102 4F22                   STS.L       PR,@-R15
+    00000104 4F12                   STS.L       MACL,@-R15
+    00000106 4F02                   STS.L       MACH,@-R15
+              fixed.c        135          const fixed      hpi = float2f(1.570796f);
+              fixed.c        136          const fixed       pi = float2f(3.141593f);
+              fixed.c        137          const fixed    twopi = float2f(6.283185f);
+              fixed.c        138          const fixed      pi2 = float2f(9.869604f);
+              fixed.c        139    
+              fixed.c        140          fixed mod, x2, ret;
+              fixed.c        141    
+              fixed.c        142        mod = mod_f(t + hpi, pi) - hpi;
+    00000108 DC92                   MOV.L       L35+20,R12 ; H'003FFFFF
+    0000010A 91BB                   MOV.W       L34+2,R1   ; H'0648
+    0000010C 341C                   ADD         R1,R4
+    0000010E 4C18                   SHLL8       R12
+    00000110 6D43                   MOV         R4,R13
+    00000112 4C08                   SHLL2       R12
+    00000114 6543                   MOV         R4,R5
+    00000116 7FE0                   ADD         #-32,R15
+    00000118 97B5                   MOV.W       L34+4,R7   ; H'0C90
+    0000011A 6273                   MOV         R7,R2
+    0000011C 4200                   SHLL        R2
+    0000011E 322A                   SUBC        R2,R2
+    00000120 2F22                   MOV.L       R2,@R15
+    00000122 1F71                   MOV.L       R7,@(4,R15)
+    00000124 7FF0                   ADD         #-16,R15
+    00000126 6243                   MOV         R4,R2
+    00000128 4200                   SHLL        R2
+    0000012A 322A                   SUBC        R2,R2
+    0000012C 1F41                   MOV.L       R4,@(4,R15)
+    0000012E 64F3                   MOV         R15,R4
+    00000130 7408                   ADD         #8,R4
+    00000132 2F22                   MOV.L       R2,@R15
+    00000134 2F46                   MOV.L       R4,@-R15
+    00000136 D984                   MOV.L       L35+8,R9   ; __shlld64
+    00000138 490B                   JSR         @R9
+    0000013A E10A                   MOV         #10,R1     ; H'0000000A
+    0000013C 7F0C                   ADD         #12,R15
+    0000013E 66F3                   MOV         R15,R6
+    00000140 7610                   ADD         #16,R6
+    00000142 DA82                   MOV.L       L35+12,R10 ; __div64s
+    00000144 4A0B                   JSR         @R10
+    00000146 2F66                   MOV.L       R6,@-R15
+    00000148 7F14                   ADD         #20,R15
+    0000014A 6BF6                   MOV.L       @R15+,R11
+    0000014C 6BF6                   MOV.L       @R15+,R11
+    0000014E 2BC9                   AND         R12,R11
+    00000150 37BD                   DMULS.L     R11,R7
+    00000152 61F3                   MOV         R15,R1
+    00000154 7108                   ADD         #8,R1
+    00000156 0E0A                   STS         MACH,R14
+    00000158 041A                   STS         MACL,R4
+    0000015A 2FE2                   MOV.L       R14,@R15
+    0000015C 1F41                   MOV.L       R4,@(4,R15)
+    0000015E 2F16                   MOV.L       R1,@-R15
+    00000160 DB78                   MOV.L       L35+4,R11  ; __shard64
+    00000162 4B0B                   JSR         @R11
+    00000164 E10A                   MOV         #10,R1     ; H'0000000A
+    00000166 7F0C                   ADD         #12,R15
+    00000168 64F6                   MOV.L       @R15+,R4
+    0000016A 64F6                   MOV.L       @R15+,R4
+    0000016C 9689                   MOV.W       L34,R6     ; H'F9B8
+    0000016E 3548                   SUB         R4,R5
+    00000170 356C                   ADD         R6,R5
+              fixed.c        143          x2 = mulff(mod, mod);
+    00000172 7FF0                   ADD         #-16,R15
+    00000174 355D                   DMULS.L     R5,R5
+    00000176 61F3                   MOV         R15,R1
+    00000178 7108                   ADD         #8,R1
+    0000017A 0E0A                   STS         MACH,R14
+    0000017C 051A                   STS         MACL,R5
+    0000017E 2FE2                   MOV.L       R14,@R15
+    00000180 1F51                   MOV.L       R5,@(4,R15)
+    00000182 2F16                   MOV.L       R1,@-R15
+    00000184 4B0B                   JSR         @R11
+    00000186 E10A                   MOV         #10,R1     ; H'0000000A
+    00000188 7F0C                   ADD         #12,R15
+    0000018A 62F6                   MOV.L       @R15+,R2
+    0000018C 6EF6                   MOV.L       @R15+,R14
+              fixed.c        144          
+              fixed.c        145          ret = divff(pi2 - 4*x2, pi2 + x2);
+    0000018E 7FF0                   ADD         #-16,R15
+    00000190 66E3                   MOV         R14,R6
+    00000192 9579                   MOV.W       L34+6,R5   ; H'277A
+    00000194 365C                   ADD         R5,R6
+    00000196 6263                   MOV         R6,R2
+    00000198 4200                   SHLL        R2
+    0000019A 322A                   SUBC        R2,R2
+    0000019C 2F22                   MOV.L       R2,@R15
+    0000019E 1F61                   MOV.L       R6,@(4,R15)
+    000001A0 7FF0                   ADD         #-16,R15
+    000001A2 4E08                   SHLL2       R14
+    000001A4 35E8                   SUB         R14,R5
+    000001A6 6253                   MOV         R5,R2
+    000001A8 4200                   SHLL        R2
+    000001AA 322A                   SUBC        R2,R2
+    000001AC 64F3                   MOV         R15,R4
+    000001AE 7408                   ADD         #8,R4
+    000001B0 2F22                   MOV.L       R2,@R15
+    000001B2 1F51                   MOV.L       R5,@(4,R15)
+    000001B4 2F46                   MOV.L       R4,@-R15
+    000001B6 490B                   JSR         @R9
+    000001B8 E10A                   MOV         #10,R1     ; H'0000000A
+    000001BA 7F0C                   ADD         #12,R15
+    000001BC 65F3                   MOV         R15,R5
+    000001BE 7510                   ADD         #16,R5
+    000001C0 4A0B                   JSR         @R10
+    000001C2 2F56                   MOV.L       R5,@-R15
+    000001C4 7F14                   ADD         #20,R15
+    000001C6 62F6                   MOV.L       @R15+,R2
+    000001C8 6EF6                   MOV.L       @R15+,R14
+              fixed.c        146    
+              fixed.c        147          if (mod_f(t + hpi, twopi) > pi) {
+    000001CA 65D3                   MOV         R13,R5
+    000001CC 7FE0                   ADD         #-32,R15
+    000001CE 965C                   MOV.W       L34+8,R6   ; H'1921
+    000001D0 6263                   MOV         R6,R2
+    000001D2 4200                   SHLL        R2
+    000001D4 322A                   SUBC        R2,R2
+    000001D6 2F22                   MOV.L       R2,@R15
+    000001D8 1F61                   MOV.L       R6,@(4,R15)
+    000001DA 7FF0                   ADD         #-16,R15
+    000001DC 62D3                   MOV         R13,R2
+    000001DE 4200                   SHLL        R2
+    000001E0 322A                   SUBC        R2,R2
+    000001E2 1FD1                   MOV.L       R13,@(4,R15)
+    000001E4 6DF3                   MOV         R15,R13
+    000001E6 7D08                   ADD         #8,R13
+    000001E8 2F22                   MOV.L       R2,@R15
+    000001EA 2FD6                   MOV.L       R13,@-R15
+    000001EC 490B                   JSR         @R9
+    000001EE E10A                   MOV         #10,R1     ; H'0000000A
+    000001F0 7F0C                   ADD         #12,R15
+    000001F2 61F3                   MOV         R15,R1
+    000001F4 7110                   ADD         #16,R1
+    000001F6 4A0B                   JSR         @R10
+    000001F8 2F16                   MOV.L       R1,@-R15
+    000001FA 7F14                   ADD         #20,R15
+    000001FC 64F6                   MOV.L       @R15+,R4
+    000001FE 64F6                   MOV.L       @R15+,R4
+    00000200 24C9                   AND         R12,R4
+    00000202 364D                   DMULS.L     R4,R6
+    00000204 0A1A                   STS         MACL,R10
+    00000206 1FA1                   MOV.L       R10,@(4,R15)
+    00000208 6AF3                   MOV         R15,R10
+    0000020A 090A                   STS         MACH,R9
+    0000020C 7A08                   ADD         #8,R10
+    0000020E 2F92                   MOV.L       R9,@R15
+    00000210 2FA6                   MOV.L       R10,@-R15
+    00000212 4B0B                   JSR         @R11
+    00000214 E10A                   MOV         #10,R1     ; H'0000000A
+    00000216 7F0C                   ADD         #12,R15
+    00000218 6BF6                   MOV.L       @R15+,R11
+    0000021A 6BF6                   MOV.L       @R15+,R11
+    0000021C 35B8                   SUB         R11,R5
+    0000021E 3577                   CMP/GT      R7,R5
+    00000220 8B00                   BF          L30
+              fixed.c        148            ret = -ret; 
+    00000222 6EEB                   NEG         R14,R14
+    00000224              L30:
+              fixed.c        149        }
+              fixed.c        150    
+              fixed.c        151          return ret;
+    00000224 60E3                   MOV         R14,R0
+    00000226 4F06                   LDS.L       @R15+,MACH
+    00000228 4F16                   LDS.L       @R15+,MACL
+    0000022A 4F26                   LDS.L       @R15+,PR
+    0000022C 6EF6                   MOV.L       @R15+,R14
+    0000022E 6DF6                   MOV.L       @R15+,R13
+    00000230 6CF6                   MOV.L       @R15+,R12
+    00000232 6BF6                   MOV.L       @R15+,R11
+    00000234 6AF6                   MOV.L       @R15+,R10
+              fixed.c        152    }
+    00000236 000B                   RTS
+    00000238 69F6                   MOV.L       @R15+,R9
+              fixed.c        153    
+              fixed.c        154    fixed tan_f(fixed t) {
+    0000023A              _tan_f:                          ; function: tan_f
+                                                           ; frame size=44
+    0000023A 2FE6                   MOV.L       R14,@-R15
+    0000023C 4F22                   STS.L       PR,@-R15
+              fixed.c        155          return divff(sin_f(t),cos_f(t));
+    0000023E 6E43                   MOV         R4,R14
+    00000240 BF59                   BSR         _cos_f
+    00000242 7FF0                   ADD         #-16,R15
+    00000244 6203                   MOV         R0,R2
+    00000246 4200                   SHLL        R2
+    00000248 322A                   SUBC        R2,R2
+    0000024A 2F22                   MOV.L       R2,@R15
+    0000024C 1F01                   MOV.L       R0,@(4,R15)
+    0000024E 7FF0                   ADD         #-16,R15
+    00000250 BF4F                   BSR         _sin_f
+    00000252 64E3                   MOV         R14,R4
+    00000254 6203                   MOV         R0,R2
+    00000256 4200                   SHLL        R2
+    00000258 322A                   SUBC        R2,R2
+    0000025A 61F3                   MOV         R15,R1
+    0000025C 7108                   ADD         #8,R1
+    0000025E 2F22                   MOV.L       R2,@R15
+    00000260 1F01                   MOV.L       R0,@(4,R15)
+    00000262 2F16                   MOV.L       R1,@-R15
+    00000264 D438                   MOV.L       L35+8,R4   ; __shlld64
+    00000266 440B                   JSR         @R4
+    00000268 E10A                   MOV         #10,R1     ; H'0000000A
+    0000026A 7F0C                   ADD         #12,R15
+    0000026C 65F3                   MOV         R15,R5
+    0000026E 7510                   ADD         #16,R5
+    00000270 D636                   MOV.L       L35+12,R6  ; __div64s
+    00000272 460B                   JSR         @R6
+    00000274 2F56                   MOV.L       R5,@-R15
+    00000276 7F14                   ADD         #20,R15
+    00000278 62F6                   MOV.L       @R15+,R2
+    0000027A 60F6                   MOV.L       @R15+,R0
+    0000027C 4F26                   LDS.L       @R15+,PR
+              fixed.c        156    }
+    0000027E 000B                   RTS
+    00000280 6EF6                   MOV.L       @R15+,R14
+    00000282              L34:
+    00000282 F9B8                   .DATA.W     H'F9B8
+    00000284 0648                   .DATA.W     H'0648
+    00000286 0C90                   .DATA.W     H'0C90
+    00000288 277A                   .DATA.W     H'277A
+    0000028A 1921                   .DATA.W     H'1921
+              fixed.c        157    
+              fixed.c        158    fixed cot_f(fixed t) {
+    0000028C              _cot_f:                          ; function: cot_f
+                                                           ; frame size=44
+    0000028C 2FE6                   MOV.L       R14,@-R15
+    0000028E 4F22                   STS.L       PR,@-R15
+              fixed.c        159          return divff(cos_f(t),sin_f(t));
+    00000290 6E43                   MOV         R4,R14
+    00000292 BF2E                   BSR         _sin_f
+    00000294 7FF0                   ADD         #-16,R15
+    00000296 6203                   MOV         R0,R2
+    00000298 4200                   SHLL        R2
+    0000029A 322A                   SUBC        R2,R2
+    0000029C 2F22                   MOV.L       R2,@R15
+    0000029E 1F01                   MOV.L       R0,@(4,R15)
+    000002A0 7FF0                   ADD         #-16,R15
+    000002A2 BF28                   BSR         _cos_f
+    000002A4 64E3                   MOV         R14,R4
+    000002A6 6203                   MOV         R0,R2
+    000002A8 4200                   SHLL        R2
+    000002AA 322A                   SUBC        R2,R2
+    000002AC 61F3                   MOV         R15,R1
+    000002AE 7108                   ADD         #8,R1
+    000002B0 2F22                   MOV.L       R2,@R15
+    000002B2 1F01                   MOV.L       R0,@(4,R15)
+    000002B4 2F16                   MOV.L       R1,@-R15
+    000002B6 D424                   MOV.L       L35+8,R4   ; __shlld64
+    000002B8 440B                   JSR         @R4
+    000002BA E10A                   MOV         #10,R1     ; H'0000000A
+    000002BC 7F0C                   ADD         #12,R15
+    000002BE 65F3                   MOV         R15,R5
+    000002C0 7510                   ADD         #16,R5
+    000002C2 D622                   MOV.L       L35+12,R6  ; __div64s
+    000002C4 460B                   JSR         @R6
+    000002C6 2F56                   MOV.L       R5,@-R15
+    000002C8 7F14                   ADD         #20,R15
+    000002CA 62F6                   MOV.L       @R15+,R2
+    000002CC 60F6                   MOV.L       @R15+,R0
+    000002CE 4F26                   LDS.L       @R15+,PR
+              fixed.c        160    }
+    000002D0 000B                   RTS
+    000002D2 6EF6                   MOV.L       @R15+,R14
+              fixed.c        161    
+              fixed.c        162    #ifndef MACRO_FLOORF
+              fixed.c        163    fixed floor_f(fixed t) {
+              fixed.c        164          return t & FIXED_WHOLE_MASK;
+              fixed.c        165    }
+              fixed.c        166    #endif
+              fixed.c        167    
+              fixed.c        168    fixed mod_f(fixed t, fixed f) {
+    000002D4              _mod_f:                          ; function: mod_f
+                                                           ; frame size=64
+    000002D4 4F22                   STS.L       PR,@-R15
+    000002D6 4F12                   STS.L       MACL,@-R15
+    000002D8 4F02                   STS.L       MACH,@-R15
+              fixed.c        169        return t - mulff(floor_f(divff(t, f)), f);
+    000002DA 6043                   MOV         R4,R0
+    000002DC 7FE0                   ADD         #-32,R15
+    000002DE 6253                   MOV         R5,R2
+    000002E0 4200                   SHLL        R2
+    000002E2 322A                   SUBC        R2,R2
+    000002E4 2F22                   MOV.L       R2,@R15
+    000002E6 1F51                   MOV.L       R5,@(4,R15)
+    000002E8 7FF0                   ADD         #-16,R15
+    000002EA 6243                   MOV         R4,R2
+    000002EC 4200                   SHLL        R2
+    000002EE 322A                   SUBC        R2,R2
+    000002F0 61F3                   MOV         R15,R1
+    000002F2 7108                   ADD         #8,R1
+    000002F4 2F22                   MOV.L       R2,@R15
+    000002F6 1F41                   MOV.L       R4,@(4,R15)
+    000002F8 2F16                   MOV.L       R1,@-R15
+    000002FA D413                   MOV.L       L35+8,R4   ; __shlld64
+    000002FC 440B                   JSR         @R4
+    000002FE E10A                   MOV         #10,R1     ; H'0000000A
+    00000300 7F0C                   ADD         #12,R15
+    00000302 66F3                   MOV         R15,R6
+    00000304 7610                   ADD         #16,R6
+    00000306 D711                   MOV.L       L35+12,R7  ; __div64s
+    00000308 470B                   JSR         @R7
+    0000030A 2F66                   MOV.L       R6,@-R15
+    0000030C 7F14                   ADD         #20,R15
+    0000030E 61F6                   MOV.L       @R15+,R1
+    00000310 64F6                   MOV.L       @R15+,R4
+    00000312 D110                   MOV.L       L35+20,R1  ; H'003FFFFF
+    00000314 4118                   SHLL8       R1
+    00000316 4108                   SHLL2       R1
+    00000318 2419                   AND         R1,R4
+    0000031A 354D                   DMULS.L     R4,R5
+    0000031C 050A                   STS         MACH,R5
+    0000031E 2F52                   MOV.L       R5,@R15
+    00000320 65F3                   MOV         R15,R5
+    00000322 041A                   STS         MACL,R4
+    00000324 7508                   ADD         #8,R5
+    00000326 1F41                   MOV.L       R4,@(4,R15)
+    00000328 2F56                   MOV.L       R5,@-R15
+    0000032A D606                   MOV.L       L35+4,R6   ; __shard64
+    0000032C 460B                   JSR         @R6
+    0000032E E10A                   MOV         #10,R1     ; H'0000000A
+    00000330 7F0C                   ADD         #12,R15
+    00000332 67F6                   MOV.L       @R15+,R7
+    00000334 67F6                   MOV.L       @R15+,R7
+    00000336 4F06                   LDS.L       @R15+,MACH
+    00000338 4F16                   LDS.L       @R15+,MACL
+    0000033A 4F26                   LDS.L       @R15+,PR
+              fixed.c        170    }
+    0000033C 000B                   RTS
+    0000033E 3078                   SUB         R7,R0
+    00000340              L35:
+    00000340 <00000000>             .DATA.L     __mul64
+    00000344 <00000000>             .DATA.L     __shard64
+    00000348 <00000000>             .DATA.L     __shlld64
+    0000034C <00000000>             .DATA.L     __div64s
+    00000350 <00000000>             .DATA.L     __divls
+    00000354 003FFFFF               .DATA.L     H'003FFFFF
+SH SERIES C/C++ Compiler (V.9.04.02.001)                                                         21-Sep-2024 11:42:24  PAGE    1
+
+
+******** STATISTICS INFORMATION ********
+
+
+********** ERROR INFORMATION ***********
+
+NUMBER OF ERRORS:           0
+NUMBER OF WARNINGS:         0
+
+
+
+
+******* SOURCE LINE INFORMATION ********
+
+COMPILED SOURCE LINE:      170
+
+
+
+******* SECTION SIZE INFORMATION *******
+
+PROGRAM  SECTION (P):                                 00000358 Byte(s)
+CONSTANT SECTION (C):                                 00000000 Byte(s)
+DATA     SECTION (D):                                 00000000 Byte(s)
+BSS      SECTION (B):                                 00000000 Byte(s)
+
+TOTAL PROGRAM  SECTION: 00000358 Byte(s)
+TOTAL CONSTANT SECTION: 00000000 Byte(s)
+TOTAL DATA     SECTION: 00000000 Byte(s)
+TOTAL BSS      SECTION: 00000000 Byte(s)
+
+    TOTAL PROGRAM SIZE: 00000358 Byte(s)
+
+
+
+********** LABEL INFORMATION ***********
+
+NUMBER OF EXTERNAL REFERENCE SYMBOLS:            5
+NUMBER OF EXTERNAL DEFINITION SYMBOLS:          15
+NUMBER OF INTERNAL/EXTERNAL SYMBOLS:            26
+
+
+
+*** COMMAND PARAMETER ***
+
+-subcommand=C:\Users\csani\AppData\Local\Temp\hmk37B8.tmp
+-cpu=sh3
+-include="C:\CasioSDK\OS\FX\include","C:\CasioSDK\Projects\VIMS3D"
+-objectfile="C:\CasioSDK\Projects\VIMS3D\Debug\fixed.obj"
+-show=source
+-listfile="C:\CasioSDK\Projects\VIMS3D\Debug\fixed.lst"
+-size
+-inline
+-chgincpath
+-errorpath
+"C:\CasioSDK\Projects\VIMS3D\fixed.c"
+-lang=c
+-nologo
+-debug
