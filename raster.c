@@ -50,7 +50,8 @@ void g_clrbuf(void) {
 	g_uuid = 1;
 }
 
-signed int g_addtriangle(trianglef t) {
+tr_id_t g_addtriangle(trianglef t) {
+	if (tbuf == NULL) return G_EALLOC;
 	if (tbuf_idx < TBUF_SIZ-1) {
 		tbuf[tbuf_idx++] = itrianglef(t.a, t.b, t.c, t.tx, g_uuid, t.flip_texture);
 		return g_uuid++;
@@ -58,8 +59,9 @@ signed int g_addtriangle(trianglef t) {
 	return G_EBUFFULL;
 }
 
-int g_removetriangle(uint32_t id) {
+int g_removetriangle(tr_id_t id) {
 	int i, j;
+	if (tbuf == NULL) return G_EALLOC;
 	for(i = 0; i < tbuf_idx; i++) {
 		if (tbuf[i].id == id) {
 			for (j = i; j < (tbuf_idx-1); j++) {
@@ -72,10 +74,10 @@ int g_removetriangle(uint32_t id) {
 	return G_ENEXIST;
 }
 
-void g_coord(vec3f _pos, fixed _pitch, fixed _yaw) {
-	go = _pos;
-	gp = _pitch;
-	gy = _yaw;
+void g_coord(vec3f pos, fixed pitch, fixed yaw) {
+	go = pos;
+	gp = pitch;
+	gy = yaw;
 }
 
 unsigned int g_draw_horizon(void) {
@@ -90,8 +92,10 @@ unsigned int g_draw_horizon(void) {
 
 unsigned int frame = 0;
 extern volatile toggle_t interlace;
+extern texture_t textures[TX_CNT];
 
 // the One and Only Rendering(TM) function
+// have fun :)
 
 unsigned int g_rasterize_buf(void) {
 	int curr_tidx, xiter, yiter;
@@ -116,6 +120,8 @@ unsigned int g_rasterize_buf(void) {
 
 	frame++;
 
+	if (tbuf == NULL) return G_EALLOC;
+
 // some stuff can get stupidly large for the ~tiny~ 22-bit fixeds
 // downscale them, who needs precision anyways :)
 #define OF_SC 8	//OverFlow downSCale constant
@@ -125,7 +131,7 @@ unsigned int g_rasterize_buf(void) {
 #define ZREC_EXP 4 // exponent (spares some cycles with rshift instead of division)
 #define ZREC_MULT (1<<ZREC_EXP)
 
-	// iterate on every triangle of every distinct z index
+	// iterate on every triangle in the buffer
 	for (curr_tidx = 0; curr_tidx < tbuf_idx; curr_tidx++) {
 		t = move(tbuf[curr_tidx], go, gp, gy); // transform to camera
 
@@ -167,10 +173,18 @@ unsigned int g_rasterize_buf(void) {
 		bbox_right  = f2int(max(max(a.x, b.x), c.x));
 		bbox_bottom = f2int(max(max(a.y, b.y), c.y));
 
-		// is it entirely offscreen? (sanity check)
 		if (bbox_right < 0 || bbox_left > 127 || bbox_bottom < 0 || bbox_top > 63) continue;
 
+		bbox_left = clamp_i(bbox_left, 0, 127);
+		bbox_top = clamp_i(bbox_top, 0, 63);
+		bbox_right = clamp_i(bbox_right, 0, 127);
+		bbox_bottom = clamp_i(bbox_bottom, 0, 63);
+		
+		// is it entirely offscreen? (sanity check)
+
 		q_cnt++;
+
+		if (t.tx == NULL) t.tx = &textures[TX_CHECKERBOARD_4];
 
 		// U and V are the barycentric coordinates of a pixel within the current triangle in screen space
 		// their range is from 0 to 1, calculate with both tiling and texture size
@@ -222,7 +236,7 @@ unsigned int g_rasterize_buf(void) {
 		//  1/Z, 1/Ui and 1/Vi are interpolated because they are linear across the surface in screen space
 
 		for (yiter = bbox_top; yiter <= bbox_bottom; yiter += 1) {
-			if (interlace.state && (yiter & 1) != (frame & 1)) continue;
+			if (interlace.is_on && ((yiter % 2) != (frame % 2))) continue;
 			if (yiter < 0 || yiter >= 64) continue;
 
 			v2 = divvi(subvv(ivec3f(int2f(bbox_left), int2f(yiter), 0), a), OF_SC);
@@ -294,9 +308,8 @@ unsigned int g_rasterize_buf(void) {
 			vzstep = divff(vzq-vzp, diff);
 
 			// interpolate between values in current row
-
 			for (ozi = ozp, uzi = uzp, vzi = vzp, xiter = minx; xiter <= maxx; xiter += 1, ozi+=ozstep, uzi+=uzstep, vzi+=vzstep) {
-				if (xiter >= 0 && xiter <= 127) { 
+				if (xiter >= 0 && xiter <= 127) {
 					zci = divff(int2f(ZREC_MULT*ZREC_MULT), ozi);
 
 					depthval = (f2int(zci) << 5) | ((zci & FIXED_FRAC_MASK) >> 5); // transform 22+10bit zci to 11+5bit depth
@@ -322,14 +335,15 @@ unsigned int g_rasterize_buf(void) {
 			}
 		}	
 	}
-
 	return q_cnt;
 }
 
-void g_text3d(unsigned char *text, vec3f pos, unsigned int params) {
+int g_text3d(unsigned char *text, vec3f pos, unsigned int params) {
 	int sspace_x, sspace_y;
 	vec3f viewport_pos;
 	vec3f ctot;
+
+	if (text == NULL) return G_ENULLPTR;
 
 	ctot = subvv(pos, go);
 	viewport_pos = rot(subvv(pos, go), -gp, -gy);
@@ -347,7 +361,10 @@ void g_text3d(unsigned char *text, vec3f pos, unsigned int params) {
 	}
 }
 
-void g_text2d(unsigned char *text, unsigned int x, unsigned int y, unsigned int params) {
+int g_text2d(unsigned char *text, unsigned int x, unsigned int y, unsigned int params) {
+
+	if (text == NULL) return G_ENULLPTR;
+
 	if (params & TEXT_SMALL) {
 		PrintMini(x, y, text, (params & TEXT_INVERTED) ? MINI_REV : MINI_OVER);
 	}
@@ -356,12 +373,17 @@ void g_text2d(unsigned char *text, unsigned int x, unsigned int y, unsigned int 
 	}
 }
 
-void g_texture2d(texture_ptr_t tx, unsigned int x, unsigned int y) {
+int g_texture2d(texture_ptr_t tx, unsigned int x, unsigned int y) {
 	unsigned int xiter, yiter;
 	uint8_t px;
 	unsigned int px_offset;
-	unsigned int tiled_width = tx->w * tx->u_tile_size;
-	unsigned int tiled_height = tx->h * tx->v_tile_size;
+	unsigned int tiled_width, tiled_height;
+
+	if (tx == NULL) return G_ENULLPTR;
+
+	tiled_width = tx->w * tx->u_tile_size;
+	tiled_height = tx->h * tx->v_tile_size;
+
 	for (yiter = 0; yiter < tiled_height; yiter++) {
 		for (xiter = 0; xiter < tiled_width; xiter++) {
 			if (xiter+x >= 0 && xiter+x < 128 && yiter+y >= 0 && yiter+y < 64) {

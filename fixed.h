@@ -131,4 +131,7 @@ fixed sin_f(fixed t);
 fixed tan_f(fixed t);
 fixed cot_f(fixed t);
 
+fixed clamp_f(fixed val, fixed min, fixed max);
+int clamp_i(int i, int min, int max);
+
 #endif

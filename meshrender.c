@@ -39,7 +39,6 @@ int m_init(void) {
 	return G_SUCCESS;
 }
 
-// clear buffers, initialize 
 int m_clrbuf(void) {
 	memset((char *)mbuf, 0, MBUF_SIZ*sizeof(mesh));
 	mbuf_idx = 0;
@@ -48,6 +47,7 @@ int m_clrbuf(void) {
 }
 
 mesh_id_t m_addmesh(mesh m) {
+	if (mbuf == NULL) return G_EALLOC;
 	if (mbuf_idx < MBUF_SIZ-1) {
 		mbuf[mbuf_idx] = m;
 		mbuf[mbuf_idx++].id = m_uuid;
@@ -58,6 +58,7 @@ mesh_id_t m_addmesh(mesh m) {
 
 int m_removemesh(mesh_id_t id) {
 	int i, j;
+	if (mbuf == NULL) return G_EALLOC;
 	for(i = 0; i < mbuf_idx; i++) {
 		if (mbuf[i].id == id) {
 			for (j = i; j < (mbuf_idx-1); j++) {
@@ -70,10 +71,10 @@ int m_removemesh(mesh_id_t id) {
 	return G_ENEXIST;
 }
 
-int m_coord(vec3f _pos, fixed _pitch, fixed _yaw) {
-	o = _pos;
-	p = _pitch;
-	y = _yaw;
+void m_coord(vec3f pos, fixed pitch, fixed yaw) {
+	o = pos;
+	p = pitch;
+	y = yaw;
 }	
 
 mesh imesh(trianglef *arr, texture_ptr_t *tx_arr, uint8_t arrlen, vec3f pos, vec3f ctr) {
@@ -88,10 +89,6 @@ mesh imesh(trianglef *arr, texture_ptr_t *tx_arr, uint8_t arrlen, vec3f pos, vec
 	m.is_billboard = FALSE;
 	return m;
 }
-
-/*
- tx_pseudo_arr should be a ptr a ptr to a texture defined in "texturemap.h"
-*/
 
 mesh ibill(trianglef *arr, texture_ptr_t *tx_pseudo_arr, vec3f pos) {
 	mesh m;
@@ -136,7 +133,7 @@ int m_rotmesh(mesh_id_t id, fixed yaw) {
 
 char buf[64]; // for sprintf
 
-int m_rendermeshes(int debug_overlay) {
+int m_rendermeshes(bool debug_overlay) {
 	int m_iter, t_iter, dx, dy;
 	unsigned int time_s, time_e2, deltaticks, tr_cnt = 0;
 	trianglef curr;	
@@ -172,10 +169,12 @@ int m_rendermeshes(int debug_overlay) {
 
 		tr_cnt += g_rasterize_buf();
 		
-		/* if (debug_overlay) {
+#ifdef DEBUG_BUILD
+		if (debug_overlay) {
 			sprintf((char *)buf, "%d", m_iter);
 			g_text3d(buf, subvv(ivec3f(0,int2f(16),0), mbuf[m_iter].pos), TEXT_SMALL | TEXT_INVERTED);
-		} */
+		}
+#endif
 	}
 	
 	time_e2 = RTC_GetTicks();

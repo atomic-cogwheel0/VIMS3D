@@ -1,20 +1,22 @@
 #ifndef _RASTER_H
 #define _RASTER_H
 
+#include <stdlib.h>
 #include "fxlib.h"
-#include "stdlib.h"
 
 #include "vec.h"
 #include "texture.h"
 
+// syscalls
 int RTC_GetTicks(void);
 unsigned char *GetVRAMAddress(void);
 int Bdisp_SYS_FastDrawLineVRAM(int x1, int y1, int x2, int y2);
 
 #define TX_CNT 13
 
-// texture ids
+#define MAX_TRIANGLES 100
 
+// texture ids
 #define TX_WHITE 0
 #define TX_BLACK 1
 #define TX_CHECKERBOARD_8 2
@@ -30,28 +32,42 @@ int Bdisp_SYS_FastDrawLineVRAM(int x1, int y1, int x2, int y2);
 #define TX_PERSON 11
 #define TX_TREE 12
 
-#define MAX_TRIANGLES 100
+// text params
+#define TEXT_SMALL 0x1
+#define TEXT_LARGE 0x2
+#define TEXT_INVERTED 0x4
 
+// return codes (for raster.c and mesh.c too)
 #define G_SUCCESS 0
 #define G_EALLOC -1
 #define G_EEMPTY -2
 #define G_EBUFFULL -3
 #define G_ENEXIST -4
+#define G_ENULLPTR -5
 
+// NEEDS CALLING (allocate bufs)
 int g_init(void);
-signed int g_addtriangle(trianglef t);
-int g_removetriangle(uint32_t);
-void g_coord(vec3f pos, fixed pitch, fixed yaw);
-unsigned int g_draw_horizon(void);
-unsigned int g_rasterize_buf(void);
+// clear buffers, reset indexes
 void g_clrbuf(void);
 
-#define TEXT_SMALL 0x1
-#define TEXT_LARGE 0x2
-#define TEXT_INVERTED 0x4
+// add a triangle (returns id of added triangle)
+tr_id_t g_addtriangle(trianglef t);
+// remove a triangle by id
+int g_removetriangle(tr_id_t id);
 
-void g_text3d(unsigned char *text, vec3f pos, unsigned int params);
-void g_text2d(unsigned char *text, unsigned int x, unsigned int y, unsigned int params);
-void g_texture2d(texture_t *tx, unsigned int x, unsigned int y);
+// set global variables
+void g_coord(vec3f pos, fixed pitch, fixed yaw);
+
+// draw the horizon (returns number of pixels drawn)
+unsigned int g_draw_horizon(void);
+// rasterize all triangles currently in buffer (returns number of triangles drawn)
+unsigned int g_rasterize_buf(void);
+
+// draw text at a position in 3D space (overwrite!)
+int g_text3d(unsigned char *text, vec3f pos, unsigned int params);
+// draw text onto the screen (overwrite!)
+int g_text2d(unsigned char *text, unsigned int x, unsigned int y, unsigned int params);
+// draw a texture (with tiling), pixel-by-pixel, screenspace coords (overwrite!)
+int g_texture2d(texture_ptr_t tx, unsigned int x, unsigned int y);
 
 #endif
