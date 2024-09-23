@@ -1,0 +1,7 @@
+*.mkv
+*.g1a
+*.G1A
+test/*
+test
+SDCard/*
+Debug/*
