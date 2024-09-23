@@ -23,7 +23,11 @@ trianglef personmesh[2];
 trianglef treemesh[2];
 mesh_id_t tid, pid;
 
-toggle_t overlay = {0, 0, 0};
+#ifndef DEBUG_BUILD
+toggle_t overlay = {FALSE, FALSE, FALSE};
+#else
+toggle_t overlay = {TRUE, FALSE, FALSE};
+#endif
 toggle_t interlace = {0, 0, 0};
 
 void start(void) {
@@ -168,7 +172,7 @@ void tick(void) {
 	g_coord(pos, pitch, yaw);
 	m_coord(pos, pitch, yaw);
 
-	dtime = m_rendermeshes(overlay.state); //1/128 s ticks
+	dtime = m_rendermeshes(overlay.is_on); //1/128 s ticks
 	scale = (float)dtime/128.0f*5.0f;
 
 	delta = float2f(gdelta * scale);
@@ -238,7 +242,7 @@ void tick(void) {
 void toggle_rising(toggle_t *t, bool state) {
 	t->toggle = state;
 	if (t->toggle != t->prev_toggle && t->toggle) {
-		t->state = !t->state;
+		t->is_on = !t->is_on;
 	}
 	t->prev_toggle = t->toggle;
 }
@@ -246,7 +250,7 @@ void toggle_rising(toggle_t *t, bool state) {
 void toggle_falling(toggle_t *t, bool state) {
 	t->toggle = state;
 	if (t->toggle != t->prev_toggle && !t->toggle) {
-		t->state = !t->state;
+		t->is_on = !t->is_on;
 	}
 	t->prev_toggle = t->toggle;
 }

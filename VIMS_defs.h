@@ -1,6 +1,8 @@
 #ifndef _VIMS_DEFS_H
 #define _VIMS_DEFS_H
 
+//#define DEBUG_BUILD
+
 // typedefs (no <stddef.h>)
 
 typedef signed long long int64_t;
@@ -23,7 +25,7 @@ typedef unsigned char bool;
 // defined and used in game.c
 
 typedef struct {
-	bool state;
+	bool is_on;
 	bool toggle;
 	bool prev_toggle;
 } toggle_t;

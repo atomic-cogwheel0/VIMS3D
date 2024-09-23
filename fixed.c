@@ -168,3 +168,15 @@ fixed floor_f(fixed t) {
 fixed mod_f(fixed t, fixed f) {
     return t - mulff(floor_f(divff(t, f)), f);
 }
+
+fixed clamp_f(fixed val, fixed min, fixed max) {
+    if (val < min) return min;
+    if (val > max) return max;
+    return val;
+}
+
+int clamp_i(int val, int min, int max) {
+    if (val < min) return min;
+    if (val > max) return max;
+    return val;
+}
