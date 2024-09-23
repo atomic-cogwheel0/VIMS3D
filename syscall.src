@@ -1,0 +1,30 @@
+; CASIO OS syscalls for important functions
+; big thanks to Simon Lothar (SimLo) for the docs
+; https://web.archive.org/web/20230315143257/https://bible.planet-casio.com/simlo/chm/v20/fx_legacy_syscalls.htm
+
+; THIS FILE IS MOST LIKELY NOT THE CAUSE OF ANY OF THE MANY PROBLEMS
+; DO NOT EDIT LEST TERRIBLE SYSTEM ERRORS BEFALL THEE
+
+	.EXPORT _RTC_GetTicks, _GetVRAMAddress, _Bdisp_SYS_FastDrawLineVRAM
+
+	.SECTION P,CODE,ALIGN=4
+
+_RTC_GetTicks:
+	mov.l #H'80010070,r1
+	mov.w #H'003b, r0
+	jmp @r1
+	nop
+
+_GetVRAMAddress:
+	mov.l #H'80010070,r1
+	mov.w #H'0135, r0
+	jmp @r1
+	nop
+
+_Bdisp_SYS_FastDrawLineVRAM:
+	mov.l #H'80010070,r1
+	mov.w #H'0764, r0
+	jmp @r1
+	nop
+
+	.END
