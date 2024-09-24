@@ -30,16 +30,31 @@ toggle_t overlay = {TRUE, FALSE, FALSE};
 #endif
 toggle_t interlace = {0, 0, 0};
 
-void start(void) {
+void init(void) {
 	int i, j;
 	mesh m, m2;
+	int g_ret, m_ret;
 	pos = ivec3f(float2f(4.2), float2f(2.0), float2f(12.0));
     pitch = float2f(-1.0*DEG2RAD_MULT), yaw = float2f(-162.5*DEG2RAD_MULT);
     gdelta = 32.0f*DEG2RAD_MULT;
     gspeed = 1.0f;
 
-	if (g_init() != G_SUCCESS) return;
-	if (m_init() != G_SUCCESS) return;
+	g_ret = g_init();
+	m_ret = m_init();
+
+	if (g_ret != G_SUCCESS || m_ret != G_SUCCESS) {
+		locate(1, 1);
+		Print("Init failed!");
+		if (g_ret == G_EALLOC) {
+			locate(1, 2);
+			Print("g_init() alloc fail");
+		}
+		if (m_ret == G_EALLOC) {
+			locate(1, 3);
+			Print("m_init() alloc fail");
+		}
+		return;
+	}
 
 	for (i = 0; i < 72; i++) {
 		tx[i] = &textures[TX_WHITE];
@@ -156,6 +171,7 @@ void start(void) {
 	gamestate = GAMESTATE_RUNNING;
 }
 
+// deallocate buffers, stop timers, set quit status
 void quit(void) {
     gamestate = GAMESTATE_QUIT_INPROG;
     KillTimer(TICK_TIMER);
@@ -172,6 +188,7 @@ void tick(void) {
 	g_coord(pos, pitch, yaw);
 	m_coord(pos, pitch, yaw);
 
+	if (m_getstatus() != G_SUBSYS_UP) return;
 	dtime = m_rendermeshes(overlay.is_on); //1/128 s ticks
 	scale = (float)dtime/128.0f*5.0f;
 

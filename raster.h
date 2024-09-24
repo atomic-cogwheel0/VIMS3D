@@ -14,7 +14,7 @@ int Bdisp_SYS_FastDrawLineVRAM(int x1, int y1, int x2, int y2);
 
 #define TX_CNT 13
 
-#define MAX_TRIANGLES 100
+#define MAX_TRIANGLES 72
 
 // texture ids
 #define TX_WHITE 0
@@ -44,11 +44,21 @@ int Bdisp_SYS_FastDrawLineVRAM(int x1, int y1, int x2, int y2);
 #define G_EBUFFULL -3
 #define G_ENEXIST -4
 #define G_ENULLPTR -5
+#define G_EALREADYINITED -6
+#define G_EDOWN -7
+
+#define G_SUBSYS_ERR 0
+#define G_SUBSYS_UP 1
+#define G_SUBSYS_DOWN 2
 
 // NEEDS CALLING (allocate bufs)
 int g_init(void);
 // clear buffers, reset indexes
-void g_clrbuf(void);
+int g_clrbuf(void);
+// deallocate buffers (MAKES THE RASTER SYSTEM UNUSABLE)
+void g_dealloc(void);
+// get status
+int g_getstatus(void);
 
 // add a triangle (returns id of added triangle)
 tr_id_t g_addtriangle(trianglef t);
@@ -63,11 +73,11 @@ unsigned int g_draw_horizon(void);
 // rasterize all triangles currently in buffer (returns number of triangles drawn)
 unsigned int g_rasterize_buf(void);
 
-// draw text at a position in 3D space (overwrite!)
+// draw text at a position in 3D space (overwrite!) (NEEDS g_init())
 int g_text3d(unsigned char *text, vec3f pos, unsigned int params);
-// draw text onto the screen (overwrite!)
+// draw text onto the screen (overwrite!) (does not need g_init())
 int g_text2d(unsigned char *text, unsigned int x, unsigned int y, unsigned int params);
-// draw a texture (with tiling), pixel-by-pixel, screenspace coords (overwrite!)
+// draw a texture (with tiling), pixel-by-pixel, screenspace coords (overwrite!) (does not need g_init())
 int g_texture2d(texture_ptr_t tx, unsigned int x, unsigned int y);
 
 #endif

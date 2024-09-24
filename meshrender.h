@@ -31,6 +31,10 @@ mesh ibill(trianglef *arr, texture_ptr_t *tx_pseudo_arr, vec3f pos);
 int m_init(void);
 // clear buffers, reset indexes
 int m_clrbuf(void);
+// deallocate buffers (MAKES THE MESH SYSTEM UNUSABLE)
+void m_dealloc(void);
+// get status
+int m_getstatus(void);
 
 // set global variables (keeping them separated from the raster engine might prove useful)
 void m_coord(vec3f pos, fixed pitch, fixed yaw);

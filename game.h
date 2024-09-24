@@ -17,7 +17,7 @@ int RTC_GetTicks(void);
 #define DRAW_MS 25
 
 void tick(void);
-void start(void);
+void init(void);
 void quit(void);
 
 void toggle_rising(toggle_t *t, bool state);
