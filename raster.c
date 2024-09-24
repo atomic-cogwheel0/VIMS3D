@@ -24,17 +24,30 @@ int16_t *depthbuf[64];
 
 unsigned char *vram;
 
+unsigned int g_status = G_SUBSYS_DOWN;
+
 // initialize all buffers (static alloc for buffers isn't possible)
 int g_init(void) {
 	int i, j;
 
+	if (g_status != G_SUBSYS_DOWN) return G_EALREADYINITED;
+
 	tbuf = (trianglef *)malloc(TBUF_SIZ*sizeof(trianglef));
 
-	for (i = 0; i < 64; i++) {
-		depthbuf[i] = (int16_t *) malloc(128*sizeof(int16_t)); 
+	if (tbuf == NULL) {
+		g_status = G_SUBSYS_ERR;
+		return G_EALLOC;
 	}
 
-	if (tbuf == NULL) return G_EALLOC;
+	for (i = 0; i < 64; i++) {
+		depthbuf[i] = (int16_t *) malloc(128*sizeof(int16_t));
+		if (depthbuf[i] == NULL) {
+			g_dealloc();
+			g_status = G_SUBSYS_ERR;
+			return G_EALLOC;
+		}
+	}
+	g_status = G_SUBSYS_UP;
 
 	g_clrbuf();
 
@@ -44,14 +57,34 @@ int g_init(void) {
 }
 
 // clear buffers, initialize 
-void g_clrbuf(void) {
+int g_clrbuf(void) {
+	if (g_status != G_SUBSYS_UP) return G_EDOWN;
 	memset((char *)tbuf, 0, TBUF_SIZ*sizeof(trianglef));
 	tbuf_idx = 0;
 	g_uuid = 1;
 }
 
+void g_dealloc(void) {
+	int i;
+	if (tbuf != NULL) {
+		free(tbuf);
+		tbuf = NULL;
+	}
+	for (i = 0; i < 64; i++) {
+		if (depthbuf[i] != NULL) {
+			free(depthbuf[i]);
+			depthbuf[i] = NULL;
+		}
+	}
+	g_status = G_SUBSYS_DOWN;
+}
+
+int g_getstatus(void) {
+	return g_status;
+}
+
 tr_id_t g_addtriangle(trianglef t) {
-	if (tbuf == NULL) return G_EALLOC;
+	if (g_status != G_SUBSYS_UP) return G_EDOWN;
 	if (tbuf_idx < TBUF_SIZ-1) {
 		tbuf[tbuf_idx++] = itrianglef(t.a, t.b, t.c, t.tx, g_uuid, t.flip_texture);
 		return g_uuid++;
@@ -61,7 +94,7 @@ tr_id_t g_addtriangle(trianglef t) {
 
 int g_removetriangle(tr_id_t id) {
 	int i, j;
-	if (tbuf == NULL) return G_EALLOC;
+	if (g_status != G_SUBSYS_UP) return G_EDOWN;
 	for(i = 0; i < tbuf_idx; i++) {
 		if (tbuf[i].id == id) {
 			for (j = i; j < (tbuf_idx-1); j++) {
@@ -82,6 +115,7 @@ void g_coord(vec3f pos, fixed pitch, fixed yaw) {
 
 unsigned int g_draw_horizon(void) {
 	int sspace_horiz_y;
+	if (g_status != G_SUBSYS_UP) return G_EDOWN;
 	sspace_horiz_y = f2int(mulff(sin_f(-gp), int2f(64))) + 32;
 	if (sspace_horiz_y < 0 || sspace_horiz_y >= 64) {
 		return 0;
@@ -120,7 +154,7 @@ unsigned int g_rasterize_buf(void) {
 
 	frame++;
 
-	if (tbuf == NULL) return G_EALLOC;
+	if (g_status != G_SUBSYS_UP) return G_EDOWN;
 
 // some stuff can get stupidly large for the ~tiny~ 22-bit fixeds
 // downscale them, who needs precision anyways :)
@@ -344,6 +378,7 @@ int g_text3d(unsigned char *text, vec3f pos, unsigned int params) {
 	vec3f ctot;
 
 	if (text == NULL) return G_ENULLPTR;
+	if (g_status != G_SUBSYS_UP) return G_EDOWN;
 
 	ctot = subvv(pos, go);
 	viewport_pos = rot(subvv(pos, go), -gp, -gy);

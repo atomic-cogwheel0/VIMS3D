@@ -12,7 +12,7 @@
 		also gint and perhaps a C++ port
 
   fun fact: I've tried to do this with a raytracer,
-            it took 500ms to draw 4 triangles with the resolution halved, it's now ~80ms for 96... (600x performance yay)
+            it took 500ms to draw 4 triangles in half resolution (64x32), it's now ~80ms for 96... (600x performance yay)
 */ 
 
 extern volatile int gamestate;
@@ -20,7 +20,7 @@ extern volatile int gamestate;
 int main(void) {
 	unsigned int key;
 
-    start();
+    init();
 
     while(gamestate != GAMESTATE_QUIT_DONE) {
 		GetKey(&key);

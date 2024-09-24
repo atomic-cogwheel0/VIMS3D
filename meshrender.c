@@ -28,54 +28,7 @@ vec3f o; // origin point (camera)
 // the pixel depth buffer, reset before meshes are rendered
 extern int16_t *depthbuf[64];
 
-// initialize all buffers (static alloc for buffers is not possible)
-int m_init(void) {
-	mbuf = (mesh *)malloc(MBUF_SIZ*sizeof(mesh));
-
-	if (mbuf == NULL) return G_EALLOC;	
-
-	m_clrbuf();
-
-	return G_SUCCESS;
-}
-
-int m_clrbuf(void) {
-	memset((char *)mbuf, 0, MBUF_SIZ*sizeof(mesh));
-	mbuf_idx = 0;
-	zindex_max = 0;
-	m_uuid = 1;
-}
-
-mesh_id_t m_addmesh(mesh m) {
-	if (mbuf == NULL) return G_EALLOC;
-	if (mbuf_idx < MBUF_SIZ-1) {
-		mbuf[mbuf_idx] = m;
-		mbuf[mbuf_idx++].id = m_uuid;
-		return m_uuid++;
-	}
-	return G_EBUFFULL;
-}
-
-int m_removemesh(mesh_id_t id) {
-	int i, j;
-	if (mbuf == NULL) return G_EALLOC;
-	for(i = 0; i < mbuf_idx; i++) {
-		if (mbuf[i].id == id) {
-			for (j = i; j < (mbuf_idx-1); j++) {
-				mbuf[j] = mbuf[j+1];
-			}
-			mbuf_idx--;
-			return G_SUCCESS;
-		}
-	}
-	return G_ENEXIST;
-}
-
-void m_coord(vec3f pos, fixed pitch, fixed yaw) {
-	o = pos;
-	p = pitch;
-	y = yaw;
-}	
+int m_status = G_SUBSYS_DOWN;
 
 mesh imesh(trianglef *arr, texture_ptr_t *tx_arr, uint8_t arrlen, vec3f pos, vec3f ctr) {
 	mesh m;
@@ -103,8 +56,77 @@ mesh ibill(trianglef *arr, texture_ptr_t *tx_pseudo_arr, vec3f pos) {
 	return m;
 }
 
+// initialize all buffers (static alloc for buffers is not possible)
+int m_init(void) {
+	if (m_status != G_SUBSYS_DOWN) return G_EALREADYINITED;
+
+	mbuf = (mesh *)malloc(MBUF_SIZ*sizeof(mesh));
+
+	if (mbuf == NULL) {
+		m_status = G_SUBSYS_ERR;
+		return G_EALLOC;
+	}
+	m_status = G_SUBSYS_UP;
+
+	m_clrbuf();
+
+	return G_SUCCESS;
+}
+
+int m_clrbuf(void) {
+	if (m_status != G_SUBSYS_UP) return G_EDOWN;
+	memset((char *)mbuf, 0, MBUF_SIZ*sizeof(mesh));
+	mbuf_idx = 0;
+	zindex_max = 0;
+	m_uuid = 1;
+}
+
+void m_dealloc(void) {
+	if (mbuf != NULL) {
+		free(mbuf);
+		mbuf = NULL;
+	}
+	m_status = G_SUBSYS_DOWN;
+}
+
+int m_getstatus(void) {
+	return m_status;
+}
+
+void m_coord(vec3f pos, fixed pitch, fixed yaw) {
+	o = pos;
+	p = pitch;
+	y = yaw;
+}
+
+mesh_id_t m_addmesh(mesh m) {
+	if (m_status != G_SUBSYS_UP) return G_EDOWN;
+	if (mbuf_idx < MBUF_SIZ-1) {
+		mbuf[mbuf_idx] = m;
+		mbuf[mbuf_idx++].id = m_uuid;
+		return m_uuid++;
+	}
+	return G_EBUFFULL;
+}
+
+int m_removemesh(mesh_id_t id) {
+	int i, j;
+	if (m_status != G_SUBSYS_UP) return G_EDOWN;
+	for(i = 0; i < mbuf_idx; i++) {
+		if (mbuf[i].id == id) {
+			for (j = i; j < (mbuf_idx-1); j++) {
+				mbuf[j] = mbuf[j+1];
+			}
+			mbuf_idx--;
+			return G_SUCCESS;
+		}
+	}
+	return G_ENEXIST;
+}
+
 int m_movemesh(mesh_id_t id, vec3f v) {
 	int i, j;
+	if (m_status != G_SUBSYS_UP) return G_EDOWN;
 	for(i = 0; i < mbuf_idx; i++) {
 		if (mbuf[i].id == id) {
 			mbuf[i].pos = addvv(mbuf[i].pos, v);
@@ -116,6 +138,7 @@ int m_movemesh(mesh_id_t id, vec3f v) {
 
 int m_rotmesh(mesh_id_t id, fixed yaw) {
 	int i, j;
+	if (m_status != G_SUBSYS_UP) return G_EDOWN;
 	for(i = 0; i < mbuf_idx; i++) {
 		if (mbuf[i].id == id) {
 			mbuf[i].yaw += yaw;
@@ -138,6 +161,9 @@ int m_rendermeshes(bool debug_overlay) {
 	unsigned int time_s, time_e2, deltaticks, tr_cnt = 0;
 	trianglef curr;	
 	
+	if (m_status == NULL) return G_EDOWN;
+	if (g_getstatus() != G_SUBSYS_UP) return G_EDOWN;
+
 	time_s = RTC_GetTicks();
 
 	Bdisp_AllClr_VRAM();

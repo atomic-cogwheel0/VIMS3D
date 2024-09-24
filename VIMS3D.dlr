@@ -59,9 +59,16 @@ Flags=00001012
 File=C:\CasioSDK\Projects\VIMS3D\game.c
 Line=146
 Flags=00001012
+Sublevel=1
 
 [Breakpoint]
 File=C:\CasioSDK\Projects\VIMS3D\raster.c
 Line=347
+Flags=00001012
+Sublevel=2
+
+[Breakpoint]
+File=C:\CasioSDK\Projects\VIMS3D\game.c
+Line=146
 Flags=00001012
 Sublevel=2
