@@ -157,7 +157,7 @@ int m_rendermeshes(bool debug_overlay, bool interlace) {
 	trianglef curr;
 	int16_t **depthbuf; // the pixel depth buffer, reset before meshes are rendered
 	
-	if (m_status == NULL) return G_EDOWN;
+	if (m_status != G_SUBSYS_DOWN) return G_EDOWN;
 	if (g_getstatus() != G_SUBSYS_UP) return G_EDOWN;
 	depthbuf = g_getdepthbuf();
 

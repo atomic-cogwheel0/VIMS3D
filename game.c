@@ -44,14 +44,14 @@ void init(void) {
 
 	if (g_ret != G_SUCCESS || m_ret != G_SUCCESS) {
 		locate(1, 1);
-		Print("init() failed!");
+		Print((unsigned char *)"init() failed!");
 		if (g_ret == G_EALLOC) {
 			locate(1, 2);
-			Print("g_init() alloc fail");
+			Print((unsigned char *)"g_init() alloc fail");
 		}
 		if (m_ret == G_EALLOC) {
 			locate(1, 3);
-			Print("m_init() alloc fail");
+			Print((unsigned char *)"m_init() alloc fail");
 		}
 		return;
 	}
@@ -256,7 +256,7 @@ void tick(void) {
 	}
 }
 
-unsigned int *get_gamestate_ptr(void) {
+int *get_gamestate_ptr(void) {
 	return &gamestate;
 }
 
