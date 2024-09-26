@@ -9,14 +9,14 @@ Height=10230
 Width=10890
 State=0
 Flags=00000020
-Setting=147:1:fixed.c
+Setting=364:1:raster.c
 OptionA=0
 
 [_2]
 Type=1
-Order=2
-Top=2340
-Left=720
+Order=3
+Top=2415
+Left=7275
 Height=12705
 Width=15645
 State=0
@@ -26,9 +26,9 @@ OptionB=15
 
 [_3]
 Type=6
-Order=3
-Top=12450
-Left=-330
+Order=2
+Top=9450
+Left=1590
 Height=6870
 Width=5430
 State=0
@@ -37,7 +37,7 @@ OptionA=0
 
 [_4]
 Type=7
-Order=8
+Order=9
 Top=5655
 Left=19470
 Height=13155
@@ -48,7 +48,7 @@ OptionA=0
 
 [_5]
 Type=8
-Order=9
+Order=10
 Top=10230
 Left=2640
 Height=7065
@@ -81,7 +81,7 @@ OptionA=0
 
 [_8]
 Type=17
-Order=4
+Order=5
 Top=-225
 Left=0
 Height=11115
@@ -148,14 +148,14 @@ OptionA=0
 
 [_32]
 Type=16
-Order=5
-Top=510
-Left=3930
+Order=6
+Top=5175
+Left=19215
 Height=14460
 Width=28080
 State=0
 Flags=00000020
-Setting=175:1:game.c
+Setting=15:22:game.c
 OptionA=0
 
 [_33]
@@ -231,7 +231,7 @@ OptionA=0
 
 [_39]
 Type=16
-Order=10
+Order=11
 Top=6690
 Left=14430
 Height=12975
@@ -255,26 +255,26 @@ OptionA=0
 
 [_41]
 Type=16
-Order=7
+Order=8
 Top=5235
 Left=22080
 Height=9300
 Width=19110
 State=0
 Flags=00000020
-Setting=24:46:game.h
+Setting=24:1:game.h
 OptionA=0
 
 [_42]
 Type=16
-Order=6
+Order=4
 Top=2670
 Left=17610
 Height=13785
 Width=32070
 State=0
 Flags=00000020
-Setting=342:1:raster.c
+Setting=97:2:raster.c
 OptionA=0
 
 [_43]
@@ -290,14 +290,14 @@ OptionA=0
 
 [_44]
 Type=16
-Order=12
-Top=705
-Left=8145
+Order=7
+Top=5910
+Left=24210
 Height=15705
 Width=25560
 State=0
 Flags=00000020
-Setting=179:2:meshrender.c
+Setting=39:1:meshrender.c
 OptionA=0
 
 [_45]
@@ -349,7 +349,7 @@ OptionA=0
 
 [_49]
 Type=16
-Order=11
+Order=12
 Top=4365
 Left=2115
 Height=11490

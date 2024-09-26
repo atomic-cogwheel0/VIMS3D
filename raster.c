@@ -83,6 +83,10 @@ int g_getstatus(void) {
 	return g_status;
 }
 
+int16_t **g_getdepthbuf(void) {
+	return (int16_t **)depthbuf;
+}
+
 tr_id_t g_addtriangle(trianglef t) {
 	if (g_status != G_SUBSYS_UP) return G_EDOWN;
 	if (tbuf_idx < TBUF_SIZ-1) {
@@ -124,14 +128,14 @@ unsigned int g_draw_horizon(void) {
 	return 128;
 }
 
-unsigned int frame = 0;
-extern volatile toggle_t interlace;
-extern texture_t textures[TX_CNT];
+// define fallback texture (2*2 checkerboard)
+byte tx_o_fallback[] = {65};
+texture_t fallback_texture = {2, 2, 1, 1, tx_o_fallback};
 
 // the One and Only Rendering(TM) function
 // have fun :)
 
-unsigned int g_rasterize_buf(void) {
+unsigned int g_rasterize_buf(interlace_param_t interlace) {
 	int curr_tidx, xiter, yiter;
 	int maxx, minx;
 	int bbox_left, bbox_right, bbox_top, bbox_bottom; // bounding box (on screen)
@@ -151,8 +155,6 @@ unsigned int g_rasterize_buf(void) {
 	uint16_t u_mult, v_mult;
 
 	signed short depthval;
-
-	frame++;
 
 	if (g_status != G_SUBSYS_UP) return G_EDOWN;
 
@@ -218,7 +220,7 @@ unsigned int g_rasterize_buf(void) {
 
 		q_cnt++;
 
-		if (t.tx == NULL) t.tx = &textures[TX_CHECKERBOARD_4];
+		if (t.tx == NULL) t.tx = &fallback_texture;
 
 		// U and V are the barycentric coordinates of a pixel within the current triangle in screen space
 		// their range is from 0 to 1, calculate with both tiling and texture size
@@ -270,7 +272,9 @@ unsigned int g_rasterize_buf(void) {
 		//  1/Z, 1/Ui and 1/Vi are interpolated because they are linear across the surface in screen space
 
 		for (yiter = bbox_top; yiter <= bbox_bottom; yiter += 1) {
-			if (interlace.is_on && ((yiter % 2) != (frame % 2))) continue;
+			if (interlace & INTERLACE_MASK_ISON)
+				if ((yiter % 2) == ((interlace & INTERLACE_MASK_ROW)?1:0)) continue;
+
 			if (yiter < 0 || yiter >= 64) continue;
 
 			v2 = divvi(subvv(ivec3f(int2f(bbox_left), int2f(yiter), 0), a), OF_SC);

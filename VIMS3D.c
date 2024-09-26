@@ -15,14 +15,13 @@
             it took 500ms to draw 4 triangles in half resolution (64x32), it's now ~80ms for 96... (600x performance yay)
 */ 
 
-extern volatile int gamestate;
-
 int main(void) {
 	unsigned int key;
+    volatile unsigned int *gamestate_ptr = get_gamestate_ptr();
 
     init();
 
-    while(gamestate != GAMESTATE_QUIT_DONE) {
+    while(*gamestate_ptr != GAMESTATE_QUIT_DONE) {
 		GetKey(&key);
     }
 }
