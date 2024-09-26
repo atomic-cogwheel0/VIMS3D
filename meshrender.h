@@ -50,7 +50,7 @@ int m_removemesh(mesh_id_t id);
 int m_movemesh(mesh_id_t id, vec3f offset);
 int m_rotmesh(mesh_id_t id, fixed yaw);
 
-// run rendering pass with current meshes
-int m_rendermeshes(bool debug_overlay);
+// run rendering pass with current meshes (returns draw time in ticks)
+int m_rendermeshes(bool debug_overlay, bool interlace);
 
 #endif

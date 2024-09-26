@@ -18,15 +18,9 @@ unsigned short mbuf_idx = 0;
 signed short zindex_max = 0;
 uint32_t m_uuid = 1;				// nothing gets uuid 0
 
-// shouldn't run two draws at the same time
-volatile int lock = 0;
-
 // global coordination variables
 fixed p, y; // pitch, yaw
 vec3f o; // origin point (camera)
-
-// the pixel depth buffer, reset before meshes are rendered
-extern int16_t *depthbuf[64];
 
 int m_status = G_SUBSYS_DOWN;
 
@@ -155,14 +149,17 @@ int m_rotmesh(mesh_id_t id, fixed yaw) {
 }
 
 char buf[64]; // for sprintf
+unsigned int frame;
 
-int m_rendermeshes(bool debug_overlay) {
+int m_rendermeshes(bool debug_overlay, bool interlace) {
 	int m_iter, t_iter, dx, dy;
 	unsigned int time_s, time_e2, deltaticks, tr_cnt = 0;
-	trianglef curr;	
+	trianglef curr;
+	int16_t **depthbuf; // the pixel depth buffer, reset before meshes are rendered
 	
 	if (m_status == NULL) return G_EDOWN;
 	if (g_getstatus() != G_SUBSYS_UP) return G_EDOWN;
+	depthbuf = g_getdepthbuf();
 
 	time_s = RTC_GetTicks();
 
@@ -177,7 +174,7 @@ int m_rendermeshes(bool debug_overlay) {
 	g_draw_horizon();
 
 	for (m_iter = 0; m_iter < mbuf_idx; m_iter++) {
-		g_clrbuf();		
+		g_clrbuf();
 
 		for (t_iter = 0; t_iter < mbuf[m_iter].arrlen; t_iter++) {
 			if (mbuf[m_iter].is_billboard) {
@@ -193,7 +190,7 @@ int m_rendermeshes(bool debug_overlay) {
 			g_addtriangle(curr);
 		}
 
-		tr_cnt += g_rasterize_buf();
+		tr_cnt += g_rasterize_buf((interlace?INTERLACE_MASK_ISON:0)|(frame%2?INTERLACE_MASK_ROW:0));
 		
 #ifdef DEBUG_BUILD
 		if (debug_overlay) {
@@ -204,6 +201,8 @@ int m_rendermeshes(bool debug_overlay) {
 	}
 	
 	time_e2 = RTC_GetTicks();
+
+	frame++;
 
 	deltaticks = time_e2-time_s;
 	if (deltaticks < 1) deltaticks = 1; 

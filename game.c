@@ -44,7 +44,7 @@ void init(void) {
 
 	if (g_ret != G_SUCCESS || m_ret != G_SUCCESS) {
 		locate(1, 1);
-		Print("Init failed!");
+		Print("init() failed!");
 		if (g_ret == G_EALLOC) {
 			locate(1, 2);
 			Print("g_init() alloc fail");
@@ -189,7 +189,7 @@ void tick(void) {
 	m_coord(pos, pitch, yaw);
 
 	if (m_getstatus() != G_SUBSYS_UP) return;
-	dtime = m_rendermeshes(overlay.is_on); //1/128 s ticks
+	dtime = m_rendermeshes(overlay.is_on, interlace.is_on); //1/128 s ticks
 	scale = (float)dtime/128.0f*5.0f;
 
 	delta = float2f(gdelta * scale);
@@ -254,6 +254,10 @@ void tick(void) {
 	if (IsKeyDown(KEY_CTRL_EXIT)) {
 		quit();
 	}
+}
+
+unsigned int *get_gamestate_ptr(void) {
+	return &gamestate;
 }
 
 void toggle_rising(toggle_t *t, bool state) {

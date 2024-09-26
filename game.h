@@ -20,6 +20,8 @@ void tick(void);
 void init(void);
 void quit(void);
 
+unsigned int *get_gamestate_ptr(void);
+
 void toggle_rising(toggle_t *t, bool state);
 void toggle_falling(toggle_t *t, bool state);
 
