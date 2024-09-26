@@ -17,7 +17,7 @@
 
 int main(void) {
 	unsigned int key;
-    volatile unsigned int *gamestate_ptr = get_gamestate_ptr();
+    volatile int *gamestate_ptr = get_gamestate_ptr();
 
     init();
 
