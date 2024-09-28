@@ -167,8 +167,12 @@ void init(void) {
 		m_addmesh(m2);
 	}
 
+#ifndef BENCHMARK_RASTER
 	SetTimer(TICK_TIMER, TICK_MS, tick);
 	gamestate = GAMESTATE_RUNNING;
+#else
+	tick();
+#endif
 }
 
 // deallocate buffers, stop timers, set quit status

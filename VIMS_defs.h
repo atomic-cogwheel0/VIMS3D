@@ -1,7 +1,9 @@
 #ifndef _VIMS_DEFS_H
 #define _VIMS_DEFS_H
 
+// rebuild all if changed
 //#define DEBUG_BUILD
+//#define BENCHMARK_RASTER
 
 // typedefs (no <stddef.h>)
 

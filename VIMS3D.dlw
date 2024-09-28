@@ -2,19 +2,19 @@
 
 [_1]
 Type=5
-Order=1
+Order=0
 Top=2625
 Left=27000
 Height=10230
 Width=10890
 State=0
 Flags=00000020
-Setting=364:1:raster.c
+Setting=64:1:vec.c
 OptionA=0
 
 [_2]
 Type=1
-Order=3
+Order=1
 Top=2415
 Left=7275
 Height=12705
@@ -26,9 +26,9 @@ OptionB=15
 
 [_3]
 Type=6
-Order=2
-Top=9450
-Left=1590
+Order=3
+Top=9570
+Left=1620
 Height=6870
 Width=5430
 State=0
@@ -37,7 +37,7 @@ OptionA=0
 
 [_4]
 Type=7
-Order=9
+Order=10
 Top=5655
 Left=19470
 Height=13155
@@ -48,7 +48,7 @@ OptionA=0
 
 [_5]
 Type=8
-Order=10
+Order=11
 Top=10230
 Left=2640
 Height=7065
@@ -81,7 +81,7 @@ OptionA=0
 
 [_8]
 Type=17
-Order=5
+Order=4
 Top=-225
 Left=0
 Height=11115
@@ -92,7 +92,7 @@ OptionA=0
 
 [_9]
 Type=15
-Order=0
+Order=2
 Top=6825
 Left=21900
 Height=9945
@@ -137,7 +137,7 @@ OptionA=0
 
 [_13]
 Type=13
-Order=21
+Order=22
 Top=17430
 Left=-2730
 Height=12840
@@ -148,7 +148,7 @@ OptionA=0
 
 [_32]
 Type=16
-Order=6
+Order=8
 Top=5175
 Left=19215
 Height=14460
@@ -160,7 +160,7 @@ OptionA=0
 
 [_33]
 Type=16
-Order=15
+Order=16
 Top=16860
 Left=30975
 Height=13425
@@ -172,7 +172,7 @@ OptionA=0
 
 [_34]
 Type=16
-Order=19
+Order=20
 Top=4110
 Left=15735
 Height=12390
@@ -184,7 +184,7 @@ OptionA=0
 
 [_35]
 Type=16
-Order=14
+Order=15
 Top=2100
 Left=7170
 Height=11490
@@ -196,7 +196,7 @@ OptionA=0
 
 [_36]
 Type=16
-Order=16
+Order=17
 Top=8940
 Left=26700
 Height=9120
@@ -219,31 +219,31 @@ OptionA=0
 
 [_38]
 Type=16
-Order=22
+Order=6
 Top=2655
 Left=11775
 Height=11490
 Width=19110
 State=0
 Flags=00000020
-Setting=35:1:VIMS3D.c
+Setting=30:2:VIMS3D.c
 OptionA=0
 
 [_39]
 Type=16
-Order=11
+Order=12
 Top=6690
 Left=14430
 Height=12975
 Width=32070
 State=0
 Flags=00000020
-Setting=28:13:VIMS_defs.h
+Setting=28:1:VIMS_defs.h
 OptionA=0
 
 [_40]
 Type=16
-Order=13
+Order=14
 Top=2265
 Left=22590
 Height=15180
@@ -255,7 +255,7 @@ OptionA=0
 
 [_41]
 Type=16
-Order=8
+Order=9
 Top=5235
 Left=22080
 Height=9300
@@ -267,14 +267,14 @@ OptionA=0
 
 [_42]
 Type=16
-Order=4
+Order=7
 Top=2670
 Left=17610
 Height=13785
 Width=32070
 State=0
 Flags=00000020
-Setting=97:2:raster.c
+Setting=276:1:raster.c
 OptionA=0
 
 [_43]
@@ -290,19 +290,19 @@ OptionA=0
 
 [_44]
 Type=16
-Order=7
-Top=5910
-Left=24210
+Order=5
+Top=2580
+Left=11010
 Height=15705
 Width=25560
 State=0
 Flags=00000020
-Setting=39:1:meshrender.c
+Setting=160:29:meshrender.c
 OptionA=0
 
 [_45]
 Type=16
-Order=20
+Order=21
 Top=3630
 Left=17940
 Height=13335
@@ -325,7 +325,7 @@ OptionA=0
 
 [_47]
 Type=16
-Order=18
+Order=19
 Top=3885
 Left=16965
 Height=11490
@@ -337,7 +337,7 @@ OptionA=0
 
 [_48]
 Type=16
-Order=17
+Order=18
 Top=5820
 Left=28950
 Height=18915
@@ -349,7 +349,7 @@ OptionA=0
 
 [_49]
 Type=16
-Order=12
+Order=13
 Top=4365
 Left=2115
 Height=11490

@@ -8,9 +8,9 @@
 /*
 FIXED POINT MATH LIBRARY
 
-precision: 22+10; 32bit (4byte) =>  FIXED_MAX = 2097151.9990234375
-									FIXED_MIN = -2097152
-									FIXED_EPSILON = 0.0009765625
+precision: 20+12; 32bit (4byte) =>  FIXED_MAX = 524287.999755859375
+									FIXED_MIN = -524288
+									FIXED_EPSILON = 0.000244140625
 
 operation names:
  add/sub/mul/div + (p = in-place e.g. +=) + first operand type + second operand type
@@ -23,7 +23,7 @@ the following operations do not need extra functions (use the built-in operators
 #define FIXED_MAX ((fixed)0x7FFFFFFF)
 #define FIXED_MIN ((fixed)0x80000000)
 #define FIXED_EPSILON ((fixed)1)
-#define FIXED_PRECISION 10
+#define FIXED_PRECISION 12
 #define FIXED_CONST (1<<FIXED_PRECISION)
 #define FIXED_WHOLE_MASK ((fixed)(0xFFFFFFFF>>FIXED_PRECISION)<<FIXED_PRECISION)
 #define FIXED_FRAC_MASK ((fixed)0xFFFFFFFF^FIXED_WHOLE_MASK)
