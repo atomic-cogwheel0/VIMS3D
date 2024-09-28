@@ -152,7 +152,7 @@ char buf[64]; // for sprintf
 unsigned int frame;
 
 int m_rendermeshes(bool debug_overlay, bool interlace) {
-	int m_iter, t_iter, dx, dy;
+	int m_iter, t_iter, dx, dy, i;
 	unsigned int time_s, time_e2, deltaticks, tr_cnt = 0;
 	trianglef curr;
 	int16_t **depthbuf; // the pixel depth buffer, reset before meshes are rendered
@@ -190,7 +190,13 @@ int m_rendermeshes(bool debug_overlay, bool interlace) {
 			g_addtriangle(curr);
 		}
 
-		tr_cnt += g_rasterize_buf((interlace?INTERLACE_MASK_ISON:0)|(frame%2?INTERLACE_MASK_ROW:0));
+#ifndef BENCHMARK_RASTER
+		tr_cnt += g_rasterize_buf((interlace ? INTERLACE_MASK_ISON : 0) | (frame % 2 ? INTERLACE_MASK_ROW : 0));
+#else
+		for (i = 0; i < 40; i++) {
+			tr_cnt += g_rasterize_buf((interlace ? INTERLACE_MASK_ISON : 0) | (frame % 2 ? INTERLACE_MASK_ROW : 0));
+		}
+#endif
 		
 #ifdef DEBUG_BUILD
 		if (debug_overlay) {
@@ -209,7 +215,11 @@ int m_rendermeshes(bool debug_overlay, bool interlace) {
 
 	//if (deltaticks > 128) deltaticks -= 128; // the emulator sometimes skips a whole second :)
 
+#ifndef BENCHMARK_RASTER
 	if (debug_overlay) {
+#else
+	if (TRUE) {
+#endif
 		sprintf(buf, "%4.1fms (%2.1ffps) %dt/%dm", (deltaticks)*(1000.0/128.0), 1000.0/((deltaticks)*(1000.0/128.0)), tr_cnt, m_iter);
 		PrintMini(0, 0, (unsigned char *)buf, 0);
 	

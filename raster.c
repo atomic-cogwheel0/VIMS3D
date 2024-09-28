@@ -136,11 +136,11 @@ texture_t fallback_texture = {2, 2, 1, 1, tx_o_fallback};
 // have fun :)
 
 unsigned int g_rasterize_buf(interlace_param_t interlace) {
-	int curr_tidx, xiter, yiter;
-	int maxx, minx;
+	int curr_tidx, xiterl, xiterr, xiter, yiter;
+	int maxx = 0x7FFFFFFF, minx = 0;
 	int bbox_left, bbox_right, bbox_top, bbox_bottom; // bounding box (on screen)
 	int q_cnt = 0;
-	int found;
+	//bool found;
 	fixed diff;
 
 	trianglef t;
@@ -151,6 +151,9 @@ unsigned int g_rasterize_buf(interlace_param_t interlace) {
 	fixed ozp, uzp, vzp, ozq, uzq, vzq, oza, ozb, uzb, vzb, ozc, uzc, vzc, ozi, uzi, vzi, zci; // practical variable naming, UV data calculation
 	fixed v0x_sc, v1x_sc;
 
+	fixed dot11_dot02, dot01_dot12, dot00_dot12, dot01_dot02;
+	fixed dot11_dot02_increment, dot01_dot12_increment, dot00_dot12_increment, dot01_dot02_increment;
+
 	uint8_t px, pxl;
 	uint16_t u_mult, v_mult;
 
@@ -158,12 +161,12 @@ unsigned int g_rasterize_buf(interlace_param_t interlace) {
 
 	if (g_status != G_SUBSYS_UP) return G_EDOWN;
 
-// some stuff can get stupidly large for the ~tiny~ 22-bit fixeds
+// some stuff can get stupidly large for the ~tiny~ 20-bit fixeds
 // downscale them, who needs precision anyways :)
-#define OF_SC 8	//OverFlow downSCale constant
+#define OF_SC 4	//OverFlow downSCale constant
 
 // we need precision for the texture calc :(
-// 10 bits aren't really enough for precise calculations with inverses, so let's make them 14-bit!
+// 12 bits aren't really enough for precise calculations with inverses, so let's make them 16-bit!
 #define ZREC_EXP 4 // exponent (spares some cycles with rshift instead of division)
 #define ZREC_MULT (1<<ZREC_EXP)
 
@@ -277,97 +280,108 @@ unsigned int g_rasterize_buf(interlace_param_t interlace) {
 
 			if (yiter < 0 || yiter >= 64) continue;
 
+			// find leftmost
 			v2 = divvi(subvv(ivec3f(int2f(bbox_left), int2f(yiter), 0), a), OF_SC);
 			dot02 = dotp2(v0, v2);
 			dot12 = dotp2(v1, v2);
 
-			// find leftmost
-			found = 0;
-			for (xiter = bbox_left; xiter <= bbox_right; xiter += 1, dot02 += v0x_sc, dot12 += v1x_sc) {				
-				u = mulff(dot11, dot02) - mulff(dot01, dot12);
-				if (u < 0) continue;
+			dot11_dot02 = mulff(dot11, dot02);
+			dot01_dot12 = mulff(dot01, dot12);
+			dot00_dot12 = mulff(dot00, dot12);
+			dot01_dot02 = mulff(dot01, dot02);
 
-				v = mulff(dot00, dot12) - mulff(dot01, dot02);
+			dot11_dot02_increment = mulff(dot11, v0x_sc);
+			dot01_dot12_increment = mulff(dot01, v1x_sc);
+			dot00_dot12_increment = mulff(dot00, v1x_sc);
+			dot01_dot02_increment = mulff(dot01, v0x_sc);
+
+			for (xiterl = bbox_left; xiterl <= bbox_right; xiterl++) {
+				dot11_dot02 += dot11_dot02_increment;
+				dot01_dot12 += dot01_dot12_increment;
+				dot00_dot12 += dot00_dot12_increment;
+				dot01_dot02 += dot01_dot02_increment;
+				u = dot11_dot02 - dot01_dot12;
+				if (u < 0) continue;
+				v = dot00_dot12 - dot01_dot02;
 				if (v < 0) continue;
 
-				if (u + v >= denom) continue;
+				if (u + v < denom) goto found_left;
+			}
+			continue; // hasn't found anything
 
-				found = 1;
-
+			found_left:
 				u = divff(u, denom);
-				v = divff(v, denom);			
-
-				// interpolation
+				v = divff(v, denom);
+				// interpolate
 				ozp = mulff(ozb, v) + mulff(ozc, u) + mulff(oza, int2f(1) - u - v);
 				uzp = mulff(uzc, u);
 				vzp = mulff(vzb, v);
 
-				minx = xiter;
-				break;
-			}	
-			if (!found) continue;
-
+			// find rightmost, same stuff but different
 			v2 = divvi(subvv(ivec3f(int2f(bbox_right), int2f(yiter), 0), a), OF_SC);
 			dot02 = dotp2(v0, v2);
 			dot12 = dotp2(v1, v2);
 
-			// find rightmost, same stuff but different
-			found = 0;
-			for(xiter = bbox_right; xiter >= bbox_left; xiter -= 1, dot02 -= v0x_sc, dot12 -= v1x_sc) {
-				u = mulff(dot11, dot02) - mulff(dot01, dot12);
-				if (u < 0) continue;
-			
-				v = mulff(dot00, dot12) - mulff(dot01, dot02);	
-				if (v < 0) continue;
-				
-				if (u + v >= denom) continue;
+			dot11_dot02 = mulff(dot11, dot02);
+			dot01_dot12 = mulff(dot01, dot12);
+			dot00_dot12 = mulff(dot00, dot12);
+			dot01_dot02 = mulff(dot01, dot02);
 
-				found = 1;
-			
+			dot11_dot02_increment = mulff(dot11, v0x_sc);
+			dot01_dot12_increment = mulff(dot01, v1x_sc);
+			dot00_dot12_increment = mulff(dot00, v1x_sc);
+			dot01_dot02_increment = mulff(dot01, v0x_sc);
+
+			for (xiterr = bbox_right; xiterr >= xiterl; xiterr--) {
+				dot11_dot02 -= dot11_dot02_increment;
+				dot01_dot12 -= dot01_dot12_increment;
+				dot00_dot12 -= dot00_dot12_increment;
+				dot01_dot02 -= dot01_dot02_increment;
+				u = dot11_dot02 - dot01_dot12;
+				if (u < 0) continue;
+				v = dot00_dot12 - dot01_dot02;
+				if (v < 0) continue;
+
+				if (u + v < denom) goto found_right;
+			}
+			continue; // hasn't found anything
+
+			found_right:
 				u = divff(u, denom);
 				v = divff(v, denom);
-
 				ozq = mulff(ozb, v) + mulff(ozc, u) + mulff(oza, int2f(1) - u - v);
 				uzq = mulff(uzc, u);
 				vzq = mulff(vzb, v);
 
-				maxx = xiter;
-				break;
-			}
-			if (!found) continue;
+			if ((xiterr-xiterl) <= 0) continue; // probably a good idea to not render
 
-			if ((maxx-minx) > 1023) continue;  // shouldn't get that big, rudimentary near-plane cull
-			if ((maxx-minx) <= 0) continue; // probably a good idea to not render
-
-			diff = int2f(maxx-minx);
+			diff = int2f(xiterr-xiterl);
 
 			ozstep = divff(ozq-ozp, diff);
 			uzstep = divff(uzq-uzp, diff);
 			vzstep = divff(vzq-vzp, diff);
 
 			// interpolate between values in current row
-			for (ozi = ozp, uzi = uzp, vzi = vzp, xiter = minx; xiter <= maxx; xiter += 1, ozi+=ozstep, uzi+=uzstep, vzi+=vzstep) {
-				if (xiter >= 0 && xiter <= 127) {
-					zci = divff(int2f(ZREC_MULT*ZREC_MULT), ozi);
+			for (ozi = ozp, uzi = uzp, vzi = vzp, xiter = xiterl; xiter <= xiterr; xiter++, ozi+=ozstep, uzi+=uzstep, vzi+=vzstep) {
+				zci = divff(int2f(ZREC_MULT*ZREC_MULT), ozi);
 
-					depthval = (f2int(zci) << 5) | ((zci & FIXED_FRAC_MASK) >> 5); // transform 22+10bit zci to 11+5bit depth
+				depthval = (f2int(zci) << 5) | ((zci & FIXED_FRAC_MASK) >> 5); // transform 22+10bit zci to 11+5bit depth
 
-					if (depthbuf[yiter][xiter] > depthval) {			
-						ui = divshiftfi(mulff(uzi, zci), ZREC_EXP+ZREC_EXP); // only use of divshiftfi is here
-						vi = divshiftfi(mulff(vzi, zci), ZREC_EXP+ZREC_EXP);
+				if (depthbuf[yiter][xiter] > depthval) {			
+					ui = divshiftfi(mulff(uzi, zci), ZREC_EXP+ZREC_EXP); // only use of divshiftfi is here
+					vi = divshiftfi(mulff(vzi, zci), ZREC_EXP+ZREC_EXP);
 
-						// index coordinates from the bottom right instead of top left
-						if (t.flip_texture) {
-                            pxl = (t.tx->h-1 - f2int(ui)%t.tx->h)*t.tx->w + (t.tx->w-1 - f2int(vi)%t.tx->w);
-                        }
-						else {
-                            pxl = (f2int(ui)%t.tx->h)*t.tx->w + (f2int(vi)%t.tx->w);
-                        }
-						px = (t.tx->tx_data[pxl>>2] & (3<<(2*(3-pxl&3)))) >> (2*(3-(pxl&3))); // pxl>>2 = pxl/4; pxl&3 = pxl%4
-						if (!(px & 2)) {
-							Bdisp_SetPoint_VRAM(xiter, yiter, px & 1);
-							depthbuf[yiter][xiter] = depthval;
-						}
+					// index coordinates from the bottom right instead of top left
+					if (t.flip_texture) {
+                        pxl = (t.tx->h-1 - f2int(ui)%t.tx->h)*t.tx->w + (t.tx->w-1 - f2int(vi)%t.tx->w);
+                    }
+					else {
+                        pxl = (f2int(ui)%t.tx->h)*t.tx->w + (f2int(vi)%t.tx->w);
+                    }
+					px = (t.tx->tx_data[pxl>>2] & (3<<(2*(3-pxl&3)))) >> (2*(3-(pxl&3))); // pxl>>2 = pxl/4; pxl&3 = pxl%4
+					if (!(px & 2)) {
+						Bdisp_SetPoint_VRAM(xiter, yiter, px & 1);
+						depthbuf[yiter][xiter] = depthval;
 					}
 				}
 			}

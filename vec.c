@@ -52,6 +52,10 @@ vec3f mulvf(vec3f t, fixed f) {
 	return ivec3f(mulff(t.x, f), mulff(t.y, f), mulff(t.z, f));
 }
 
+vec3f mulvi(vec3f t, int f) {
+	return ivec3f(mulfi(t.x, f), mulfi(t.y, f), mulfi(t.z, f));
+}
+
 vec3f divvf(vec3f t, fixed f) {
 	return ivec3f(divff(t.x, f), divff(t.y, f), divff(t.z, f));
 }

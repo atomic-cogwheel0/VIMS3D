@@ -54,6 +54,7 @@ vec3f crossp(vec3f t, vec3f v);
 vec3f addvv(vec3f t, vec3f v);
 vec3f subvv(vec3f t, vec3f v);
 vec3f mulvf(vec3f t, fixed f);
+vec3f mulvi(vec3f t, int f);
 vec3f divvf(vec3f t, fixed f);
 vec3f divvi(vec3f t, int f);
 
