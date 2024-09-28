@@ -8,3 +8,5 @@ Debug/*
 Debug
 INIT/*
 INIT
+*.dlw
+*.dlr
