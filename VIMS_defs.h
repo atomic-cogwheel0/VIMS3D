@@ -32,4 +32,8 @@ typedef struct {
 	bool prev_toggle;
 } toggle_t;
 
+typedef int32_t uuid_t;
+
+#define UUID_MAX ((uuid_t)0x7FFFFFFF)
+
 #endif

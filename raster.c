@@ -17,7 +17,7 @@ vec3f go; // origin point (camera)
 // triangle buffer, triangle indexing
 trianglef *tbuf;
 unsigned short tbuf_idx = 0;
-signed int g_uuid = 1;				// nothing gets g_uuid 0
+uuid_t g_uuid = 1;				// nothing gets g_uuid 0
 
 // depth buffer: a 128*64 array, every pixel has a 11+5 bit fixed-point depth value
 int16_t *depthbuf[64];
@@ -87,16 +87,18 @@ int16_t **g_getdepthbuf(void) {
 	return (int16_t **)depthbuf;
 }
 
-tr_id_t g_addtriangle(trianglef t) {
+uuid_t g_addtriangle(trianglef t) {
 	if (g_status != G_SUBSYS_UP) return G_EDOWN;
-	if (tbuf_idx < TBUF_SIZ-1) {
-		tbuf[tbuf_idx++] = itrianglef(t.a, t.b, t.c, t.tx, g_uuid, t.flip_texture);
-		return g_uuid++;
+	if (g_uuid < UUID_MAX) {
+		if (tbuf_idx < TBUF_SIZ-1) {
+			tbuf[tbuf_idx++] = itrianglef(t.a, t.b, t.c, t.tx, g_uuid, t.flip_texture);
+			return g_uuid++;
+		}
 	}
 	return G_EBUFFULL;
 }
 
-int g_removetriangle(tr_id_t id) {
+int g_removetriangle(uuid_t id) {
 	int i, j;
 	if (g_status != G_SUBSYS_UP) return G_EDOWN;
 	for(i = 0; i < tbuf_idx; i++) {
@@ -135,7 +137,7 @@ texture_t fallback_texture = {2, 2, 1, 1, tx_o_fallback};
 // the One and Only Rendering(TM) function
 // have fun :)
 
-unsigned int g_rasterize_buf(interlace_param_t interlace) {
+unsigned int g_rasterize_buf(bool interlace_on, bool odd_row) {
 	int curr_tidx, xiterl, xiterr, xiter, yiter;
 	int maxx = 0x7FFFFFFF, minx = 0;
 	int bbox_left, bbox_right, bbox_top, bbox_bottom; // bounding box (on screen)
@@ -275,8 +277,8 @@ unsigned int g_rasterize_buf(interlace_param_t interlace) {
 		//  1/Z, 1/Ui and 1/Vi are interpolated because they are linear across the surface in screen space
 
 		for (yiter = bbox_top; yiter <= bbox_bottom; yiter += 1) {
-			if (interlace & INTERLACE_MASK_ISON)
-				if ((yiter % 2) == ((interlace & INTERLACE_MASK_ROW)?1:0)) continue;
+			if (interlace_on)
+				if ((yiter % 2) == odd_row) continue;
 
 			if (yiter < 0 || yiter >= 64) continue;
 
@@ -415,7 +417,6 @@ int g_text3d(unsigned char *text, vec3f pos, unsigned int params) {
 }
 
 int g_text2d(unsigned char *text, unsigned int x, unsigned int y, unsigned int params) {
-
 	if (text == NULL) return G_ENULLPTR;
 
 	if (params & TEXT_SMALL) {
