@@ -23,6 +23,7 @@ fixed sqrt_f(fixed f) {
         b >>= 1;
     }
     q >>= 8;
+    q >>= 2;
     return q;
 }
 

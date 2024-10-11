@@ -46,15 +46,11 @@ int Bdisp_SYS_FastDrawLineVRAM(int x1, int y1, int x2, int y2);
 #define G_ENULLPTR -5
 #define G_EALREADYINITED -6
 #define G_EDOWN -7
+#define G_EIMPLEMENT -8
 
 #define G_SUBSYS_ERR 0
 #define G_SUBSYS_UP 1
 #define G_SUBSYS_DOWN 2
-
-typedef uint8_t interlace_param_t;
-
-#define INTERLACE_MASK_ISON 1
-#define INTERLACE_MASK_ROW  2
 
 // NEEDS CALLING (allocate bufs)
 int g_init(void);
@@ -69,9 +65,9 @@ int g_getstatus(void);
 int16_t **g_getdepthbuf(void);
 
 // add a triangle (returns id of added triangle)
-tr_id_t g_addtriangle(trianglef t);
+uuid_t g_addtriangle(trianglef t);
 // remove a triangle by id
-int g_removetriangle(tr_id_t id);
+int g_removetriangle(uuid_t id);
 
 // set global variables
 void g_coord(vec3f pos, fixed pitch, fixed yaw);
@@ -79,7 +75,7 @@ void g_coord(vec3f pos, fixed pitch, fixed yaw);
 // draw the horizon (returns number of pixels drawn)
 unsigned int g_draw_horizon(void);
 // rasterize all triangles currently in buffer (returns number of triangles drawn)
-unsigned int g_rasterize_buf(interlace_param_t interlace);
+unsigned int g_rasterize_buf(bool interlace_on, bool odd_row);
 
 // draw text at a position in 3D space (overwrite!) (NEEDS g_init())
 int g_text3d(unsigned char *text, vec3f pos, unsigned int params);

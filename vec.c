@@ -149,7 +149,7 @@ vec3f rot(vec3f t, fixed pitch, fixed yaw) {
 
 // itrianglef: initialize trianglef
 
-trianglef itrianglef(vec3f _a, vec3f _b, vec3f _c, texture_t *_tx, tr_id_t _id, bool _flip) {
+trianglef itrianglef(vec3f _a, vec3f _b, vec3f _c, texture_t *_tx, uuid_t _id, bool _flip) {
     trianglef r;
 	r.a = _a;
 	r.b = _b;

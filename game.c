@@ -34,6 +34,7 @@ void init(void) {
 	int i, j;
 	mesh m, m2;
 	int g_ret, m_ret;
+
 	pos = ivec3f(float2f(4.2), float2f(2.0), float2f(12.0));
     pitch = float2f(-1.0*DEG2RAD_MULT), yaw = float2f(-162.5*DEG2RAD_MULT);
     gdelta = 32.0f*DEG2RAD_MULT;
@@ -55,6 +56,8 @@ void init(void) {
 		}
 		return;
 	}
+
+	
 
 	for (i = 0; i < 72; i++) {
 		tx[i] = &textures[TX_WHITE];

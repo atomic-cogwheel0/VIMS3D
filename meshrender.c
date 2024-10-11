@@ -1,10 +1,11 @@
 #include "meshrender.h"
 
 /*
- MESHRENDER.C:
-  functions for handling meshes
+ MESH.C:
+  functions for handling meshes and colliders
   supported:
 	mesh addition, deletion, rotation, translation
+	collision boxes & spheres
   the render process starts here
     fills triangle buffers and calls g_rasterize_buf for each mesh
     this adds some overhead but drastically reduces memory usage
@@ -16,13 +17,88 @@
 mesh *mbuf;
 unsigned short mbuf_idx = 0;
 signed short zindex_max = 0;
-uint32_t m_uuid = 1;				// nothing gets uuid 0
+uuid_t m_uuid = 1;				// nothing gets uuid 0
 
 // global coordination variables
 fixed p, y; // pitch, yaw
 vec3f o; // origin point (camera)
 
 int m_status = G_SUBSYS_DOWN;
+
+// simplifies internal calculation
+bool _c_collide_sphere_aabb(collider sphere, collider aabb);
+
+collider icoll_sphere(vec3f ctr, fixed r) {
+	collider coll;
+	coll.type = COLLIDER_SPHERE;
+	coll.shape.sphere.ctr = ctr;
+	coll.shape.sphere.radius = r;
+	return coll;
+}
+
+collider icoll_aabb(vec3f pt, vec3f opp) {
+	collider coll;
+	coll.type = COLLIDER_AABB;
+	coll.shape.aabb.pt = pt;
+	coll.shape.aabb.opp = opp;
+	return coll;
+}
+
+bool c_do_colliders_collide(collider a, collider b) {
+	if (a.type == COLLIDER_SPHERE && b.type == COLLIDER_SPHERE) {
+		return (a.shape.sphere.radius + b.shape.sphere.radius >= magnitude(subvv(b.shape.sphere.ctr, a.shape.sphere.ctr)));
+	}
+	if (a.type == COLLIDER_AABB && b.type == COLLIDER_AABB) {
+		if ((max(a.shape.aabb.pt.x, a.shape.aabb.opp.x) >= min(b.shape.aabb.pt.x, b.shape.aabb.opp.x)) && (min(a.shape.aabb.pt.x, a.shape.aabb.opp.x) <= max(b.shape.aabb.pt.x, b.shape.aabb.opp.x)) && 
+		    (max(a.shape.aabb.pt.y, a.shape.aabb.opp.y) >= min(b.shape.aabb.pt.y, b.shape.aabb.opp.y)) && (min(a.shape.aabb.pt.y, a.shape.aabb.opp.y) <= max(b.shape.aabb.pt.y, b.shape.aabb.opp.y)) &&
+		    (max(a.shape.aabb.pt.z, a.shape.aabb.opp.z) >= min(b.shape.aabb.pt.z, b.shape.aabb.opp.z)) && (min(a.shape.aabb.pt.z, a.shape.aabb.opp.z) <= max(b.shape.aabb.pt.z, b.shape.aabb.opp.z))) return TRUE;
+	}
+	if (a.type == COLLIDER_SPHERE && b.type == COLLIDER_AABB) {
+		return _c_collide_sphere_aabb(a, b);
+	}
+	if (a.type == COLLIDER_AABB && b.type == COLLIDER_SPHERE) {
+		return _c_collide_sphere_aabb(b, a);
+	}
+	return FALSE;
+}
+
+bool c_pt_within_collider(vec3f pt, collider c) {
+	if (c.type == COLLIDER_SPHERE) {
+		return (c.shape.sphere.radius >= magnitude(subvv(c.shape.sphere.ctr, pt)));
+	}
+	if (c.type == COLLIDER_AABB) {
+		if ((min(c.shape.aabb.pt.x, c.shape.aabb.opp.x) <= pt.x && max(c.shape.aabb.pt.x, c.shape.aabb.opp.x) >= pt.x) &&
+			(min(c.shape.aabb.pt.y, c.shape.aabb.opp.y) <= pt.y && max(c.shape.aabb.pt.x, c.shape.aabb.opp.y) >= pt.y) &&
+			(min(c.shape.aabb.pt.z, c.shape.aabb.opp.z) <= pt.z && max(c.shape.aabb.pt.z, c.shape.aabb.opp.z) >= pt.z)) return TRUE;
+	}
+	return FALSE;
+}
+
+collider c_move_collider(collider c, vec3f v) {
+	if (c.type == COLLIDER_SPHERE) {
+		c.shape.sphere.ctr = addvv(c.shape.sphere.ctr, v);
+	}
+	if (c.type == COLLIDER_AABB) {
+		c.shape.aabb.pt = addvv(c.shape.aabb.pt, v);
+		c.shape.aabb.opp = addvv(c.shape.aabb.opp, v);
+	}
+	return c;
+}
+
+bool _c_collide_sphere_aabb(collider sphere, collider aabb) {
+	vec3f closest_pt;
+
+	// is the sphere inside the AABB?
+	if (c_pt_within_collider(sphere.shape.sphere.ctr, aabb)) return TRUE;
+	
+	// find closest point of the AABB to the sphere by clamping coords of the center onto the surface of the AABB
+	closest_pt.x = clamp_f(sphere.shape.sphere.ctr.x, min(aabb.shape.aabb.pt.x, aabb.shape.aabb.opp.x), max(aabb.shape.aabb.pt.x, aabb.shape.aabb.opp.x));
+	closest_pt.y = clamp_f(sphere.shape.sphere.ctr.y, min(aabb.shape.aabb.pt.y, aabb.shape.aabb.opp.y), max(aabb.shape.aabb.pt.y, aabb.shape.aabb.opp.y));
+	closest_pt.z = clamp_f(sphere.shape.sphere.ctr.z, min(aabb.shape.aabb.pt.z, aabb.shape.aabb.opp.z), max(aabb.shape.aabb.pt.z, aabb.shape.aabb.opp.z));
+
+	// is closest point within radius?
+	return c_pt_within_collider(closest_pt, sphere);
+}
 
 mesh imesh(trianglef *arr, texture_ptr_t *tx_arr, uint8_t arrlen, vec3f pos, vec3f ctr) {
 	mesh m;
@@ -44,7 +120,7 @@ mesh ibill(trianglef *arr, texture_ptr_t *tx_pseudo_arr, vec3f pos) {
 	m.arrlen = 2;
 	m.pos = pos;
 	m.id = 0;
-	m.ctr = ivec3f(0, 0, 0);
+	m.ctr = ivec3f(0, divfi(arr[0].a.x + arr[0].b.x, 2), 0);
 	m.yaw = 0;
 	m.is_billboard = TRUE;
 	return m;
@@ -93,17 +169,19 @@ void m_coord(vec3f pos, fixed pitch, fixed yaw) {
 	y = yaw;
 }
 
-mesh_id_t m_addmesh(mesh m) {
+uuid_t m_addmesh(mesh m) {
 	if (m_status != G_SUBSYS_UP) return G_EDOWN;
-	if (mbuf_idx < MBUF_SIZ-1) {
-		mbuf[mbuf_idx] = m;
-		mbuf[mbuf_idx++].id = m_uuid;
-		return m_uuid++;
+	if (m_uuid < UUID_MAX) {
+		if (mbuf_idx < MBUF_SIZ-1) {
+			mbuf[mbuf_idx] = m;
+			mbuf[mbuf_idx++].id = m_uuid;
+			return m_uuid++;
+		}
 	}
 	return G_EBUFFULL;
 }
 
-int m_removemesh(mesh_id_t id) {
+int m_removemesh(uuid_t id) {
 	int i, j;
 	if (m_status != G_SUBSYS_UP) return G_EDOWN;
 	for(i = 0; i < mbuf_idx; i++) {
@@ -118,7 +196,7 @@ int m_removemesh(mesh_id_t id) {
 	return G_ENEXIST;
 }
 
-int m_movemesh(mesh_id_t id, vec3f v) {
+int m_movemesh(uuid_t id, vec3f v) {
 	int i, j;
 	if (m_status != G_SUBSYS_UP) return G_EDOWN;
 	for(i = 0; i < mbuf_idx; i++) {
@@ -130,7 +208,7 @@ int m_movemesh(mesh_id_t id, vec3f v) {
 	return G_ENEXIST;
 }
 
-int m_rotmesh(mesh_id_t id, fixed yaw) {
+int m_rotmesh(uuid_t id, fixed yaw) {
 	int i, j;
 	if (m_status != G_SUBSYS_UP) return G_EDOWN;
 	for(i = 0; i < mbuf_idx; i++) {
@@ -148,6 +226,40 @@ int m_rotmesh(mesh_id_t id, fixed yaw) {
 	return G_ENEXIST;
 }
 
+int m_collide(uuid_t id1, uuid_t id2) {
+	mesh *a = NULL, *b = NULL;
+	collider tr_a, tr_b;
+	int i, j;
+	if (m_status != G_SUBSYS_UP) return G_EDOWN;
+	for (i = 0; i < mbuf_idx; i++) {
+		if (mbuf[i].id == id1) {
+			a = &mbuf[i];
+			break;
+		}
+	}
+	for (i = 0; i < mbuf_idx; i++) {
+		if (mbuf[i].id == id2) {
+			b = &mbuf[i];
+			break;
+		}
+	}
+	if (a == NULL && b == NULL)
+		return G_ENEXIST;
+
+	if (a->collcnt == 0 && b->collcnt == 0)
+		return FALSE;
+
+	for (i = 0; i < a->collcnt; i++) {
+		tr_a = c_move_collider(a->hitbox[i], a->pos);
+		for (j = 0; j < b->collcnt; j++) {
+			tr_b = c_move_collider(b->hitbox[i], b->pos);
+			if (c_do_colliders_collide(tr_a, tr_b))
+				return TRUE;
+		}
+	}
+	return FALSE;
+}
+
 char buf[64]; // for sprintf
 unsigned int frame;
 
@@ -157,8 +269,9 @@ int m_rendermeshes(bool debug_overlay, bool interlace) {
 	trianglef curr;
 	int16_t **depthbuf; // the pixel depth buffer, reset before meshes are rendered
 	
-	if (m_status != G_SUBSYS_UP) return G_EDOWN;
+	if (m_status != G_SUBSYS_UP)return G_EDOWN;
 	if (g_getstatus() != G_SUBSYS_UP) return G_EDOWN;
+
 	depthbuf = g_getdepthbuf();
 
 	time_s = RTC_GetTicks();
@@ -191,10 +304,10 @@ int m_rendermeshes(bool debug_overlay, bool interlace) {
 		}
 
 #ifndef BENCHMARK_RASTER
-		tr_cnt += g_rasterize_buf((interlace ? INTERLACE_MASK_ISON : 0) | (frame % 2 ? INTERLACE_MASK_ROW : 0));
+		tr_cnt += g_rasterize_buf(interlace, frame % 2);
 #else
 		for (i = 0; i < 40; i++) {
-			tr_cnt += g_rasterize_buf((interlace ? INTERLACE_MASK_ISON : 0) | (frame % 2 ? INTERLACE_MASK_ROW : 0));
+			tr_cnt += g_rasterize_buf(interlace, frame % 2);
 		}
 #endif
 		

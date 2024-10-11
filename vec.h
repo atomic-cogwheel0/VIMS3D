@@ -68,18 +68,16 @@ void subpvv(vec3f *t, vec3f v);
 
 void mulpvf(vec3f *t, fixed f);
 
-typedef int32_t tr_id_t;
-
 typedef struct {
 	vec3f a;
 	vec3f b;
 	vec3f c;
 	texture_t *tx;
-	tr_id_t id;
+	uuid_t id;
 	bool flip_texture;
 } trianglef;
 
-trianglef itrianglef(vec3f a, vec3f b, vec3f c, texture_t *tx, tr_id_t id, bool flip);
+trianglef itrianglef(vec3f a, vec3f b, vec3f c, texture_t *tx, uuid_t id, bool flip);
 
 trianglef move(trianglef q, vec3f v, fixed pitch, fixed yaw);
 vec3f normal(trianglef q);
