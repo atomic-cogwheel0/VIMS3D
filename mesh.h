@@ -1,5 +1,5 @@
-#ifndef _MESHRENDER_H
-#define _MESHRENDER_H
+#ifndef _MESH_H
+#define _MESH_H
 
 #include <stdlib.h>
 #include <stdarg.h>
