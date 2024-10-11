@@ -5,7 +5,7 @@
 #include "fxlib.h"
 #include "timer.h"
 
-#include "meshrender.h"
+#include "mesh.h"
 #include "VIMS_defs.h"
 
 int RTC_GetTicks(void);
