@@ -36,9 +36,9 @@ void init(void) {
 	int g_ret, m_ret;
 
 	pos = ivec3f(float2f(4.2), float2f(2.0), float2f(12.0));
-    pitch = float2f(-1.0*DEG2RAD_MULT), yaw = float2f(197.5*DEG2RAD_MULT);
-    gdelta = 32.0f*DEG2RAD_MULT;
-    gspeed = 1.0f;
+	pitch = float2f(-1.0*DEG2RAD_MULT), yaw = float2f(197.5*DEG2RAD_MULT);
+	gdelta = 32.0f*DEG2RAD_MULT;
+	gspeed = 1.0f;
 
 	g_ret = g_init();
 	m_ret = m_init();
@@ -179,9 +179,9 @@ void init(void) {
 
 // deallocate buffers, stop timers, set quit status
 void quit(void) {
-    gamestate = GAMESTATE_QUIT_INPROG;
-    KillTimer(TICK_TIMER);
-    //KillTimer(DRAW_TIMER);
+	gamestate = GAMESTATE_QUIT_INPROG;
+	KillTimer(TICK_TIMER);
+	KillTimer(DRAW_TIMER);
 	gamestate = GAMESTATE_QUIT_DONE;
 }
 

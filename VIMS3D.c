@@ -17,13 +17,13 @@
 
 int main(void) {
 	unsigned int key;
-    volatile int *gamestate_ptr = get_gamestate_ptr();
+	volatile int *gamestate_ptr = get_gamestate_ptr();
 
-    init();
+	init();
 
-    while(*gamestate_ptr != GAMESTATE_QUIT_DONE) {
+	while(*gamestate_ptr != GAMESTATE_QUIT_DONE) {
 		GetKey(&key);
-    }
+	}
 }
 
 int AddIn_main(int isAppli, unsigned short OptionNum)
