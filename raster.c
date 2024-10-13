@@ -180,9 +180,9 @@ unsigned int g_rasterize_buf(bool interlace_on, bool odd_row) {
 		ctot = subvv(tbuf[curr_tidx].a, go);
 
 		// cull
-		if(t.a.z < float2f(.5f) || t.b.z < float2f(.5f) || t.c.z < float2f(.5f) ||							// near-plane
-		   (t.a.z > int2f(64) && t.b.z > int2f(64) && t.c.z > int2f(64)) ||									// far-plane
-		   dotp(ctot, nrm) >= 0) {																			// backface
+		if (t.a.z < float2f(.5f) || t.b.z < float2f(.5f) || t.c.z < float2f(.5f) ||							// near-plane
+		    (t.a.z > int2f(64) && t.b.z > int2f(64) && t.c.z > int2f(64)) ||								// far-plane
+		    dotp(ctot, nrm) >= 0) {													// backface
 			continue;
 		}
 
@@ -277,8 +277,7 @@ unsigned int g_rasterize_buf(bool interlace_on, bool odd_row) {
 		//  1/Z, 1/Ui and 1/Vi are interpolated because they are linear across the surface in screen space
 
 		for (yiter = bbox_top; yiter <= bbox_bottom; yiter += 1) {
-			if (interlace_on)
-				if ((yiter % 2) == odd_row) continue;
+			if (interlace_on && ((yiter % 2) == odd_row)) continue;
 
 			if (yiter < 0 || yiter >= 64) continue;
 

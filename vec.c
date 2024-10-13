@@ -135,8 +135,8 @@ trianglef itrianglef(vec3f _a, vec3f _b, vec3f _c, texture_t *_tx, uuid_t _id, b
 trianglef move(trianglef q, vec3f v, fixed pitch, fixed yaw) {
 	return itrianglef(rot(subvv(q.a, v), -pitch, -yaw),
 	                  rot(subvv(q.b, v), -pitch, -yaw),
-                          rot(subvv(q.c, v), -pitch, -yaw),
-                          q.tx, q.id, q.flip_texture);
+	                  rot(subvv(q.c, v), -pitch, -yaw),
+	                  q.tx, q.id, q.flip_texture);
 }
 
 vec3f normal(trianglef q) {
