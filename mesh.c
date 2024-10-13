@@ -157,6 +157,7 @@ int m_clrbuf(void) {
 	mbuf_idx = 0;
 	zindex_max = 0;
 	m_uuid = 1;
+	return G_SUCCESS;
 }
 
 void m_dealloc(void) {
@@ -205,7 +206,7 @@ int m_removemesh(uuid_t id) {
 }
 
 int m_movemesh(uuid_t id, vec3f v) {
-	int i, j;
+	int i;
 	if (m_status != G_SUBSYS_UP) return G_EDOWN;
 	for(i = 0; i < mbuf_idx; i++) {
 		if (mbuf[i].id == id) {
@@ -217,7 +218,7 @@ int m_movemesh(uuid_t id, vec3f v) {
 }
 
 int m_rotmesh(uuid_t id, fixed yaw) {
-	int i, j;
+	int i;
 	if (m_status != G_SUBSYS_UP) return G_EDOWN;
 	for(i = 0; i < mbuf_idx; i++) {
 		if (mbuf[i].id == id) {

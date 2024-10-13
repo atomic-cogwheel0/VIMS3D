@@ -28,7 +28,7 @@ unsigned int g_status = G_SUBSYS_DOWN;
 
 // initialize all buffers (static alloc for buffers isn't possible)
 int g_init(void) {
-	int i, j;
+	int i;
 
 	if (g_status != G_SUBSYS_DOWN) return G_EALREADYINITED;
 
@@ -62,6 +62,7 @@ int g_clrbuf(void) {
 	memset((char *)tbuf, 0, TBUF_SIZ*sizeof(trianglef));
 	tbuf_idx = 0;
 	g_uuid = 1;
+	return G_SUCCESS;
 }
 
 void g_dealloc(void) {
@@ -139,18 +140,15 @@ texture_t fallback_texture = {2, 2, 1, 1, tx_o_fallback};
 
 unsigned int g_rasterize_buf(bool interlace_on, bool odd_row) {
 	int curr_tidx, xiterl, xiterr, xiter, yiter;
-	int maxx = 0x7FFFFFFF, minx = 0;
 	int bbox_left, bbox_right, bbox_top, bbox_bottom; // bounding box (on screen)
 	int q_cnt = 0;
-	//bool found;
 	fixed diff;
 
 	trianglef t;
-	texture_ptr_t texture;
 	vec3f v0, v1, v2, a, b, c, nrm, ctot; // ctot is Camera TO Triangle
 	fixed denom, dot00, dot01, dot02, dot11, dot12, u, v, ui, vi; // for barycentric
 	fixed ozstep, uzstep, vzstep; // perspective correctness iterators
-	fixed ozp, uzp, vzp, ozq, uzq, vzq, oza, ozb, uzb, vzb, ozc, uzc, vzc, ozi, uzi, vzi, zci; // practical variable naming, UV data calculation
+	fixed ozp, uzp, vzp, ozq, uzq, vzq, oza, ozb, vzb, ozc, uzc, ozi, uzi, vzi, zci; // practical variable naming, UV data calculation
 	fixed v0x_sc, v1x_sc;
 
 	fixed dot11_dot02, dot01_dot12, dot00_dot12, dot01_dot02;
@@ -366,7 +364,7 @@ unsigned int g_rasterize_buf(bool interlace_on, bool odd_row) {
 			for (ozi = ozp, uzi = uzp, vzi = vzp, xiter = xiterl; xiter <= xiterr; xiter++, ozi+=ozstep, uzi+=uzstep, vzi+=vzstep) {
 				zci = divff(int2f(ZREC_MULT*ZREC_MULT), ozi);
 
-				depthval = (f2int(zci) << 5) | ((zci & FIXED_FRAC_MASK) >> 5); // transform 22+10bit zci to 11+5bit depth
+				depthval = (f2int(zci) << 5) | ((zci & FIXED_FRAC_MASK) >> (FIXED_PRECISION-5)); // transform 22+10bit zci to 11+5bit depth
 
 				if (depthbuf[yiter][xiter] > depthval) {			
 					ui = divshiftfi(mulff(uzi, zci), ZREC_EXP+ZREC_EXP); // only use of divshiftfi is here
@@ -379,7 +377,7 @@ unsigned int g_rasterize_buf(bool interlace_on, bool odd_row) {
 					else {
 						pxl = (f2int(ui)%t.tx->h)*t.tx->w + (f2int(vi)%t.tx->w);
 					}
-					px = (t.tx->tx_data[pxl>>2] & (3<<(2*(3-pxl&3)))) >> (2*(3-(pxl&3))); // pxl>>2 = pxl/4; pxl&3 = pxl%4
+					px = (t.tx->tx_data[pxl>>2] & (3<<(2*(3-(pxl&3))))) >> (2*(3-(pxl&3))); // pxl>>2 = pxl/4; pxl&3 = pxl%4
 					if (!(px & 2)) {
 						Bdisp_SetPoint_VRAM(xiter, yiter, px & 1);
 						depthbuf[yiter][xiter] = depthval;
@@ -406,13 +404,12 @@ int g_text3d(unsigned char *text, vec3f pos, unsigned int params) {
 	sspace_y = f2int(divff(mulff(viewport_pos.y, int2f(64)), -viewport_pos.z)) + 32;
 
 	// is in view?
-	if (viewport_pos.z < float2f(0.25f)) {									
-		return;
+	if (!(viewport_pos.z < float2f(0.25f))) {	
+		if (sspace_x <= 127 && sspace_x >= 0 && sspace_y <= 63 && sspace_y >= 0) {
+			g_text2d(text, sspace_x, sspace_y, params);
+		}
 	}
-	 
-	if (sspace_x <= 127 && sspace_x >= 0 && sspace_y <= 63 && sspace_y >= 0) {
-		g_text2d(text, sspace_x, sspace_y, params);
-	}
+	return G_SUCCESS;
 }
 
 int g_text2d(unsigned char *text, unsigned int x, unsigned int y, unsigned int params) {
@@ -424,6 +421,7 @@ int g_text2d(unsigned char *text, unsigned int x, unsigned int y, unsigned int p
 	else if (params & TEXT_LARGE) {
 		PrintXY(x, y, text, (params & TEXT_INVERTED) ? MINI_REV : MINI_OVER);
 	}
+	return G_SUCCESS;
 }
 
 int g_texture2d(texture_ptr_t tx, unsigned int x, unsigned int y) {
@@ -448,4 +446,5 @@ int g_texture2d(texture_ptr_t tx, unsigned int x, unsigned int y) {
 			}
 		}
 	}
+	return G_SUCCESS;
 }

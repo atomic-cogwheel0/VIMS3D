@@ -9,7 +9,6 @@ FIXED.C
 // zero idea how this works
 fixed sqrt_f(fixed f) {
 	uint32_t t, q, b, r;
-	fixed res = 0;
 	r = f;
 	b = 0x40000000;
 	q = 0;

@@ -31,7 +31,7 @@ toggle_t overlay = {TRUE, FALSE, FALSE};
 toggle_t interlace = {0, 0, 0};
 
 void init(void) {
-	int i, j;
+	int i;
 	mesh m, m2;
 	int g_ret, m_ret;
 
