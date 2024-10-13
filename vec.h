@@ -30,8 +30,12 @@ typedef struct {
 #define MACRO_ADDSUBPV
 
 #pragma inline(ivec3f)
+// initialize vec3f
 vec3f ivec3f(fixed _x, fixed _y, fixed _z);
+
+// transform pitch and yaw into a rotated normal vector
 vec3f py2vec3f(fixed pitch, fixed yaw);
+// rotate vector t around axes x (pitch) and y (yaw)
 vec3f rot(vec3f t, fixed pitch, fixed yaw);
 
 fixed magnitude(vec3f t);
@@ -77,8 +81,10 @@ typedef struct {
 	bool flip_texture;
 } trianglef;
 
+// initialize trianglef
 trianglef itrianglef(vec3f a, vec3f b, vec3f c, texture_t *tx, uuid_t id, bool flip);
 
+// transform triangle (offset with vector q then rotated around origin)
 trianglef move(trianglef q, vec3f v, fixed pitch, fixed yaw);
 vec3f normal(trianglef q);
 

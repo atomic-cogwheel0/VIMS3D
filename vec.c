@@ -6,12 +6,10 @@
 	they are most likely correct
 */
 
-//initialize vec3f
-
 vec3f ivec3f(fixed _x, fixed _y, fixed _z) {
-    vec3f r;
-    r.x = _x; r.y = _y; r.z = _z;
-    return r;
+	vec3f r;
+	r.x = _x; r.y = _y; r.z = _z;
+	return r;
 }
 
 fixed magnitude(vec3f t) {
@@ -19,7 +17,7 @@ fixed magnitude(vec3f t) {
 }
 
 vec3f neg(vec3f t) {
-    return ivec3f(-t.x, -t.y, -t.z);
+	return ivec3f(-t.x, -t.y, -t.z);
 }
 
 vec3f normalize(vec3f t) {
@@ -67,23 +65,21 @@ vec3f divvi(vec3f t, int f) {
 #ifndef MACRO_ADDSUBPV
 void addpvv(vec3f *t, vec3f v) {
 	(t->x)+=v.x;
-    (t->y)+=v.y;
-    (t->z)+=v.z;
+	(t->y)+=v.y;
+	(t->z)+=v.z;
 }
 
 void subpvv(vec3f *t, vec3f v) {
 	(t->x)-=v.x;
-    (t->y)-=v.y;
-    (t->z)-=v.z;
+	(t->y)-=v.y;
+	(t->z)-=v.z;
 }
 #endif
 
-// mulpvf: multiply vector t with lambda f in place
-
 void mulpvf(vec3f *t, fixed f) {
 	mulpff(&(t->x), f);
-    mulpff(&(t->y), f);
-    mulpff(&(t->z), f);
+	mulpff(&(t->y), f);
+	mulpff(&(t->z), f);
 }
 
 
@@ -101,33 +97,11 @@ void mulpvf(vec3f *t, fixed f) {
     |0   cos ?    -sin ?| |y| = |y cos ? - z sin ?| = |y'|
     |0   sin ?     cos ?| |z|   |y sin ? + z cos ?|   |z'| */
 
-
-// py2vec3f: transform pitch and yaw into a rotated normal vector
-
 vec3f py2vec3f(fixed pitch, fixed yaw) {
-    vec3f resp;
-    vec3f v;	
-
-	fixed sy, cy, sp, cp;
-
-	sy = sin_f(yaw); sp = sin_f(pitch); cy = cos_f(yaw); cp = cos_f(pitch);
-
-	v = ivec3f(0, 0, int2f(1));
-
-	// pitch (around X)		
-
-    resp = ivec3f(v.x,
-                  mulff(v.y, cp)-mulff(v.z, sp),
-                  mulff(v.y, sp)+mulff(v.z, cp));
-
-	// yaw (around Y);
-
-	return ivec3f(mulff(resp.x, cy)+mulff(resp.z, sy),
-                  resp.y,
-                  mulff(resp.z, cy)-mulff(resp.x, sy));
+	vec3f v = ivec3f(0, 0, int2f(1));
+	
+	return rot(v, pitch, yaw);
 }
-
-// rot: rotate vector t around axes x (pitch) and y (yaw)
 
 vec3f rot(vec3f t, fixed pitch, fixed yaw) {
 	vec3f resp, resy;	
@@ -137,36 +111,32 @@ vec3f rot(vec3f t, fixed pitch, fixed yaw) {
 	sy = sin_f(yaw); sp = sin_f(pitch); cy = cos_f(yaw); cp = cos_f(pitch);
 
 	resy.x = mulff(t.x, cy) + mulff(t.z, sy);
-    resy.y = t.y;
+	resy.y = t.y;
 	resy.z = mulff(t.z, cy) - mulff(t.x, sy);
 
-    resp.x = resy.x;
+	resp.x = resy.x;
 	resp.y = mulff(resy.y, cp) - mulff(resy.z, sp);
 	resp.z = mulff(resy.y, sp) + mulff(resy.z, cp);
 
 	return resp;
 }
 
-// itrianglef: initialize trianglef
-
 trianglef itrianglef(vec3f _a, vec3f _b, vec3f _c, texture_t *_tx, uuid_t _id, bool _flip) {
-    trianglef r;
+	trianglef r;
 	r.a = _a;
 	r.b = _b;
 	r.c = _c;
 	r.tx = _tx;
 	r.id = _id;
 	r.flip_texture = _flip;
-    return r;
+	return r;
 }
-
-// move: transform triangle (offset with vector q then rotated around origin)
 
 trianglef move(trianglef q, vec3f v, fixed pitch, fixed yaw) {
 	return itrianglef(rot(subvv(q.a, v), -pitch, -yaw),
-                  rot(subvv(q.b, v), -pitch, -yaw),
-                  rot(subvv(q.c, v), -pitch, -yaw),
-                  q.tx, q.id, q.flip_texture);
+	                  rot(subvv(q.b, v), -pitch, -yaw),
+                          rot(subvv(q.c, v), -pitch, -yaw),
+                          q.tx, q.id, q.flip_texture);
 }
 
 vec3f normal(trianglef q) {

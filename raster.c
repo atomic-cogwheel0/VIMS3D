@@ -236,7 +236,7 @@ unsigned int g_rasterize_buf(bool interlace_on, bool odd_row) {
 		// the following code does barycentric coord calculation (u and v)
 		// src: https://web.archive.org/web/20240910155457/https://blackpawn.com/texts/pointinpoly/
 		
-	    // some (or most) of it has been ~mutilated~ for ~optimization~
+		// some (or most) of it has been ~mutilated~ for ~optimization~
 		// this is NOT some especially maintainable nor good code. who cares? it's fast
 		// especially the parts related to v2, the only changing vector here
 		// its dot products are incremented in the for loop iterators!
@@ -375,11 +375,11 @@ unsigned int g_rasterize_buf(bool interlace_on, bool odd_row) {
 
 					// index coordinates from the bottom right instead of top left
 					if (t.flip_texture) {
-                        pxl = (t.tx->h-1 - f2int(ui)%t.tx->h)*t.tx->w + (t.tx->w-1 - f2int(vi)%t.tx->w);
-                    }
+						pxl = (t.tx->h-1 - f2int(ui)%t.tx->h)*t.tx->w + (t.tx->w-1 - f2int(vi)%t.tx->w);
+					}
 					else {
-                        pxl = (f2int(ui)%t.tx->h)*t.tx->w + (f2int(vi)%t.tx->w);
-                    }
+						pxl = (f2int(ui)%t.tx->h)*t.tx->w + (f2int(vi)%t.tx->w);
+					}
 					px = (t.tx->tx_data[pxl>>2] & (3<<(2*(3-pxl&3)))) >> (2*(3-(pxl&3))); // pxl>>2 = pxl/4; pxl&3 = pxl%4
 					if (!(px & 2)) {
 						Bdisp_SetPoint_VRAM(xiter, yiter, px & 1);
