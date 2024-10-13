@@ -8,23 +8,24 @@
 
 typedef signed short mesh_id_t;
 
+// collider types
 #define COLLIDER_NONE   0
 #define COLLIDER_SPHERE 1
 #define COLLIDER_AABB   2 //Axis Aligned Bounding Box
 
-// well-well, memory constraints :)
+// a single collider's geometry
 typedef struct {
-	uint8_t type;
+	uint8_t type; 
 	union {
 		struct {
-			vec3f ctr;
-			fixed radius;
+			vec3f ctr;    // center
+			fixed radius; // radius
 		} sphere;
 		struct {
-			vec3f pt;
-			vec3f opp;
+			vec3f pt;  // any corner of the AABB
+			vec3f opp; // the opposite corner
 		} aabb;
-	} shape;
+	} shape; // a single collider can't be both at the same time
 } collider;
 
 // initialize spherical collider 
@@ -38,20 +39,24 @@ bool c_pt_within_collider(vec3f pt, collider c);
 // translate collider with vec v
 collider c_move_collider(collider c, vec3f v);
 
+// a single instance of a mesh, stores position, and POINTERS to hitboxes, triangles and colliders -> reusable arrays
 typedef struct {
 	trianglef *mesh_arr;
 	texture_ptr_t *tx_arr;
-	uint8_t arrlen;
+	uint8_t tr_cnt; // if not billboard, tx_arr and mesh_arr both must have tr_cnt elements
 
-	collider *hitbox;
-	uint8_t collcnt;
+	collider *coll_arr; // array of colliders relative to pos
+	uint8_t coll_cnt;  // arr size
 
-	vec3f pos;
-	fixed yaw; // around y axis
+	vec3f pos; // position (offset of triangles and hitbox)
+	fixed yaw; // around y axis (horizontal rot)
 	vec3f ctr; // center of mesh (relative to pos)
 
-	bool is_billboard; // if true: tx_arr is assumed to have 1 element, mesh_arr is assumed to have 2
 	uuid_t id;
+
+	bool flag_renderable : 1;
+	bool flag_has_collision : 1;
+	bool flag_is_billboard : 1; // if true: tx_arr is assumed to have 1 element, mesh_arr is assumed to have 2
 } mesh;
 
 // init new mesh
