@@ -164,7 +164,7 @@ void init(void) {
 
 	for (i = 0; i < 5; i++) {
 		m2 = ibill(treemesh, ptr2, ivec3f(int2f(6),0,int2f(i*18)));
-	    m_addmesh(m2);
+		m_addmesh(m2);
 		m2 = ibill(treemesh, ptr2, ivec3f(int2f(-6),0,int2f(i*18)));
 		m_addmesh(m2);
 	}
