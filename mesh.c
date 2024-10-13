@@ -104,12 +104,16 @@ mesh imesh(trianglef *arr, texture_ptr_t *tx_arr, uint8_t arrlen, vec3f pos, vec
 	mesh m;
 	m.mesh_arr = arr;
 	m.tx_arr = tx_arr;
-	m.arrlen = arrlen;
+	m.tr_cnt = arrlen;
+	m.coll_arr = NULL;
+	m.coll_cnt = 0;
 	m.pos = pos;
 	m.id = 0;
 	m.ctr = ctr;
 	m.yaw = 0;
-	m.is_billboard = FALSE;
+	m.flag_renderable = TRUE;
+	m.flag_has_collision = FALSE;
+	m.flag_is_billboard = FALSE;
 	return m;
 }
 
@@ -117,12 +121,16 @@ mesh ibill(trianglef *arr, texture_ptr_t *tx_pseudo_arr, vec3f pos) {
 	mesh m;
 	m.mesh_arr = arr;
 	m.tx_arr = tx_pseudo_arr;
-	m.arrlen = 2;
+	m.tr_cnt = 2;
+	m.coll_arr = NULL;
+	m.coll_cnt = 0;
 	m.pos = pos;
 	m.id = 0;
 	m.ctr = ivec3f(0, divfi(arr[0].a.x + arr[0].b.x, 2), 0);
 	m.yaw = 0;
-	m.is_billboard = TRUE;
+	m.flag_renderable = TRUE;
+	m.flag_has_collision = FALSE;
+	m.flag_is_billboard = TRUE;
 	return m;
 }
 
@@ -246,13 +254,16 @@ int m_collide(uuid_t id1, uuid_t id2) {
 	if (a == NULL && b == NULL)
 		return G_ENEXIST;
 
-	if (a->collcnt == 0 && b->collcnt == 0)
+	if (!a->flag_has_collision || !b->flag_has_collision)
 		return FALSE;
 
-	for (i = 0; i < a->collcnt; i++) {
-		tr_a = c_move_collider(a->hitbox[i], a->pos);
-		for (j = 0; j < b->collcnt; j++) {
-			tr_b = c_move_collider(b->hitbox[i], b->pos);
+	if (a->coll_cnt == 0 && b->coll_cnt == 0)
+		return FALSE;
+
+	for (i = 0; i < a->coll_cnt; i++) {
+		tr_a = c_move_collider(a->coll_arr[i], a->pos);
+		for (j = 0; j < b->coll_cnt; j++) {
+			tr_b = c_move_collider(b->coll_arr[i], b->pos);
 			if (c_do_colliders_collide(tr_a, tr_b))
 				return TRUE;
 		}
@@ -269,7 +280,7 @@ int m_rendermeshes(bool debug_overlay, bool interlace) {
 	trianglef curr;
 	int16_t **depthbuf; // the pixel depth buffer, reset before meshes are rendered
 	
-	if (m_status != G_SUBSYS_UP)return G_EDOWN;
+	if (m_status != G_SUBSYS_UP) return G_EDOWN;
 	if (g_getstatus() != G_SUBSYS_UP) return G_EDOWN;
 
 	depthbuf = g_getdepthbuf();
@@ -287,17 +298,19 @@ int m_rendermeshes(bool debug_overlay, bool interlace) {
 	g_draw_horizon();
 
 	for (m_iter = 0; m_iter < mbuf_idx; m_iter++) {
+		if (mbuf[m_iter].flag_is_billboard) {
+			mbuf[m_iter].yaw = -y;
+		}
+		if (!mbuf[m_iter].flag_renderable)
+			continue;
 		g_clrbuf();
-
-		for (t_iter = 0; t_iter < mbuf[m_iter].arrlen; t_iter++) {
-			if (mbuf[m_iter].is_billboard) {
-				mbuf[m_iter].yaw = -y;
-			}
+		for (t_iter = 0; t_iter < mbuf[m_iter].tr_cnt; t_iter++) {
+			// TODO: separate this into physics ticks
 			curr = move(mbuf[m_iter].mesh_arr[t_iter], mbuf[m_iter].ctr, 0, mbuf[m_iter].yaw);
 			curr = move(curr, subvv(ivec3f(0,0,0), mbuf[m_iter].ctr), 0, 0);
 			curr = move(curr, mbuf[m_iter].pos, 0, 0);
-			curr.tx = mbuf[m_iter].tx_arr[mbuf[m_iter].is_billboard?0:t_iter];
-			if (mbuf[m_iter].is_billboard) {
+			curr.tx = mbuf[m_iter].tx_arr[mbuf[m_iter].flag_is_billboard?0:t_iter];
+			if (mbuf[m_iter].flag_is_billboard) {
 				curr.flip_texture = t_iter == 0 ? FALSE : TRUE;
 			}
 			g_addtriangle(curr);

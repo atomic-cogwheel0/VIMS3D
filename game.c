@@ -36,7 +36,7 @@ void init(void) {
 	int g_ret, m_ret;
 
 	pos = ivec3f(float2f(4.2), float2f(2.0), float2f(12.0));
-    pitch = float2f(-1.0*DEG2RAD_MULT), yaw = float2f(-162.5*DEG2RAD_MULT);
+    pitch = float2f(-1.0*DEG2RAD_MULT), yaw = float2f(197.5*DEG2RAD_MULT);
     gdelta = 32.0f*DEG2RAD_MULT;
     gspeed = 1.0f;
 
@@ -57,7 +57,6 @@ void init(void) {
 		return;
 	}
 
-	
 
 	for (i = 0; i < 72; i++) {
 		tx[i] = &textures[TX_WHITE];
@@ -219,19 +218,9 @@ void tick(void) {
 		yaw += delta;
 	}
 
-	if (pitch > float2f(90*DEG2RAD_MULT)) {
-		pitch = float2f(90*DEG2RAD_MULT);
-	}
-	if (pitch < float2f(-90*DEG2RAD_MULT)) {
-		pitch = float2f(-90*DEG2RAD_MULT);
-	}
+	pitch = clamp_f(pitch, float2f(-90*DEG2RAD_MULT), float2f(90*DEG2RAD_MULT));
 
-	if (yaw > float2f(180*DEG2RAD_MULT)) {
-		yaw -= float2f(360*DEG2RAD_MULT);
-	}
-	if (yaw < float2f(-180*DEG2RAD_MULT)) {
-		yaw += float2f(360*DEG2RAD_MULT);
-	}
+	yaw = mod_f(yaw, float2f(360*DEG2RAD_MULT));
 
 	t = ivec3f(0, 0, 0);
 	if (IsKeyDown(KEY_CHAR_8)) {
