@@ -2,7 +2,6 @@
 #define _MESH_H
 
 #include <stdlib.h>
-#include <stdarg.h>
 
 #include "raster.h"
 
