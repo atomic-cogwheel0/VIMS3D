@@ -6,8 +6,6 @@
 
 #include "raster.h"
 
-typedef signed short mesh_id_t;
-
 // collider types
 #define COLLIDER_NONE   0
 #define COLLIDER_SPHERE 1
@@ -75,9 +73,6 @@ void m_dealloc(void);
 // get status
 int m_getstatus(void);
 
-// set global variables (keeping them separated from the raster engine might prove useful)
-void m_coord(vec3f pos, fixed pitch, fixed yaw);
-
 // add a mesh (returns id)
 // the mesh will be rendered in the next pass
 uuid_t m_addmesh(mesh m);
@@ -92,6 +87,6 @@ int m_rotmesh(uuid_t id, fixed yaw);
 int m_collide(uuid_t id1, uuid_t id2);
 
 // run rendering pass with current meshes (returns draw time in ticks)
-int m_rendermeshes(bool debug_overlay, bool interlace);
+int m_rendermeshes(bool debug_overlay, camera *cam);
 
 #endif

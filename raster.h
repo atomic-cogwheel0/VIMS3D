@@ -12,6 +12,12 @@ int RTC_GetTicks(void);
 unsigned char *GetVRAMAddress(void);
 int Bdisp_SYS_FastDrawLineVRAM(int x1, int y1, int x2, int y2);
 
+typedef struct {
+	vec3f pos;
+	fixed yaw;
+	fixed pitch;
+} camera;
+
 #define TX_CNT 13
 
 #define MAX_TRIANGLES 72
@@ -69,16 +75,13 @@ uuid_t g_addtriangle(trianglef t);
 // remove a triangle by id
 int g_removetriangle(uuid_t id);
 
-// set global variables
-void g_coord(vec3f pos, fixed pitch, fixed yaw);
-
 // draw the horizon (returns number of pixels drawn)
-unsigned int g_draw_horizon(void);
+unsigned int g_draw_horizon(camera *cam);
 // rasterize all triangles currently in buffer (returns number of triangles drawn)
-unsigned int g_rasterize_buf(bool interlace_on, bool odd_row);
+unsigned int g_rasterize_buf(camera *cam);
 
 // draw text at a position in 3D space (overwrite!) (NEEDS g_init())
-int g_text3d(unsigned char *text, vec3f pos, unsigned int params);
+int g_text3d(camera *cam, unsigned char *text, vec3f pos, unsigned int params);
 // draw text onto the screen (overwrite!) (does not need g_init())
 int g_text2d(unsigned char *text, unsigned int x, unsigned int y, unsigned int params);
 // draw a texture (with tiling), pixel-by-pixel, screenspace coords (overwrite!) (does not need g_init())
