@@ -10,10 +10,6 @@
 
 #define TBUF_SIZ MAX_TRIANGLES
 
-// global coordination variables
-fixed gp, gy; // pitch, yaw
-vec3f go; // origin point (camera)
-
 // triangle buffer, triangle indexing
 trianglef *tbuf;
 unsigned short tbuf_idx = 0;
@@ -114,16 +110,10 @@ int g_removetriangle(uuid_t id) {
 	return G_ENEXIST;
 }
 
-void g_coord(vec3f pos, fixed pitch, fixed yaw) {
-	go = pos;
-	gp = pitch;
-	gy = yaw;
-}
-
-unsigned int g_draw_horizon(void) {
+unsigned int g_draw_horizon(camera *cam) {
 	int sspace_horiz_y;
 	if (g_status != G_SUBSYS_UP) return G_EDOWN;
-	sspace_horiz_y = f2int(mulff(sin_f(-gp), int2f(64))) + 32;
+	sspace_horiz_y = f2int(mulff(sin_f(-cam->pitch), int2f(64))) + 32;
 	if (sspace_horiz_y < 0 || sspace_horiz_y >= 64) {
 		return 0;
 	}
@@ -138,7 +128,7 @@ texture_t fallback_texture = {2, 2, 1, 1, tx_o_fallback};
 // the One and Only Rendering(TM) function
 // have fun :)
 
-unsigned int g_rasterize_buf(bool interlace_on, bool odd_row) {
+unsigned int g_rasterize_buf(camera *cam) {
 	int curr_tidx, xiterl, xiterr, xiter, yiter;
 	int bbox_left, bbox_right, bbox_top, bbox_bottom; // bounding box (on screen)
 	int q_cnt = 0;
@@ -172,10 +162,10 @@ unsigned int g_rasterize_buf(bool interlace_on, bool odd_row) {
 
 	// iterate on every triangle in the buffer
 	for (curr_tidx = 0; curr_tidx < tbuf_idx; curr_tidx++) {
-		t = move(tbuf[curr_tidx], go, gp, gy); // transform to camera
+		t = move(tbuf[curr_tidx], cam->pos, cam->pitch, cam->yaw); // transform to camera
 
 		nrm = normal(tbuf[curr_tidx]);
-		ctot = subvv(tbuf[curr_tidx].a, go);
+		ctot = subvv(tbuf[curr_tidx].a, cam->pos);
 
 		// cull
 		if (t.a.z < float2f(.5f) || t.b.z < float2f(.5f) || t.c.z < float2f(.5f) ||							// near-plane
@@ -275,8 +265,6 @@ unsigned int g_rasterize_buf(bool interlace_on, bool odd_row) {
 		//  1/Z, 1/Ui and 1/Vi are interpolated because they are linear across the surface in screen space
 
 		for (yiter = bbox_top; yiter <= bbox_bottom; yiter += 1) {
-			if (interlace_on && ((yiter % 2) == odd_row)) continue;
-
 			if (yiter < 0 || yiter >= 64) continue;
 
 			// find leftmost
@@ -389,7 +377,7 @@ unsigned int g_rasterize_buf(bool interlace_on, bool odd_row) {
 	return q_cnt;
 }
 
-int g_text3d(unsigned char *text, vec3f pos, unsigned int params) {
+int g_text3d(camera *cam, unsigned char *text, vec3f pos, unsigned int params) {
 	int sspace_x, sspace_y;
 	vec3f viewport_pos;
 	vec3f ctot;
@@ -397,8 +385,8 @@ int g_text3d(unsigned char *text, vec3f pos, unsigned int params) {
 	if (text == NULL) return G_ENULLPTR;
 	if (g_status != G_SUBSYS_UP) return G_EDOWN;
 
-	ctot = subvv(pos, go);
-	viewport_pos = rot(subvv(pos, go), -gp, -gy);
+	ctot = subvv(pos, cam->pos);
+	viewport_pos = rot(subvv(pos, cam->pos), -cam->pitch, -cam->yaw);
 
 	sspace_x = f2int(divff(mulff(viewport_pos.x, int2f(64)), -viewport_pos.z)) + 64;
 	sspace_y = f2int(divff(mulff(viewport_pos.y, int2f(64)), -viewport_pos.z)) + 32;

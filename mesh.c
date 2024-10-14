@@ -19,10 +19,6 @@ unsigned short mbuf_idx = 0;
 signed short zindex_max = 0;
 uuid_t m_uuid = 1;				// nothing gets uuid 0
 
-// global coordination variables
-fixed p, y; // pitch, yaw
-vec3f o; // origin point (camera)
-
 int m_status = G_SUBSYS_DOWN;
 
 // simplifies internal calculation
@@ -172,12 +168,6 @@ int m_getstatus(void) {
 	return m_status;
 }
 
-void m_coord(vec3f pos, fixed pitch, fixed yaw) {
-	o = pos;
-	p = pitch;
-	y = yaw;
-}
-
 uuid_t m_addmesh(mesh m) {
 	if (m_status != G_SUBSYS_UP) return G_EDOWN;
 	if (m_uuid < UUID_MAX) {
@@ -273,9 +263,8 @@ int m_collide(uuid_t id1, uuid_t id2) {
 }
 
 char buf[64]; // for sprintf
-unsigned int frame;
 
-int m_rendermeshes(bool debug_overlay, bool interlace) {
+int m_rendermeshes(bool debug_overlay, camera *cam) {
 	int m_iter, t_iter, dx, dy, i;
 	unsigned int time_s, time_e2, deltaticks, tr_cnt = 0;
 	trianglef curr;
@@ -296,11 +285,11 @@ int m_rendermeshes(bool debug_overlay, bool interlace) {
 		}
 	}
 	
-	g_draw_horizon();
+	g_draw_horizon(cam);
 
 	for (m_iter = 0; m_iter < mbuf_idx; m_iter++) {
 		if (mbuf[m_iter].flag_is_billboard) {
-			mbuf[m_iter].yaw = -y;
+			mbuf[m_iter].yaw = -cam->yaw;
 		}
 		if (!mbuf[m_iter].flag_renderable)
 			continue;
@@ -318,24 +307,22 @@ int m_rendermeshes(bool debug_overlay, bool interlace) {
 		}
 
 #ifndef BENCHMARK_RASTER
-		tr_cnt += g_rasterize_buf(interlace, frame % 2);
+		tr_cnt += g_rasterize_buf(cam);
 #else
 		for (i = 0; i < 40; i++) {
-			tr_cnt += g_rasterize_buf(interlace, frame % 2);
+			tr_cnt += g_rasterize_buf(cam);
 		}
 #endif
 		
 #ifdef DEBUG_BUILD
 		if (debug_overlay) {
 			sprintf((char *)buf, "%d", m_iter);
-			g_text3d(buf, subvv(ivec3f(0,int2f(16),0), mbuf[m_iter].pos), TEXT_SMALL | TEXT_INVERTED);
+			g_text3d(cam, buf, subvv(ivec3f(0,int2f(16),0), mbuf[m_iter].pos), TEXT_SMALL | TEXT_INVERTED);
 		}
 #endif
 	}
 	
 	time_e2 = RTC_GetTicks();
-
-	frame++;
 
 	deltaticks = time_e2-time_s;
 	if (deltaticks < 1) deltaticks = 1; 
@@ -350,9 +337,9 @@ int m_rendermeshes(bool debug_overlay, bool interlace) {
 		sprintf(buf, "%4.1fms (%2.1ffps) %dt/%dm", (deltaticks)*(1000.0/128.0), 1000.0/((deltaticks)*(1000.0/128.0)), tr_cnt, m_iter);
 		PrintMini(0, 0, (unsigned char *)buf, 0);
 	
-		sprintf(buf, "%4.1f %4.1f %4.1f %4.1fp %4.1fy",	f2float(o.x),
-														f2float(o.y),
-														f2float(o.z), f2float(p)*RAD2DEG_MULT, f2float(y)*RAD2DEG_MULT);
+		sprintf(buf, "%4.1f %4.1f %4.1f %4.1fp %4.1fy",	f2float(cam->pos.x),
+														f2float(cam->pos.y),
+														f2float(cam->pos.z), f2float(cam->pitch)*RAD2DEG_MULT, f2float(cam->yaw)*RAD2DEG_MULT);
 		PrintMini(0, 6, (unsigned char *)buf, 0);
 	}
 
