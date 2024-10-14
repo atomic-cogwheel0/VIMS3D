@@ -91,7 +91,7 @@ void init(void) {
 			Print((unsigned char *)"m_init() alloc fail");
 		}
 		if (w_ret == G_EALLOC) {
-			locate(1, 3);
+			locate(1, 4);
 			Print((unsigned char *)"w_init() alloc fail");
 		}
 		return;
