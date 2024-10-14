@@ -40,29 +40,6 @@ toggle_t overlay = {TRUE, FALSE, FALSE};
 #endif
 toggle_t interlace = {0, 0, 0};
 
-int common_add_object_with_mesh(world_obj *obj, llist l) {
-	obj->mesh_id = m_addmesh(*obj->mesh);
-	return G_SUCCESS;
-}
-
-int common_del_object_with_mesh(world_obj *obj, llist l) {
-	m_removemesh(obj->mesh_id);
-	return G_SUCCESS;
-}
-
-#define add_tree common_add_object_with_mesh
-#define add_person common_add_object_with_mesh
-
-#define del_tree common_del_object_with_mesh
-#define del_person common_del_object_with_mesh
-#define del_tank common_del_object_with_mesh
-
-int add_tank(world_obj *tank, llist l) {
-	common_add_object_with_mesh(tank, l);
-	m_rotmesh(tank->mesh_id, int2f(90)*DEG2RAD_MULT);
-	return G_SUCCESS;
-}
-
 void init(void) {
 	int i;
 	mesh m, m2;
@@ -195,9 +172,9 @@ void init(void) {
 	person_txarr[0] = &textures[TX_PERSON];
 
 	person_meshobj = ibill(person_mesh, person_txarr, ivec3f(float2f(6.0),0,float2f(5.0)));
-	person_worldobj = iworld_obj(WORLDOBJ_TANK, &person_meshobj, add_person, del_person, NULL);
+	person_worldobj = iworld_obj_static_mesh(WORLDOBJ_PERSON, &person_meshobj);
 
-	
+
 	tree_mesh[0] = itrianglef(ivec3f(0, int2f(12), 0), ivec3f(int2f(6), int2f(12), 0), ivec3f(0, 0, 0), 0, 0, 0);
 	tree_mesh[1] = itrianglef(ivec3f(int2f(6), 0, 0), ivec3f(0, 0, 0), ivec3f(int2f(6), int2f(12), 0), 0, 0, 0);
 
@@ -205,15 +182,15 @@ void init(void) {
 
 	for (i = 0; i < 5; i++) {
 		tree_meshobj = ibill(tree_mesh, tree_txarr, ivec3f(int2f(6), 0, int2f(i*18)));
-		tree_worldobjs[i] = iworld_obj(WORLDOBJ_TANK, &tree_meshobj, add_tree, del_tree, NULL);
+		tree_worldobjs[i] = iworld_obj_static_mesh(WORLDOBJ_TREE, &tree_meshobj);
 		tree_meshobj = ibill(tree_mesh, tree_txarr, ivec3f(int2f(-6),0,int2f(i*18)));
-		tree_worldobjs[i+5] = iworld_obj(WORLDOBJ_TANK, &tree_meshobj, add_tree, del_tree, NULL);
+		tree_worldobjs[i+5] = iworld_obj_static_mesh(WORLDOBJ_TREE, &tree_meshobj);
 	}
 
-	w_register_to_world(&tank_worldobj, NULL);
-	w_register_to_world(&person_worldobj, NULL);
+	w_register(&tank_worldobj, NULL);
+	w_register(&person_worldobj, NULL);
 	for (i = 0; i < 10; i++) {
-		tree_nodes[i] = w_register_to_world(&tree_worldobjs[i], NULL);
+		tree_nodes[i] = w_register(&tree_worldobjs[i], NULL);
 	}
 
 #ifndef BENCHMARK_RASTER

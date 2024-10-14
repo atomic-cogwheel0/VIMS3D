@@ -25,7 +25,7 @@ void dworld_obj(world_obj w) {
 	if (w.mesh != NULL) free(w.mesh);
 }
 
-node *w_register_to_world(world_obj *obj, int *status) {
+node *w_register(world_obj *obj, int *status) {
 	node *to_add = alloc_node(obj);
 
 	if (to_add == NULL)
@@ -43,7 +43,7 @@ node *w_register_to_world(world_obj *obj, int *status) {
 	return to_add;
 }
 
-int w_remove_from_world(node *n) {
+int w_deregister(node *n) {
 	if (n == NULL)
 		return G_ENULLPTR;
 
@@ -72,7 +72,7 @@ int _tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timesc
 
 int w_init(void) {
 	player = iworld_obj(WORLDOBJ_PLAYER, NULL, NULL, NULL, _tick_player);
-	player_node = w_register_to_world(&player, NULL);
+	player_node = w_register(&player, NULL);
 	if (player_node == NULL)
 		return G_EALLOC;
 

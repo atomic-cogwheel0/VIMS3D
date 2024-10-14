@@ -5,9 +5,8 @@
 #include "fxlib.h"
 #include "timer.h"
 
-#include "world.h"
+#include "worldobj.h"
 #include "VIMS_defs.h"
-
 
 int RTC_GetTicks(void);
 
