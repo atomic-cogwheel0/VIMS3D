@@ -1,6 +1,8 @@
 #ifndef _VIMS_DEFS_H
 #define _VIMS_DEFS_H
 
+#include "fxlib.h"
+
 // rebuild all if changed
 //#define DEBUG_BUILD
 //#define BENCHMARK_RASTER
@@ -24,16 +26,31 @@ typedef unsigned char bool;
 #define max(a, b) (((a)>(b))?(a):(b))
 #define min(a, b) (((a)<(b))?(a):(b))
 
-// defined and used in game.c
-
+// stores all data needed for a toggle in a tick function
 typedef struct {
 	bool is_on;
 	bool toggle;
 	bool prev_toggle;
 } toggle_t;
 
-typedef int32_t uuid_t;
+// toggles t->is_on if state has changed to TRUE since last call
+void toggle_rising(toggle_t *t, bool state);
+// toggles t->is_on if state has changed to FALSE since last call
+void toggle_falling(toggle_t *t, bool state);
 
+// stores 31-bit uuid; negative values should mean an error code
+typedef int32_t uuid_t;
 #define UUID_MAX ((uuid_t)0x7FFFFFFF)
+
+// status codes
+#define S_SUCCESS 0
+#define S_EALLOC -1
+#define S_EEMPTY -2
+#define S_EBUFFULL -3
+#define S_ENEXIST -4
+#define S_ENULLPTR -5
+#define S_EALREADYINITED -6
+#define S_EDOWN -7
+#define S_EIMPLEMENT -8
 
 #endif

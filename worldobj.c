@@ -2,12 +2,12 @@
 
 int common_add_object_with_mesh(world_obj *obj, llist l) {
 	obj->mesh_id = m_addmesh(*obj->mesh);
-	return G_SUCCESS;
+	return S_SUCCESS;
 }
 
 int common_del_object_with_mesh(world_obj *obj, llist l) {
 	m_removemesh(obj->mesh_id);
-	return G_SUCCESS;
+	return S_SUCCESS;
 }
 
 world_obj iworld_obj_static_mesh(uint8_t t, mesh *m) {
@@ -19,5 +19,5 @@ world_obj iworld_obj_static_mesh(uint8_t t, mesh *m) {
 int add_tank(world_obj *tank, llist l) {
 	common_add_object_with_mesh(tank, l);
 	m_rotmesh(tank->mesh_id, int2f(90)*DEG2RAD_MULT);
-	return G_SUCCESS;
+	return S_SUCCESS;
 }

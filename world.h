@@ -60,9 +60,8 @@ world_obj *w_getplayer(void);
 // initialize list, player, bufs
 int w_init(void);
 
-// set camera to the given coords
-// returns the pointer to a camera with the params set
-camera *w_setcam(vec3f pos, fixed pitch, fixed yaw);
+int w_setcam(camera *newcam);
+camera *w_getcam(void);
 
 // tick every object, passes timescale as arg to tick_obj()
 void w_tick(fixed timescale);

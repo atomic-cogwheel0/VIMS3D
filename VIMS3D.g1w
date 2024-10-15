@@ -22,6 +22,7 @@ SourceFile=:texturemap.c
 SourceFile=:syscall.src
 SourceFile=:world.c
 SourceFile=:worldobj.c
+SourceFile=:VIMS_defs.c
 HeaderFile=:vec.h
 HeaderFile=:fixed.h
 HeaderFile=:game.h

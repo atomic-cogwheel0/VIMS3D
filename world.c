@@ -2,7 +2,7 @@
 
 llist wlist;
 
-camera cam;
+camera *global_cam = NULL;
 
 world_obj player;
 node *player_node;
@@ -30,7 +30,7 @@ node *w_register(world_obj *obj, int *status) {
 
 	if (to_add == NULL)
 		if (status != NULL)
-			*status = G_EALLOC;
+			*status = S_EALLOC;
 
 	l_append(wlist, to_add);
 
@@ -39,13 +39,13 @@ node *w_register(world_obj *obj, int *status) {
 	}
 
 	if (status != NULL)
-		*status = G_SUCCESS;
+		*status = S_SUCCESS;
 	return to_add;
 }
 
 int w_deregister(node *n) {
 	if (n == NULL)
-		return G_ENULLPTR;
+		return S_ENULLPTR;
 
 	if (n->data->del_obj != NULL) {
 		n->data->del_obj(n->data, wlist);
@@ -54,14 +54,18 @@ int w_deregister(node *n) {
 	l_rmnode(wlist, n);
 	free_node(n);
 	n = NULL;
-	return G_SUCCESS;
+	return S_SUCCESS;
 }
 
-camera *w_setcam(vec3f pos, fixed pitch, fixed yaw) {
-	cam.pos = pos;
-	cam.pitch = pitch;
-	cam.yaw = yaw;
-	return &cam;
+int w_setcam(camera *newcam) {
+	if (newcam == NULL) return S_ENULLPTR;
+
+	global_cam = newcam;
+	return S_SUCCESS;
+}
+
+camera *w_getcam(void) {
+	return global_cam;
 }
 
 world_obj *w_getplayer(void) {
@@ -74,12 +78,12 @@ int w_init(void) {
 	player = iworld_obj(WORLDOBJ_PLAYER, NULL, NULL, NULL, _tick_player);
 	player_node = w_register(&player, NULL);
 	if (player_node == NULL)
-		return G_EALLOC;
+		return S_EALLOC;
 
 	wlist.head = player_node;
 	wlist.tail = player_node;
 
-	return G_SUCCESS;
+	return S_SUCCESS;
 }
 
 void w_tick(fixed timescale) {
@@ -92,7 +96,7 @@ void w_tick(fixed timescale) {
 }
 
 int _tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timescale) {
-	return G_SUCCESS;
+	return S_SUCCESS;
 }
 
 //------------ linked list code ------------

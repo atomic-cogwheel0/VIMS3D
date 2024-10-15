@@ -19,7 +19,7 @@ unsigned short mbuf_idx = 0;
 signed short zindex_max = 0;
 uuid_t m_uuid = 1;				// nothing gets uuid 0
 
-int m_status = G_SUBSYS_DOWN;
+int m_status = SUBSYS_DOWN;
 
 // simplifies internal calculation
 bool _c_collide_sphere_aabb(collider sphere, collider aabb);
@@ -132,28 +132,28 @@ mesh ibill(trianglef *arr, texture_ptr_t *tx_pseudo_arr, vec3f pos) {
 
 // initialize all buffers (static alloc for buffers is not possible)
 int m_init(void) {
-	if (m_status != G_SUBSYS_DOWN) return G_EALREADYINITED;
+	if (m_status != SUBSYS_DOWN) return S_EALREADYINITED;
 
 	mbuf = (mesh *)malloc(MBUF_SIZ*sizeof(mesh));
 
 	if (mbuf == NULL) {
-		m_status = G_SUBSYS_ERR;
-		return G_EALLOC;
+		m_status = SUBSYS_ERR;
+		return S_EALLOC;
 	}
-	m_status = G_SUBSYS_UP;
+	m_status = SUBSYS_UP;
 
 	m_clrbuf();
 
-	return G_SUCCESS;
+	return S_SUCCESS;
 }
 
 int m_clrbuf(void) {
-	if (m_status != G_SUBSYS_UP) return G_EDOWN;
+	if (m_status != SUBSYS_UP) return S_EDOWN;
 	memset((char *)mbuf, 0, MBUF_SIZ*sizeof(mesh));
 	mbuf_idx = 0;
 	zindex_max = 0;
 	m_uuid = 1;
-	return G_SUCCESS;
+	return S_SUCCESS;
 }
 
 void m_dealloc(void) {
@@ -161,7 +161,7 @@ void m_dealloc(void) {
 		free(mbuf);
 		mbuf = NULL;
 	}
-	m_status = G_SUBSYS_DOWN;
+	m_status = SUBSYS_DOWN;
 }
 
 int m_getstatus(void) {
@@ -169,7 +169,7 @@ int m_getstatus(void) {
 }
 
 uuid_t m_addmesh(mesh m) {
-	if (m_status != G_SUBSYS_UP) return G_EDOWN;
+	if (m_status != SUBSYS_UP) return S_EDOWN;
 	if (m_uuid < UUID_MAX) {
 		if (mbuf_idx < MBUF_SIZ-1) {
 			mbuf[mbuf_idx] = m;
@@ -177,39 +177,39 @@ uuid_t m_addmesh(mesh m) {
 			return m_uuid++;
 		}
 	}
-	return G_EBUFFULL;
+	return S_EBUFFULL;
 }
 
 int m_removemesh(uuid_t id) {
 	int i, j;
-	if (m_status != G_SUBSYS_UP) return G_EDOWN;
+	if (m_status != SUBSYS_UP) return S_EDOWN;
 	for(i = 0; i < mbuf_idx; i++) {
 		if (mbuf[i].id == id) {
 			for (j = i; j < (mbuf_idx-1); j++) {
 				mbuf[j] = mbuf[j+1];
 			}
 			mbuf_idx--;
-			return G_SUCCESS;
+			return S_SUCCESS;
 		}
 	}
-	return G_ENEXIST;
+	return S_ENEXIST;
 }
 
 int m_movemesh(uuid_t id, vec3f v) {
 	int i;
-	if (m_status != G_SUBSYS_UP) return G_EDOWN;
+	if (m_status != SUBSYS_UP) return S_EDOWN;
 	for(i = 0; i < mbuf_idx; i++) {
 		if (mbuf[i].id == id) {
 			mbuf[i].pos = addvv(mbuf[i].pos, v);
-			return G_SUCCESS;
+			return S_SUCCESS;
 		}
 	}
-	return G_ENEXIST;
+	return S_ENEXIST;
 }
 
 int m_rotmesh(uuid_t id, fixed yaw) {
 	int i;
-	if (m_status != G_SUBSYS_UP) return G_EDOWN;
+	if (m_status != SUBSYS_UP) return S_EDOWN;
 	for(i = 0; i < mbuf_idx; i++) {
 		if (mbuf[i].id == id) {
 			mbuf[i].yaw += yaw;
@@ -219,17 +219,17 @@ int m_rotmesh(uuid_t id, fixed yaw) {
 			if (mbuf[i].yaw < float2f(-180*DEG2RAD_MULT)) {
 				mbuf[i].yaw += float2f(360*DEG2RAD_MULT);
 			}
-			return G_SUCCESS;
+			return S_SUCCESS;
 		}
 	}
-	return G_ENEXIST;
+	return S_ENEXIST;
 }
 
 int m_collide(uuid_t id1, uuid_t id2) {
 	mesh *a = NULL, *b = NULL;
 	collider tr_a, tr_b;
 	int i, j;
-	if (m_status != G_SUBSYS_UP) return G_EDOWN;
+	if (m_status != SUBSYS_UP) return S_EDOWN;
 	for (i = 0; i < mbuf_idx; i++) {
 		if (mbuf[i].id == id1) {
 			a = &mbuf[i];
@@ -243,7 +243,7 @@ int m_collide(uuid_t id1, uuid_t id2) {
 		}
 	}
 	if (a == NULL && b == NULL)
-		return G_ENEXIST;
+		return S_ENEXIST;
 
 	if (!a->flag_has_collision || !b->flag_has_collision)
 		return FALSE;
@@ -270,8 +270,8 @@ int m_rendermeshes(bool debug_overlay, camera *cam) {
 	trianglef curr;
 	int16_t **depthbuf; // the pixel depth buffer, reset before meshes are rendered
 	
-	if (m_status != G_SUBSYS_UP) return G_EDOWN;
-	if (g_getstatus() != G_SUBSYS_UP) return G_EDOWN;
+	if (m_status != SUBSYS_UP) return S_EDOWN;
+	if (g_getstatus() != SUBSYS_UP) return S_EDOWN;
 
 	depthbuf = g_getdepthbuf();
 

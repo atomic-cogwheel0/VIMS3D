@@ -22,9 +22,6 @@ void quit(void);
 
 int *get_gamestate_ptr(void);
 
-void toggle_rising(toggle_t *t, bool state);
-void toggle_falling(toggle_t *t, bool state);
-
 #define GAMESTATE_PREINIT 0
 #define GAMESTATE_RUNNING 1
 #define GAMESTATE_QUIT_INPROG 2
