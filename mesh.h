@@ -49,8 +49,6 @@ typedef struct {
 	fixed yaw; // around y axis (horizontal rot)
 	vec3f ctr; // center of mesh (relative to pos)
 
-	uuid_t id;
-
 	bool flag_renderable : 1;
 	bool flag_has_collision : 1;
 	bool flag_is_billboard : 1; // if true: tx_arr is assumed to have 1 element, mesh_arr is assumed to have 2
@@ -72,18 +70,14 @@ void m_dealloc(void);
 // get status
 int m_getstatus(void);
 
-// add a mesh (returns id)
+// adds a mesh to the global mesh * array; the value referenced by added_unique_ptr will be a pointer to the added instance in the global mesh * array
 // the mesh will be rendered in the next pass
-uuid_t m_addmesh(mesh *m);
-// remove a mesh by id
-int m_removemesh(uuid_t id);
+int m_addmesh(mesh *m, mesh ***added_unique_ptr);
+// removes a mesh that was added with addmesh; sets the value referenced by unique_ptr_to_remove to NULL
+int m_removemesh(mesh ***unique_ptr_to_remove);
 
-// manipulate a mesh's pos and yaw (does not touch mesh_arr)
-// IMPORTANT: these are relative, not absolute offsets
-int m_movemesh(uuid_t id, vec3f offset);
-int m_rotmesh(uuid_t id, fixed yaw);
-
-int m_collide(uuid_t id1, uuid_t id2);
+// do the given meshes collide?
+int m_collide(mesh *a, mesh *b);
 
 // run rendering pass with current meshes (returns draw time in ticks)
 int m_rendermeshes(bool debug_overlay, camera *cam);

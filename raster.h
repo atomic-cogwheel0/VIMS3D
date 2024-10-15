@@ -54,10 +54,8 @@ int g_getstatus(void);
 // returns pointer to depth buffer (128*64 arr of int16_t)
 int16_t **g_getdepthbuf(void);
 
-// add a triangle (returns id of added triangle)
-uuid_t g_addtriangle(trianglef t);
-// remove a triangle by id
-int g_removetriangle(uuid_t id);
+// adds a triangle to the array of global triangles
+int g_addtriangle(trianglef t);
 
 // draw the horizon (returns number of pixels drawn)
 int g_draw_horizon(camera *cam);

@@ -104,7 +104,6 @@ mesh imesh(trianglef *arr, texture_ptr_t *tx_arr, uint8_t arrlen, vec3f pos, vec
 	m.coll_arr = NULL;
 	m.coll_cnt = 0;
 	m.pos = pos;
-	m.id = 0;
 	m.ctr = ctr;
 	m.yaw = 0;
 	m.flag_renderable = TRUE;
@@ -121,8 +120,7 @@ mesh ibill(trianglef *arr, texture_ptr_t *tx_pseudo_arr, vec3f pos) {
 	m.coll_arr = NULL;
 	m.coll_cnt = 0;
 	m.pos = pos;
-	m.id = 0;
-	m.ctr = ivec3f(divfi(arr[0].a.x + arr[0].b.x, 2), 0, divfi(arr[0].a.z + arr[0].b.z, 2));
+	m.ctr = ivec3f(0, divfi(arr[0].a.x + arr[0].b.x, 2), 0);
 	m.yaw = 0;
 	m.flag_renderable = TRUE;
 	m.flag_has_collision = FALSE;
@@ -168,78 +166,44 @@ int m_getstatus(void) {
 	return m_status;
 }
 
-uuid_t m_addmesh(mesh *m) {
+int m_addmesh(mesh *m, mesh ***added_unique_ptr) {
 	if (m_status != SUBSYS_UP) return S_EDOWN;
 	if (m == NULL) return S_ENULLPTR;
 	if (m_uuid < UUID_MAX) {
 		if (mbuf_idx < MBUF_SIZ-1) {
 			mbuf[mbuf_idx] = m;
-			mbuf[mbuf_idx++]->id = m_uuid;
-			return m_uuid++;
+			if (added_unique_ptr != NULL)
+				*added_unique_ptr = &mbuf[mbuf_idx];
+			mbuf_idx++;
+			return S_SUCCESS;
 		}
 	}
 	return S_EBUFFULL;
 }
 
-int m_removemesh(uuid_t id) {
+int m_removemesh(mesh ***unique_ptr_to_remove) {
 	int i, j;
 	if (m_status != SUBSYS_UP) return S_EDOWN;
+	if (unique_ptr_to_remove == NULL || *unique_ptr_to_remove == NULL) return S_ENULLPTR;
 	for(i = 0; i < mbuf_idx; i++) {
-		if (mbuf[i]->id == id) {
+		if (&mbuf[i] == *unique_ptr_to_remove) {
 			for (j = i; j < (mbuf_idx-1); j++) {
 				mbuf[j] = mbuf[j+1];
 			}
 			mbuf_idx--;
+			*unique_ptr_to_remove = NULL;
 			return S_SUCCESS;
 		}
 	}
 	return S_ENEXIST;
 }
 
-int m_movemesh(uuid_t id, vec3f v) {
-	int i;
-	if (m_status != SUBSYS_UP) return S_EDOWN;
-	for(i = 0; i < mbuf_idx; i++) {
-		if (mbuf[i]->id == id) {
-			mbuf[i]->pos = addvv(mbuf[i]->pos, v);
-			return S_SUCCESS;
-		}
-	}
-	return S_ENEXIST;
-}
 
-int m_rotmesh(uuid_t id, fixed yaw) {
-	int i;
-	if (m_status != SUBSYS_UP) return S_EDOWN;
-	for(i = 0; i < mbuf_idx; i++) {
-		if (mbuf[i]->id == id) {
-			mbuf[i]->yaw += yaw;
-			mbuf[i]->yaw = mod_f(mbuf[i]->yaw, float2f(360*DEG2RAD_MULT));
-			return S_SUCCESS;
-		}
-	}
-	return S_ENEXIST;
-}
-
-int m_collide(uuid_t id1, uuid_t id2) {
-	mesh *a = NULL, *b = NULL;
+int m_collide(mesh *a, mesh *b) {
 	collider tr_a, tr_b;
 	int i, j;
-	if (m_status != SUBSYS_UP) return S_EDOWN;
-	for (i = 0; i < mbuf_idx; i++) {
-		if (mbuf[i]->id == id1) {
-			a = mbuf[i];
-			break;
-		}
-	}
-	for (i = 0; i < mbuf_idx; i++) {
-		if (mbuf[i]->id == id2) {
-			b = mbuf[i];
-			break;
-		}
-	}
-	if (a == NULL && b == NULL)
-		return S_ENEXIST;
+	if (a == NULL || b == NULL)
+		return S_ENULLPTR;
 
 	if (!a->flag_has_collision || !b->flag_has_collision)
 		return FALSE;

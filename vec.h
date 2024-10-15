@@ -83,12 +83,11 @@ typedef struct {
 	vec3f b;
 	vec3f c;
 	texture_t *tx;
-	uuid_t id;
 	bool flip_texture;
 } trianglef;
 
 // initialize trianglef
-trianglef itrianglef(vec3f a, vec3f b, vec3f c, texture_t *tx, uuid_t id, bool flip);
+trianglef itrianglef(vec3f a, vec3f b, vec3f c, texture_t *tx, bool flip);
 
 trianglef transform_tri_from_zero(trianglef q, vec3f v, fixed pitch, fixed yaw);
 trianglef transform_tri_to_camera(trianglef q, camera cam);

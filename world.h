@@ -31,8 +31,8 @@ typedef struct {
 typedef struct _wobj {
 	uint8_t type;
 
-	uuid_t mesh_id; // set this in add_obj()
 	mesh *mesh; // may be NULL
+	mesh **instance_in_mesharr; // set this in add_obj
 
 	void *data; // pointer to basically any data needed for this object
 

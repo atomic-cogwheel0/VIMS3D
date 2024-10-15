@@ -5,13 +5,11 @@ vec3f remove_y_data(vec3f v) {
 }
 
 int common_add_object_with_mesh(world_obj *obj, llist l) {
-	obj->mesh_id = m_addmesh(obj->mesh);
-	return S_SUCCESS;
+	return m_addmesh(obj->mesh, &obj->instance_in_mesharr);
 }
 
 int common_del_object_with_mesh(world_obj *obj, llist l) {
-	m_removemesh(obj->mesh_id);
-	return S_SUCCESS;
+	return m_removemesh(&obj->instance_in_mesharr);
 }
 
 world_obj iworld_obj_static_mesh(uint8_t t, mesh *m) {
@@ -22,7 +20,7 @@ world_obj iworld_obj_static_mesh(uint8_t t, mesh *m) {
 
 int add_tank(world_obj *tank, llist l) {
 	common_add_object_with_mesh(tank, l);
-	m_rotmesh(tank->mesh_id, float2f(90*DEG2RAD_MULT));
+	tank->mesh->yaw = float2f(90*DEG2RAD_MULT);
 	return S_SUCCESS;
 }
 
@@ -36,5 +34,5 @@ int tick_tank(world_obj *tank, llist l, world_obj *player, fixed timescale) {
 	tank_pos_noy = remove_y_data(subvv(tank->mesh->pos, tank->mesh->ctr));
 
 	// move tank towards player (does not rotate yet)
-	m_movemesh(tank->mesh_id, mulvf(normalize(subvv(cam_pos_noy, tank_pos_noy)), divfi(timescale, 8)));
+	tank->mesh->pos = addvv(tank->mesh->pos, mulvf(normalize(subvv(cam_pos_noy, tank_pos_noy)), divfi(timescale, 8)));
 }
