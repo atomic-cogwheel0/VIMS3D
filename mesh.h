@@ -74,7 +74,7 @@ int m_getstatus(void);
 
 // add a mesh (returns id)
 // the mesh will be rendered in the next pass
-uuid_t m_addmesh(mesh m);
+uuid_t m_addmesh(mesh *m);
 // remove a mesh by id
 int m_removemesh(uuid_t id);
 

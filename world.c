@@ -7,7 +7,7 @@ camera *global_cam = NULL;
 world_obj player;
 node *player_node;
 
-world_obj iworld_obj(uint8_t t, mesh *m, int (*a)(world_obj *, llist), int (*d)(world_obj *, llist), int (*tk)(world_obj *, llist, world_obj *, fixed)) {
+world_obj iworld_obj(uint8_t t, mesh *m, void *dataptr, int (*a)(world_obj *, llist), int (*d)(world_obj *, llist), int (*tk)(world_obj *, llist, world_obj *, fixed)) {
 	world_obj w;
 	w.type = t;
 	w.mesh = NULL;
@@ -15,6 +15,7 @@ world_obj iworld_obj(uint8_t t, mesh *m, int (*a)(world_obj *, llist), int (*d)(
 		w.mesh = malloc(sizeof(mesh));
 		memcpy(w.mesh, m, sizeof(mesh));
 	}
+	w.data = dataptr;
 	w.add_obj = a;
 	w.del_obj = d;
 	w.tick_obj = tk;
@@ -75,7 +76,7 @@ world_obj *w_getplayer(void) {
 int _tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timescale);
 
 int w_init(void) {
-	player = iworld_obj(WORLDOBJ_PLAYER, NULL, NULL, NULL, _tick_player);
+	player = iworld_obj(WORLDOBJ_PLAYER, NULL, &global_cam, NULL, NULL, _tick_player);
 	player_node = w_register(&player, NULL);
 	if (player_node == NULL)
 		return S_EALLOC;

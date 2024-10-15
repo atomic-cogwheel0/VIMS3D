@@ -14,7 +14,7 @@
 // max number of meshes
 #define MBUF_SIZ 12
 
-mesh *mbuf;
+mesh **mbuf;
 unsigned short mbuf_idx = 0;
 signed short zindex_max = 0;
 uuid_t m_uuid = 1;				// nothing gets uuid 0
@@ -122,7 +122,7 @@ mesh ibill(trianglef *arr, texture_ptr_t *tx_pseudo_arr, vec3f pos) {
 	m.coll_cnt = 0;
 	m.pos = pos;
 	m.id = 0;
-	m.ctr = ivec3f(0, divfi(arr[0].a.x + arr[0].b.x, 2), 0);
+	m.ctr = ivec3f(divfi(arr[0].a.x + arr[0].b.x, 2), 0, divfi(arr[0].a.z + arr[0].b.z, 2));
 	m.yaw = 0;
 	m.flag_renderable = TRUE;
 	m.flag_has_collision = FALSE;
@@ -134,7 +134,7 @@ mesh ibill(trianglef *arr, texture_ptr_t *tx_pseudo_arr, vec3f pos) {
 int m_init(void) {
 	if (m_status != SUBSYS_DOWN) return S_EALREADYINITED;
 
-	mbuf = (mesh *)malloc(MBUF_SIZ*sizeof(mesh));
+	mbuf = (mesh **)malloc(MBUF_SIZ*sizeof(mesh *));
 
 	if (mbuf == NULL) {
 		m_status = SUBSYS_ERR;
@@ -149,7 +149,7 @@ int m_init(void) {
 
 int m_clrbuf(void) {
 	if (m_status != SUBSYS_UP) return S_EDOWN;
-	memset((char *)mbuf, 0, MBUF_SIZ*sizeof(mesh));
+	memset((char *)mbuf, 0, MBUF_SIZ*sizeof(mesh *));
 	mbuf_idx = 0;
 	zindex_max = 0;
 	m_uuid = 1;
@@ -168,12 +168,13 @@ int m_getstatus(void) {
 	return m_status;
 }
 
-uuid_t m_addmesh(mesh m) {
+uuid_t m_addmesh(mesh *m) {
 	if (m_status != SUBSYS_UP) return S_EDOWN;
+	if (m == NULL) return S_ENULLPTR;
 	if (m_uuid < UUID_MAX) {
 		if (mbuf_idx < MBUF_SIZ-1) {
 			mbuf[mbuf_idx] = m;
-			mbuf[mbuf_idx++].id = m_uuid;
+			mbuf[mbuf_idx++]->id = m_uuid;
 			return m_uuid++;
 		}
 	}
@@ -184,7 +185,7 @@ int m_removemesh(uuid_t id) {
 	int i, j;
 	if (m_status != SUBSYS_UP) return S_EDOWN;
 	for(i = 0; i < mbuf_idx; i++) {
-		if (mbuf[i].id == id) {
+		if (mbuf[i]->id == id) {
 			for (j = i; j < (mbuf_idx-1); j++) {
 				mbuf[j] = mbuf[j+1];
 			}
@@ -199,8 +200,8 @@ int m_movemesh(uuid_t id, vec3f v) {
 	int i;
 	if (m_status != SUBSYS_UP) return S_EDOWN;
 	for(i = 0; i < mbuf_idx; i++) {
-		if (mbuf[i].id == id) {
-			mbuf[i].pos = addvv(mbuf[i].pos, v);
+		if (mbuf[i]->id == id) {
+			mbuf[i]->pos = addvv(mbuf[i]->pos, v);
 			return S_SUCCESS;
 		}
 	}
@@ -211,14 +212,9 @@ int m_rotmesh(uuid_t id, fixed yaw) {
 	int i;
 	if (m_status != SUBSYS_UP) return S_EDOWN;
 	for(i = 0; i < mbuf_idx; i++) {
-		if (mbuf[i].id == id) {
-			mbuf[i].yaw += yaw;
-			if (mbuf[i].yaw > float2f(180*DEG2RAD_MULT)) {
-				mbuf[i].yaw -= float2f(360*DEG2RAD_MULT);
-			}
-			if (mbuf[i].yaw < float2f(-180*DEG2RAD_MULT)) {
-				mbuf[i].yaw += float2f(360*DEG2RAD_MULT);
-			}
+		if (mbuf[i]->id == id) {
+			mbuf[i]->yaw += yaw;
+			mbuf[i]->yaw = mod_f(mbuf[i]->yaw, float2f(360*DEG2RAD_MULT));
 			return S_SUCCESS;
 		}
 	}
@@ -231,14 +227,14 @@ int m_collide(uuid_t id1, uuid_t id2) {
 	int i, j;
 	if (m_status != SUBSYS_UP) return S_EDOWN;
 	for (i = 0; i < mbuf_idx; i++) {
-		if (mbuf[i].id == id1) {
-			a = &mbuf[i];
+		if (mbuf[i]->id == id1) {
+			a = mbuf[i];
 			break;
 		}
 	}
 	for (i = 0; i < mbuf_idx; i++) {
-		if (mbuf[i].id == id2) {
-			b = &mbuf[i];
+		if (mbuf[i]->id == id2) {
+			b = mbuf[i];
 			break;
 		}
 	}
@@ -288,19 +284,19 @@ int m_rendermeshes(bool debug_overlay, camera *cam) {
 	g_draw_horizon(cam);
 
 	for (m_iter = 0; m_iter < mbuf_idx; m_iter++) {
-		if (mbuf[m_iter].flag_is_billboard) {
-			mbuf[m_iter].yaw = -cam->yaw;
+		if (mbuf[m_iter]->flag_is_billboard) {
+			mbuf[m_iter]->yaw = cam->yaw;
 		}
-		if (!mbuf[m_iter].flag_renderable)
+		if (!mbuf[m_iter]->flag_renderable)
 			continue;
 		g_clrbuf();
-		for (t_iter = 0; t_iter < mbuf[m_iter].tr_cnt; t_iter++) {
+		for (t_iter = 0; t_iter < mbuf[m_iter]->tr_cnt; t_iter++) {
 			// TODO: separate this into physics ticks
-			curr = move(mbuf[m_iter].mesh_arr[t_iter], mbuf[m_iter].ctr, 0, mbuf[m_iter].yaw);
-			curr = move(curr, subvv(ivec3f(0,0,0), mbuf[m_iter].ctr), 0, 0);
-			curr = move(curr, mbuf[m_iter].pos, 0, 0);
-			curr.tx = mbuf[m_iter].tx_arr[mbuf[m_iter].flag_is_billboard?0:t_iter];
-			if (mbuf[m_iter].flag_is_billboard) {
+			curr = transform_tri_from_zero(mbuf[m_iter]->mesh_arr[t_iter], subvv(ivec3f(0, 0, 0), mbuf[m_iter]->ctr), 0, 0);
+			curr = transform_tri_from_zero(curr, mbuf[m_iter]->pos, 0, mbuf[m_iter]->yaw);
+
+			curr.tx = mbuf[m_iter]->tx_arr[mbuf[m_iter]->flag_is_billboard?0:t_iter];
+			if (mbuf[m_iter]->flag_is_billboard) {
 				curr.flip_texture = t_iter == 0 ? FALSE : TRUE;
 			}
 			g_addtriangle(curr);
