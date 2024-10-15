@@ -13,7 +13,6 @@
 // triangle buffer, triangle indexing
 trianglef *tbuf;
 unsigned short tbuf_idx = 0;
-uuid_t g_uuid = 1;				// nothing gets g_uuid 0
 
 // depth buffer: a 128*64 array, every pixel has a 11+5 bit fixed-point depth value
 int16_t *depthbuf[64];
@@ -57,7 +56,6 @@ int g_clrbuf(void) {
 	if (g_status != SUBSYS_UP) return S_EDOWN;
 	memset((char *)tbuf, 0, TBUF_SIZ*sizeof(trianglef));
 	tbuf_idx = 0;
-	g_uuid = 1;
 	return S_SUCCESS;
 }
 
@@ -86,11 +84,9 @@ int16_t **g_getdepthbuf(void) {
 
 int g_addtriangle(trianglef t) {
 	if (g_status != SUBSYS_UP) return S_EDOWN;
-	if (g_uuid < UUID_MAX) {
-		if (tbuf_idx < TBUF_SIZ-1) {
-			tbuf[tbuf_idx++] = t;
-			return S_SUCCESS;
-		}
+	if (tbuf_idx < TBUF_SIZ-1) {
+		tbuf[tbuf_idx++] = t;
+		return S_SUCCESS;
 	}
 	return S_EBUFFULL;
 }
