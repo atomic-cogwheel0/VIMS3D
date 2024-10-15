@@ -84,30 +84,15 @@ int16_t **g_getdepthbuf(void) {
 	return (int16_t **)depthbuf;
 }
 
-uuid_t g_addtriangle(trianglef t) {
+int g_addtriangle(trianglef t) {
 	if (g_status != SUBSYS_UP) return S_EDOWN;
 	if (g_uuid < UUID_MAX) {
 		if (tbuf_idx < TBUF_SIZ-1) {
-			tbuf[tbuf_idx++] = itrianglef(t.a, t.b, t.c, t.tx, g_uuid, t.flip_texture);
-			return g_uuid++;
-		}
-	}
-	return S_EBUFFULL;
-}
-
-int g_removetriangle(uuid_t id) {
-	int i, j;
-	if (g_status != SUBSYS_UP) return S_EDOWN;
-	for(i = 0; i < tbuf_idx; i++) {
-		if (tbuf[i].id == id) {
-			for (j = i; j < (tbuf_idx-1); j++) {
-				tbuf[j] = tbuf[j+1];
-			}
-			tbuf_idx--;
+			tbuf[tbuf_idx++] = t;
 			return S_SUCCESS;
 		}
 	}
-	return S_ENEXIST;
+	return S_EBUFFULL;
 }
 
 int g_draw_horizon(camera *cam) {
@@ -132,6 +117,7 @@ int g_rasterize_buf(camera *cam) {
 	int curr_tidx, xiterl, xiterr, xiter, yiter;
 	int bbox_left, bbox_right, bbox_top, bbox_bottom; // bounding box (on screen)
 	int q_cnt = 0;
+	trianglef curr_t;
 	fixed diff;
 
 	trianglef t;
@@ -162,10 +148,11 @@ int g_rasterize_buf(camera *cam) {
 
 	// iterate on every triangle in the buffer
 	for (curr_tidx = 0; curr_tidx < tbuf_idx; curr_tidx++) {
-		t = transform_tri_to_camera(tbuf[curr_tidx], *cam); // transform to camera
+		curr_t = tbuf[curr_tidx];
+		t = transform_tri_to_camera(curr_t, *cam); // transform to camera
 
-		nrm = normal(tbuf[curr_tidx]);
-		ctot = subvv(tbuf[curr_tidx].a, cam->pos);
+		nrm = normal(curr_t);
+		ctot = subvv(curr_t.a, cam->pos);
 
 		// cull
 		if (t.a.z < float2f(.5f) || t.b.z < float2f(.5f) || t.c.z < float2f(.5f) ||							// near-plane
