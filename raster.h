@@ -18,9 +18,9 @@ typedef struct {
 	fixed pitch;
 } camera;
 
-#define TX_CNT 13
-
 #define MAX_TRIANGLES 72
+
+#define TX_CNT 13
 
 // texture ids
 #define TX_WHITE 0
@@ -38,25 +38,15 @@ typedef struct {
 #define TX_PERSON 11
 #define TX_TREE 12
 
-// text params
+// text rendering function flags
 #define TEXT_SMALL 0x1
 #define TEXT_LARGE 0x2
 #define TEXT_INVERTED 0x4
 
-// return codes (for raster.c and mesh.c too)
-#define G_SUCCESS 0
-#define G_EALLOC -1
-#define G_EEMPTY -2
-#define G_EBUFFULL -3
-#define G_ENEXIST -4
-#define G_ENULLPTR -5
-#define G_EALREADYINITED -6
-#define G_EDOWN -7
-#define G_EIMPLEMENT -8
-
-#define G_SUBSYS_ERR 0
-#define G_SUBSYS_UP 1
-#define G_SUBSYS_DOWN 2
+// subsystem states
+#define SUBSYS_ERR 0
+#define SUBSYS_UP 1
+#define SUBSYS_DOWN 2
 
 // NEEDS CALLING (allocate bufs)
 int g_init(void);
@@ -76,9 +66,9 @@ uuid_t g_addtriangle(trianglef t);
 int g_removetriangle(uuid_t id);
 
 // draw the horizon (returns number of pixels drawn)
-unsigned int g_draw_horizon(camera *cam);
+int g_draw_horizon(camera *cam);
 // rasterize all triangles currently in buffer (returns number of triangles drawn)
-unsigned int g_rasterize_buf(camera *cam);
+int g_rasterize_buf(camera *cam);
 
 // draw text at a position in 3D space (overwrite!) (NEEDS g_init())
 int g_text3d(camera *cam, unsigned char *text, vec3f pos, unsigned int params);

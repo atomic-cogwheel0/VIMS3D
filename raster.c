@@ -20,45 +20,45 @@ int16_t *depthbuf[64];
 
 unsigned char *vram;
 
-unsigned int g_status = G_SUBSYS_DOWN;
+unsigned int g_status = SUBSYS_DOWN;
 
 // initialize all buffers (static alloc for buffers isn't possible)
 int g_init(void) {
 	int i;
 
-	if (g_status != G_SUBSYS_DOWN) return G_EALREADYINITED;
+	if (g_status != SUBSYS_DOWN) return S_EALREADYINITED;
 
 	tbuf = (trianglef *)malloc(TBUF_SIZ*sizeof(trianglef));
 
 	if (tbuf == NULL) {
-		g_status = G_SUBSYS_ERR;
-		return G_EALLOC;
+		g_status = SUBSYS_ERR;
+		return S_EALLOC;
 	}
 
 	for (i = 0; i < 64; i++) {
 		depthbuf[i] = (int16_t *) malloc(128*sizeof(int16_t));
 		if (depthbuf[i] == NULL) {
 			g_dealloc();
-			g_status = G_SUBSYS_ERR;
-			return G_EALLOC;
+			g_status = SUBSYS_ERR;
+			return S_EALLOC;
 		}
 	}
-	g_status = G_SUBSYS_UP;
+	g_status = SUBSYS_UP;
 
 	g_clrbuf();
 
 	vram = GetVRAMAddress();
 
-	return G_SUCCESS;
+	return S_SUCCESS;
 }
 
 // clear buffers, initialize 
 int g_clrbuf(void) {
-	if (g_status != G_SUBSYS_UP) return G_EDOWN;
+	if (g_status != SUBSYS_UP) return S_EDOWN;
 	memset((char *)tbuf, 0, TBUF_SIZ*sizeof(trianglef));
 	tbuf_idx = 0;
 	g_uuid = 1;
-	return G_SUCCESS;
+	return S_SUCCESS;
 }
 
 void g_dealloc(void) {
@@ -73,7 +73,7 @@ void g_dealloc(void) {
 			depthbuf[i] = NULL;
 		}
 	}
-	g_status = G_SUBSYS_DOWN;
+	g_status = SUBSYS_DOWN;
 }
 
 int g_getstatus(void) {
@@ -85,34 +85,34 @@ int16_t **g_getdepthbuf(void) {
 }
 
 uuid_t g_addtriangle(trianglef t) {
-	if (g_status != G_SUBSYS_UP) return G_EDOWN;
+	if (g_status != SUBSYS_UP) return S_EDOWN;
 	if (g_uuid < UUID_MAX) {
 		if (tbuf_idx < TBUF_SIZ-1) {
 			tbuf[tbuf_idx++] = itrianglef(t.a, t.b, t.c, t.tx, g_uuid, t.flip_texture);
 			return g_uuid++;
 		}
 	}
-	return G_EBUFFULL;
+	return S_EBUFFULL;
 }
 
 int g_removetriangle(uuid_t id) {
 	int i, j;
-	if (g_status != G_SUBSYS_UP) return G_EDOWN;
+	if (g_status != SUBSYS_UP) return S_EDOWN;
 	for(i = 0; i < tbuf_idx; i++) {
 		if (tbuf[i].id == id) {
 			for (j = i; j < (tbuf_idx-1); j++) {
 				tbuf[j] = tbuf[j+1];
 			}
 			tbuf_idx--;
-			return G_SUCCESS;
+			return S_SUCCESS;
 		}
 	}
-	return G_ENEXIST;
+	return S_ENEXIST;
 }
 
-unsigned int g_draw_horizon(camera *cam) {
+int g_draw_horizon(camera *cam) {
 	int sspace_horiz_y;
-	if (g_status != G_SUBSYS_UP) return G_EDOWN;
+	if (g_status != SUBSYS_UP) return S_EDOWN;
 	sspace_horiz_y = f2int(mulff(sin_f(-cam->pitch), int2f(64))) + 32;
 	if (sspace_horiz_y < 0 || sspace_horiz_y >= 64) {
 		return 0;
@@ -128,7 +128,7 @@ texture_t fallback_texture = {2, 2, 1, 1, tx_o_fallback};
 // the One and Only Rendering(TM) function
 // have fun :)
 
-unsigned int g_rasterize_buf(camera *cam) {
+int g_rasterize_buf(camera *cam) {
 	int curr_tidx, xiterl, xiterr, xiter, yiter;
 	int bbox_left, bbox_right, bbox_top, bbox_bottom; // bounding box (on screen)
 	int q_cnt = 0;
@@ -149,7 +149,7 @@ unsigned int g_rasterize_buf(camera *cam) {
 
 	signed short depthval;
 
-	if (g_status != G_SUBSYS_UP) return G_EDOWN;
+	if (g_status != SUBSYS_UP) return S_EDOWN;
 
 // some stuff can get stupidly large for the ~tiny~ 20-bit fixeds
 // downscale them, who needs precision anyways :)
@@ -382,8 +382,8 @@ int g_text3d(camera *cam, unsigned char *text, vec3f pos, unsigned int params) {
 	vec3f viewport_pos;
 	vec3f ctot;
 
-	if (text == NULL) return G_ENULLPTR;
-	if (g_status != G_SUBSYS_UP) return G_EDOWN;
+	if (text == NULL) return S_ENULLPTR;
+	if (g_status != SUBSYS_UP) return S_EDOWN;
 
 	ctot = subvv(pos, cam->pos);
 	viewport_pos = rot(subvv(pos, cam->pos), -cam->pitch, -cam->yaw);
@@ -394,14 +394,14 @@ int g_text3d(camera *cam, unsigned char *text, vec3f pos, unsigned int params) {
 	// is in view?
 	if (!(viewport_pos.z < float2f(0.25f))) {	
 		if (sspace_x <= 127 && sspace_x >= 0 && sspace_y <= 63 && sspace_y >= 0) {
-			g_text2d(text, sspace_x, sspace_y, params);
+			return g_text2d(text, sspace_x, sspace_y, params);
 		}
 	}
-	return G_SUCCESS;
+	return S_SUCCESS;
 }
 
 int g_text2d(unsigned char *text, unsigned int x, unsigned int y, unsigned int params) {
-	if (text == NULL) return G_ENULLPTR;
+	if (text == NULL) return S_ENULLPTR;
 
 	if (params & TEXT_SMALL) {
 		PrintMini(x, y, text, (params & TEXT_INVERTED) ? MINI_REV : MINI_OVER);
@@ -409,7 +409,7 @@ int g_text2d(unsigned char *text, unsigned int x, unsigned int y, unsigned int p
 	else if (params & TEXT_LARGE) {
 		PrintXY(x, y, text, (params & TEXT_INVERTED) ? MINI_REV : MINI_OVER);
 	}
-	return G_SUCCESS;
+	return S_SUCCESS;
 }
 
 int g_texture2d(texture_ptr_t tx, unsigned int x, unsigned int y) {
@@ -418,7 +418,7 @@ int g_texture2d(texture_ptr_t tx, unsigned int x, unsigned int y) {
 	unsigned int px_offset;
 	unsigned int tiled_width, tiled_height;
 
-	if (tx == NULL) return G_ENULLPTR;
+	if (tx == NULL) return S_ENULLPTR;
 
 	tiled_width = tx->w * tx->u_tile_size;
 	tiled_height = tx->h * tx->v_tile_size;
@@ -434,5 +434,5 @@ int g_texture2d(texture_ptr_t tx, unsigned int x, unsigned int y) {
 			}
 		}
 	}
-	return G_SUCCESS;
+	return S_SUCCESS;
 }

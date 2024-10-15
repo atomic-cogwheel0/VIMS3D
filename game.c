@@ -40,14 +40,16 @@ toggle_t overlay = {TRUE, FALSE, FALSE};
 #endif
 toggle_t interlace = {0, 0, 0};
 
+camera game_cam;
+
 void init(void) {
 	int i;
 	mesh m, m2;
 	int g_ret, m_ret, w_ret;
 
-	pos = ivec3f(float2f(4.2), float2f(2.0), float2f(12.0));
-	pitch = float2f(-1.0*DEG2RAD_MULT); 
-	yaw = float2f(197.5*DEG2RAD_MULT);
+	game_cam.pos = ivec3f(float2f(4.2), float2f(2.0), float2f(12.0));
+	game_cam.pitch = float2f(-1.0*DEG2RAD_MULT); 
+	game_cam.yaw = float2f(197.5*DEG2RAD_MULT);
 
 	gdelta = 32.0f*DEG2RAD_MULT;
 	gspeed = 1.0f;
@@ -56,24 +58,25 @@ void init(void) {
 	m_ret = m_init();
 	w_ret = w_init();
 
-	if (g_ret != G_SUCCESS || m_ret != G_SUCCESS || w_ret != G_SUCCESS) {
+	if (g_ret != S_SUCCESS || m_ret != S_SUCCESS || w_ret != S_SUCCESS) {
 		locate(1, 1);
 		Print((unsigned char *)"init() failed!");
-		if (g_ret == G_EALLOC) {
+		if (g_ret == S_EALLOC) {
 			locate(1, 2);
 			Print((unsigned char *)"g_init() alloc fail");
 		}
-		if (m_ret == G_EALLOC) {
+		if (m_ret == S_EALLOC) {
 			locate(1, 3);
 			Print((unsigned char *)"m_init() alloc fail");
 		}
-		if (w_ret == G_EALLOC) {
+		if (w_ret == S_EALLOC) {
 			locate(1, 4);
 			Print((unsigned char *)"w_init() alloc fail");
 		}
 		return;
 	}
 
+	w_setcam(&game_cam);
 
 	for (i = 0; i < 72; i++) {
 		tank_txarr[i] = &textures[TX_WHITE];
@@ -193,12 +196,15 @@ void init(void) {
 		tree_nodes[i] = w_register(&tree_worldobjs[i], NULL);
 	}
 
+	// some call might have modified it (called quit())
+	if (gamestate == GAMESTATE_PREINIT) {
 #ifndef BENCHMARK_RASTER
-	SetTimer(TICK_TIMER, TICK_MS, tick);
-	gamestate = GAMESTATE_RUNNING;
+		SetTimer(TICK_TIMER, TICK_MS, tick);
+		gamestate = GAMESTATE_RUNNING;
 #else
-	tick();
+		tick();
 #endif
+	}
 }
 
 // deallocate buffers, stop timers, set quit status
@@ -216,9 +222,9 @@ void tick(void) {
 	fixed speed, delta;
 	camera *cam;
 
-	cam = w_setcam(pos, pitch, yaw);
+	cam = w_getcam();
 
-	if (m_getstatus() != G_SUBSYS_UP) return;
+	if (m_getstatus() != SUBSYS_UP) return;
 	dtime = m_rendermeshes(overlay.is_on, cam); //1/128 s ticks
 	scale = (float)dtime/128.0f*5.0f;
 
@@ -280,20 +286,4 @@ void tick(void) {
 
 int *get_gamestate_ptr(void) {
 	return &gamestate;
-}
-
-void toggle_rising(toggle_t *t, bool state) {
-	t->toggle = state;
-	if (t->toggle != t->prev_toggle && t->toggle) {
-		t->is_on = !t->is_on;
-	}
-	t->prev_toggle = t->toggle;
-}
-
-void toggle_falling(toggle_t *t, bool state) {
-	t->toggle = state;
-	if (t->toggle != t->prev_toggle && !t->toggle) {
-		t->is_on = !t->is_on;
-	}
-	t->prev_toggle = t->toggle;
 }
