@@ -38,10 +38,6 @@ void toggle_rising(toggle_t *t, bool state);
 // toggles t->is_on if state has changed to FALSE since last call
 void toggle_falling(toggle_t *t, bool state);
 
-// stores 31-bit uuid; negative values should mean an error code
-typedef int32_t uuid_t;
-#define UUID_MAX ((uuid_t)0x7FFFFFFF)
-
 // status codes
 #define S_SUCCESS 0
 #define S_EALLOC -1
