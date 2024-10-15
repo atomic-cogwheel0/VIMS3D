@@ -9,6 +9,7 @@
 
 	.SECTION P,CODE,ALIGN=4
 
+; returns 1/128 second ticks since midnight according to the CPU's RTC
 _RTC_GetTicks:
 	mov.l #H'80010070,r1
 	mov.w #H'003b, r0
@@ -21,6 +22,7 @@ _GetVRAMAddress:
 	jmp @r1
 	nop
 
+; draws a line to VRAM, faster than the library one
 _Bdisp_SYS_FastDrawLineVRAM:
 	mov.l #H'80010070,r1
 	mov.w #H'0764, r0

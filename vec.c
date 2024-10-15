@@ -132,10 +132,17 @@ trianglef itrianglef(vec3f _a, vec3f _b, vec3f _c, texture_t *_tx, uuid_t _id, b
 	return r;
 }
 
-trianglef move(trianglef q, vec3f v, fixed pitch, fixed yaw) {
-	return itrianglef(rot(subvv(q.a, v), -pitch, -yaw),
-	                  rot(subvv(q.b, v), -pitch, -yaw),
-	                  rot(subvv(q.c, v), -pitch, -yaw),
+trianglef transform_tri_from_zero(trianglef q, vec3f v, fixed pitch, fixed yaw) {
+	return itrianglef(addvv(rot(q.a, pitch, yaw), v),
+	                  addvv(rot(q.b, pitch, yaw), v),
+		              addvv(rot(q.c, pitch, yaw), v),
+	                  q.tx, q.id, q.flip_texture);
+}
+
+trianglef transform_tri_to_camera(trianglef q, camera cam) {
+	return itrianglef(rot(subvv(q.a, cam.pos), -cam.pitch, -cam.yaw),
+	                  rot(subvv(q.b, cam.pos), -cam.pitch, -cam.yaw),
+	                  rot(subvv(q.c, cam.pos), -cam.pitch, -cam.yaw),
 	                  q.tx, q.id, q.flip_texture);
 }
 

@@ -47,9 +47,9 @@ void init(void) {
 	mesh m, m2;
 	int g_ret, m_ret, w_ret;
 
-	game_cam.pos = ivec3f(float2f(4.2), float2f(2.0), float2f(12.0));
-	game_cam.pitch = float2f(-1.0*DEG2RAD_MULT); 
-	game_cam.yaw = float2f(197.5*DEG2RAD_MULT);
+	game_cam.pos = ivec3f(float2f(-3.3), float2f(2.0), float2f(-10.0));
+	game_cam.pitch = float2f(-12.3*DEG2RAD_MULT); 
+	game_cam.yaw = float2f(16.2*DEG2RAD_MULT);
 
 	gdelta = 32.0f*DEG2RAD_MULT;
 	gspeed = 1.0f;
@@ -165,8 +165,8 @@ void init(void) {
 	tank_mesh[35] = itrianglef(vertices[22], vertices[21], vertices[25], 0, 0, 0);
 	tank_mesh[36] = itrianglef(vertices[24], vertices[25], vertices[21], 0, 0, 0);
 
-	tank_meshobj = imesh(tank_mesh, tank_txarr, 37, ivec3f(float2f(1.5), 0, float2f(12.0)), ivec3f(0, 0, 0));
-	tank_worldobj = iworld_obj(WORLDOBJ_TANK, &tank_meshobj, add_tank, del_tank, NULL);
+	tank_meshobj = imesh(tank_mesh, tank_txarr, 37, ivec3f(float2f(1.5), 0, float2f(12.0)), ivec3f(int2f(-3), 0, float2f(2.5f)));
+	tank_worldobj = iworld_obj(WORLDOBJ_TANK, &tank_meshobj, NULL, add_tank, del_tank, tick_tank);
 
 
 	person_mesh[0] = itrianglef(ivec3f(0, int2f(4), 0), ivec3f(int2f(2), int2f(4), 0), ivec3f(0, 0, 0), 0, 0, 0);
@@ -195,6 +195,8 @@ void init(void) {
 	for (i = 0; i < 10; i++) {
 		tree_nodes[i] = w_register(&tree_worldobjs[i], NULL);
 	}
+
+	w_tick(0);
 
 	// some call might have modified it (called quit())
 	if (gamestate == GAMESTATE_PREINIT) {
@@ -238,34 +240,34 @@ void tick(void) {
 	Bdisp_PutDisp_DD();
 
     if (IsKeyDown(KEY_CTRL_UP)) {
-		pitch -= delta;
+		cam->pitch -= delta;
 	}
 	if (IsKeyDown(KEY_CTRL_DOWN)) {
-		pitch += delta;
+		cam->pitch += delta;
 	}
 	if (IsKeyDown(KEY_CTRL_RIGHT)) {
-		yaw -= delta;
+		cam->yaw -= delta;
 	}
 	if (IsKeyDown(KEY_CTRL_LEFT)) {
-		yaw += delta;
+		cam->yaw += delta;
 	}
 
-	pitch = clamp_f(pitch, float2f(-90*DEG2RAD_MULT), float2f(90*DEG2RAD_MULT));
+	cam->pitch = clamp_f(cam->pitch, float2f(-90*DEG2RAD_MULT), float2f(90*DEG2RAD_MULT));
 
-	yaw = mod_f(yaw, float2f(360*DEG2RAD_MULT));
+	cam->yaw = mod_f(cam->yaw, float2f(360*DEG2RAD_MULT));
 
 	t = ivec3f(0, 0, 0);
 	if (IsKeyDown(KEY_CHAR_8)) {
-		t = rot(ivec3f(0, 0, speed), 0, yaw);
+		t = rot(ivec3f(0, 0, speed), 0, cam->yaw);
 	}
 	if (IsKeyDown(KEY_CHAR_2)) {
-		t = rot(ivec3f(0, 0, speed), 0, yaw + float2f(180*DEG2RAD_MULT));
+		t = rot(ivec3f(0, 0, speed), 0, cam->yaw + float2f(180*DEG2RAD_MULT));
 	}
 	if (IsKeyDown(KEY_CHAR_4)) {
-		t = rot(ivec3f(0, 0, speed), 0, yaw + float2f(90*DEG2RAD_MULT));
+		t = rot(ivec3f(0, 0, speed), 0, cam->yaw + float2f(90*DEG2RAD_MULT));
 	}
 	if (IsKeyDown(KEY_CHAR_6)) {
-		t = rot(ivec3f(0, 0, speed), 0, yaw - float2f(90*DEG2RAD_MULT));
+		t = rot(ivec3f(0, 0, speed), 0, cam->yaw - float2f(90*DEG2RAD_MULT));
 	}
 	if (IsKeyDown(KEY_CHAR_9)) {
 		t = ivec3f(0, speed, 0);
@@ -273,7 +275,7 @@ void tick(void) {
 	if (IsKeyDown(KEY_CHAR_3)) {
 		t = ivec3f(0, -speed, 0);
 	}
-	addpvv(&pos, t);
+	cam->pos = addvv(cam->pos, t);
 
 	toggle_rising(&overlay, IsKeyDown(KEY_CTRL_F3));
 

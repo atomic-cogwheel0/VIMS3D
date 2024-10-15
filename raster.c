@@ -162,7 +162,7 @@ int g_rasterize_buf(camera *cam) {
 
 	// iterate on every triangle in the buffer
 	for (curr_tidx = 0; curr_tidx < tbuf_idx; curr_tidx++) {
-		t = move(tbuf[curr_tidx], cam->pos, cam->pitch, cam->yaw); // transform to camera
+		t = transform_tri_to_camera(tbuf[curr_tidx], *cam); // transform to camera
 
 		nrm = normal(tbuf[curr_tidx]);
 		ctot = subvv(tbuf[curr_tidx].a, cam->pos);

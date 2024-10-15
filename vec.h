@@ -73,6 +73,12 @@ void subpvv(vec3f *t, vec3f v);
 void mulpvf(vec3f *t, fixed f);
 
 typedef struct {
+	vec3f pos;
+	fixed yaw;
+	fixed pitch;
+} camera;
+
+typedef struct {
 	vec3f a;
 	vec3f b;
 	vec3f c;
@@ -84,8 +90,9 @@ typedef struct {
 // initialize trianglef
 trianglef itrianglef(vec3f a, vec3f b, vec3f c, texture_t *tx, uuid_t id, bool flip);
 
-// transform triangle (offset with vector q then rotated around origin)
-trianglef move(trianglef q, vec3f v, fixed pitch, fixed yaw);
+trianglef transform_tri_from_zero(trianglef q, vec3f v, fixed pitch, fixed yaw);
+trianglef transform_tri_to_camera(trianglef q, camera cam);
+
 vec3f normal(trianglef q);
 
 #endif

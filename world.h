@@ -34,6 +34,8 @@ typedef struct _wobj {
 	uuid_t mesh_id; // set this in add_obj()
 	mesh *mesh; // may be NULL
 
+	void *data; // pointer to basically any data needed for this object
+
 	// function pointers (obj is a ptr to this object, l is the list of world objects, pl is the player)
 	int (*add_obj)(struct _wobj *obj, llist l); // runs automatically, immediately after w_register() adds it to its list of objects
 	int (*del_obj)(struct _wobj *obj, llist l); // runs automatically, before w_deregister() removes it from the list
@@ -41,7 +43,7 @@ typedef struct _wobj {
 } world_obj;
 
 // returns a new world object, m is memcpyed, so feel free to modify it afterwards (BUT DO NOT EDIT THE ARRS)
-world_obj iworld_obj(uint8_t t, mesh *m, int (*a)(world_obj *, llist), int (*d)(world_obj *, llist), int (*tk)(world_obj *, llist, world_obj *, fixed));
+world_obj iworld_obj(uint8_t t, mesh *m, void *dataptr, int (*a)(world_obj *, llist), int (*d)(world_obj *, llist), int (*tk)(world_obj *, llist, world_obj *, fixed));
 // delete a world object (frees malloced memory)
 void dworld_obj(world_obj obj);
 
@@ -60,7 +62,9 @@ world_obj *w_getplayer(void);
 // initialize list, player, bufs
 int w_init(void);
 
+// sets the world's camera object to be newcam
 int w_setcam(camera *newcam);
+// gets the current camera instance of the world
 camera *w_getcam(void);
 
 // tick every object, passes timescale as arg to tick_obj()
