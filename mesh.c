@@ -133,9 +133,9 @@ int m_collide(mesh *a, mesh *b) {
 		return FALSE;
 
 	for (i = 0; i < a->coll_cnt; i++) {
-		tr_a = c_move_collider(a->coll_arr[i], a->pos);
+		tr_a = c_move_collider(a->coll_arr[i], subvv(a->pos, a->ctr));
 		for (j = 0; j < b->coll_cnt; j++) {
-			tr_b = c_move_collider(b->coll_arr[i], b->pos);
+			tr_b = c_move_collider(b->coll_arr[i], subvv(b->pos, b->ctr));
 			if (c_do_colliders_collide(tr_a, tr_b))
 				return TRUE;
 		}
