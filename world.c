@@ -149,7 +149,7 @@ void l_append(llist l, node *n) {
 }
 
 void l_prepend(llist l, node *n) {
-	l_insert_before(l, n, l.tail);
+	l_insert_before(l, n, l.head);
 }
 
 void l_rmnode(llist l, node *n) {
