@@ -17,84 +17,8 @@
 mesh **mbuf;
 unsigned short mbuf_idx = 0;
 signed short zindex_max = 0;
-uuid_t m_uuid = 1;				// nothing gets uuid 0
 
 int m_status = SUBSYS_DOWN;
-
-// simplifies internal calculation
-bool _c_collide_sphere_aabb(collider sphere, collider aabb);
-
-collider icoll_sphere(vec3f ctr, fixed r) {
-	collider coll;
-	coll.type = COLLIDER_SPHERE;
-	coll.shape.sphere.ctr = ctr;
-	coll.shape.sphere.radius = r;
-	return coll;
-}
-
-collider icoll_aabb(vec3f pt, vec3f opp) {
-	collider coll;
-	coll.type = COLLIDER_AABB;
-	coll.shape.aabb.pt = pt;
-	coll.shape.aabb.opp = opp;
-	return coll;
-}
-
-bool c_do_colliders_collide(collider a, collider b) {
-	if (a.type == COLLIDER_SPHERE && b.type == COLLIDER_SPHERE) {
-		return (a.shape.sphere.radius + b.shape.sphere.radius >= magnitude(subvv(b.shape.sphere.ctr, a.shape.sphere.ctr)));
-	}
-	if (a.type == COLLIDER_AABB && b.type == COLLIDER_AABB) {
-		if ((max(a.shape.aabb.pt.x, a.shape.aabb.opp.x) >= min(b.shape.aabb.pt.x, b.shape.aabb.opp.x)) && (min(a.shape.aabb.pt.x, a.shape.aabb.opp.x) <= max(b.shape.aabb.pt.x, b.shape.aabb.opp.x)) && 
-		    (max(a.shape.aabb.pt.y, a.shape.aabb.opp.y) >= min(b.shape.aabb.pt.y, b.shape.aabb.opp.y)) && (min(a.shape.aabb.pt.y, a.shape.aabb.opp.y) <= max(b.shape.aabb.pt.y, b.shape.aabb.opp.y)) &&
-		    (max(a.shape.aabb.pt.z, a.shape.aabb.opp.z) >= min(b.shape.aabb.pt.z, b.shape.aabb.opp.z)) && (min(a.shape.aabb.pt.z, a.shape.aabb.opp.z) <= max(b.shape.aabb.pt.z, b.shape.aabb.opp.z))) return TRUE;
-	}
-	if (a.type == COLLIDER_SPHERE && b.type == COLLIDER_AABB) {
-		return _c_collide_sphere_aabb(a, b);
-	}
-	if (a.type == COLLIDER_AABB && b.type == COLLIDER_SPHERE) {
-		return _c_collide_sphere_aabb(b, a);
-	}
-	return FALSE;
-}
-
-bool c_pt_within_collider(vec3f pt, collider c) {
-	if (c.type == COLLIDER_SPHERE) {
-		return (c.shape.sphere.radius >= magnitude(subvv(c.shape.sphere.ctr, pt)));
-	}
-	if (c.type == COLLIDER_AABB) {
-		if ((min(c.shape.aabb.pt.x, c.shape.aabb.opp.x) <= pt.x && max(c.shape.aabb.pt.x, c.shape.aabb.opp.x) >= pt.x) &&
-			(min(c.shape.aabb.pt.y, c.shape.aabb.opp.y) <= pt.y && max(c.shape.aabb.pt.x, c.shape.aabb.opp.y) >= pt.y) &&
-			(min(c.shape.aabb.pt.z, c.shape.aabb.opp.z) <= pt.z && max(c.shape.aabb.pt.z, c.shape.aabb.opp.z) >= pt.z)) return TRUE;
-	}
-	return FALSE;
-}
-
-collider c_move_collider(collider c, vec3f v) {
-	if (c.type == COLLIDER_SPHERE) {
-		c.shape.sphere.ctr = addvv(c.shape.sphere.ctr, v);
-	}
-	if (c.type == COLLIDER_AABB) {
-		c.shape.aabb.pt = addvv(c.shape.aabb.pt, v);
-		c.shape.aabb.opp = addvv(c.shape.aabb.opp, v);
-	}
-	return c;
-}
-
-bool _c_collide_sphere_aabb(collider sphere, collider aabb) {
-	vec3f closest_pt;
-
-	// is the sphere inside the AABB?
-	if (c_pt_within_collider(sphere.shape.sphere.ctr, aabb)) return TRUE;
-	
-	// find closest point of the AABB to the sphere by clamping coords of the center onto the surface of the AABB
-	closest_pt.x = clamp_f(sphere.shape.sphere.ctr.x, min(aabb.shape.aabb.pt.x, aabb.shape.aabb.opp.x), max(aabb.shape.aabb.pt.x, aabb.shape.aabb.opp.x));
-	closest_pt.y = clamp_f(sphere.shape.sphere.ctr.y, min(aabb.shape.aabb.pt.y, aabb.shape.aabb.opp.y), max(aabb.shape.aabb.pt.y, aabb.shape.aabb.opp.y));
-	closest_pt.z = clamp_f(sphere.shape.sphere.ctr.z, min(aabb.shape.aabb.pt.z, aabb.shape.aabb.opp.z), max(aabb.shape.aabb.pt.z, aabb.shape.aabb.opp.z));
-
-	// is closest point within radius?
-	return c_pt_within_collider(closest_pt, sphere);
-}
 
 mesh imesh(trianglef *arr, texture_ptr_t *tx_arr, uint8_t arrlen, vec3f pos, vec3f ctr) {
 	mesh m;
@@ -150,7 +74,6 @@ int m_clrbuf(void) {
 	memset((char *)mbuf, 0, MBUF_SIZ*sizeof(mesh *));
 	mbuf_idx = 0;
 	zindex_max = 0;
-	m_uuid = 1;
 	return S_SUCCESS;
 }
 
@@ -169,14 +92,12 @@ int m_getstatus(void) {
 int m_addmesh(mesh *m, mesh ***added_unique_ptr) {
 	if (m_status != SUBSYS_UP) return S_EDOWN;
 	if (m == NULL) return S_ENULLPTR;
-	if (m_uuid < UUID_MAX) {
-		if (mbuf_idx < MBUF_SIZ-1) {
-			mbuf[mbuf_idx] = m;
-			if (added_unique_ptr != NULL)
-				*added_unique_ptr = &mbuf[mbuf_idx];
-			mbuf_idx++;
-			return S_SUCCESS;
-		}
+	if (mbuf_idx < MBUF_SIZ-1) {
+		mbuf[mbuf_idx] = m;
+		if (added_unique_ptr != NULL)
+			*added_unique_ptr = &mbuf[mbuf_idx];
+		mbuf_idx++;
+		return S_SUCCESS;
 	}
 	return S_EBUFFULL;
 }
@@ -312,4 +233,79 @@ int m_rendermeshes(bool debug_overlay, camera *cam) {
 	return deltaticks;
 }
 
+// --- collision code ---
 
+// simplifies internal calculation
+bool _c_collide_sphere_aabb(collider sphere, collider aabb);
+
+collider icoll_sphere(vec3f ctr, fixed r) {
+	collider coll;
+	coll.type = COLLIDER_SPHERE;
+	coll.shape.sphere.ctr = ctr;
+	coll.shape.sphere.radius = r;
+	return coll;
+}
+
+collider icoll_aabb(vec3f pt, vec3f opp) {
+	collider coll;
+	coll.type = COLLIDER_AABB;
+	coll.shape.aabb.pt = pt;
+	coll.shape.aabb.opp = opp;
+	return coll;
+}
+
+bool c_do_colliders_collide(collider a, collider b) {
+	if (a.type == COLLIDER_SPHERE && b.type == COLLIDER_SPHERE) {
+		return (a.shape.sphere.radius + b.shape.sphere.radius >= magnitude(subvv(b.shape.sphere.ctr, a.shape.sphere.ctr)));
+	}
+	if (a.type == COLLIDER_AABB && b.type == COLLIDER_AABB) {
+		if ((max(a.shape.aabb.pt.x, a.shape.aabb.opp.x) >= min(b.shape.aabb.pt.x, b.shape.aabb.opp.x)) && (min(a.shape.aabb.pt.x, a.shape.aabb.opp.x) <= max(b.shape.aabb.pt.x, b.shape.aabb.opp.x)) && 
+			(max(a.shape.aabb.pt.y, a.shape.aabb.opp.y) >= min(b.shape.aabb.pt.y, b.shape.aabb.opp.y)) && (min(a.shape.aabb.pt.y, a.shape.aabb.opp.y) <= max(b.shape.aabb.pt.y, b.shape.aabb.opp.y)) &&
+			(max(a.shape.aabb.pt.z, a.shape.aabb.opp.z) >= min(b.shape.aabb.pt.z, b.shape.aabb.opp.z)) && (min(a.shape.aabb.pt.z, a.shape.aabb.opp.z) <= max(b.shape.aabb.pt.z, b.shape.aabb.opp.z))) return TRUE;
+	}
+	if (a.type == COLLIDER_SPHERE && b.type == COLLIDER_AABB) {
+		return _c_collide_sphere_aabb(a, b);
+	}
+	if (a.type == COLLIDER_AABB && b.type == COLLIDER_SPHERE) {
+		return _c_collide_sphere_aabb(b, a);
+	}
+	return FALSE;
+}
+
+bool c_pt_within_collider(vec3f pt, collider c) {
+	if (c.type == COLLIDER_SPHERE) {
+		return (c.shape.sphere.radius >= magnitude(subvv(c.shape.sphere.ctr, pt)));
+	}
+	if (c.type == COLLIDER_AABB) {
+		if ((min(c.shape.aabb.pt.x, c.shape.aabb.opp.x) <= pt.x && max(c.shape.aabb.pt.x, c.shape.aabb.opp.x) >= pt.x) &&
+			(min(c.shape.aabb.pt.y, c.shape.aabb.opp.y) <= pt.y && max(c.shape.aabb.pt.x, c.shape.aabb.opp.y) >= pt.y) &&
+			(min(c.shape.aabb.pt.z, c.shape.aabb.opp.z) <= pt.z && max(c.shape.aabb.pt.z, c.shape.aabb.opp.z) >= pt.z)) return TRUE;
+	}
+	return FALSE;
+}
+
+collider c_move_collider(collider c, vec3f v) {
+	if (c.type == COLLIDER_SPHERE) {
+		c.shape.sphere.ctr = addvv(c.shape.sphere.ctr, v);
+	}
+	if (c.type == COLLIDER_AABB) {
+		c.shape.aabb.pt = addvv(c.shape.aabb.pt, v);
+		c.shape.aabb.opp = addvv(c.shape.aabb.opp, v);
+	}
+	return c;
+}
+
+bool _c_collide_sphere_aabb(collider sphere, collider aabb) {
+	vec3f closest_pt;
+
+	// is the sphere inside the AABB?
+	if (c_pt_within_collider(sphere.shape.sphere.ctr, aabb)) return TRUE;
+
+	// find closest point of the AABB to the sphere by clamping coords of the center onto the surface of the AABB
+	closest_pt.x = clamp_f(sphere.shape.sphere.ctr.x, min(aabb.shape.aabb.pt.x, aabb.shape.aabb.opp.x), max(aabb.shape.aabb.pt.x, aabb.shape.aabb.opp.x));
+	closest_pt.y = clamp_f(sphere.shape.sphere.ctr.y, min(aabb.shape.aabb.pt.y, aabb.shape.aabb.opp.y), max(aabb.shape.aabb.pt.y, aabb.shape.aabb.opp.y));
+	closest_pt.z = clamp_f(sphere.shape.sphere.ctr.z, min(aabb.shape.aabb.pt.z, aabb.shape.aabb.opp.z), max(aabb.shape.aabb.pt.z, aabb.shape.aabb.opp.z));
+
+	// is closest point within radius?
+	return c_pt_within_collider(closest_pt, sphere);
+}
