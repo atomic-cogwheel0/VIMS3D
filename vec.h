@@ -89,6 +89,9 @@ typedef struct {
 // initialize trianglef
 trianglef itrianglef(vec3f a, vec3f b, vec3f c, texture_t *tx, bool flip);
 
+vec3f transform_vec_from_zero(vec3f u, vec3f v, fixed pitch, fixed yaw);
+vec3f transform_vec_to_camera(vec3f u, camera cam);
+
 trianglef transform_tri_from_zero(trianglef q, vec3f v, fixed pitch, fixed yaw);
 trianglef transform_tri_to_camera(trianglef q, camera cam);
 

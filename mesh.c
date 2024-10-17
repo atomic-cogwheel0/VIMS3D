@@ -44,7 +44,7 @@ mesh ibill(trianglef *arr, texture_ptr_t *tx_pseudo_arr, vec3f pos) {
 	m.coll_arr = NULL;
 	m.coll_cnt = 0;
 	m.pos = pos;
-	m.ctr = ivec3f(0, divfi(arr[0].a.x + arr[0].b.x, 2), 0);
+	m.ctr = ivec3f(divfi(min(arr[0].a.x, arr[0].b.x, arr[0].c.x) + max(arr[0].a.x, arr[0].b.x, arr[0].c.x), 2), 0, divfi(min(arr[0].a.z, arr[0].b.z, arr[0].c.z) + max(arr[0].a.z, arr[0].b.z, arr[0].c.z), 2));
 	m.yaw = 0;
 	m.flag_renderable = TRUE;
 	m.flag_has_collision = FALSE;
@@ -169,6 +169,7 @@ int m_rendermeshes(bool debug_overlay, camera *cam) {
 	g_draw_horizon(cam);
 
 	for (m_iter = 0; m_iter < mbuf_idx; m_iter++) {
+		// TODO: separate this into physics ticks
 		if (mbuf[m_iter]->flag_is_billboard) {
 			mbuf[m_iter]->yaw = cam->yaw;
 		}
@@ -176,7 +177,6 @@ int m_rendermeshes(bool debug_overlay, camera *cam) {
 			continue;
 		g_clrbuf();
 		for (t_iter = 0; t_iter < mbuf[m_iter]->tr_cnt; t_iter++) {
-			// TODO: separate this into physics ticks
 			curr = transform_tri_from_zero(mbuf[m_iter]->mesh_arr[t_iter], subvv(ivec3f(0, 0, 0), mbuf[m_iter]->ctr), 0, 0);
 			curr = transform_tri_from_zero(curr, mbuf[m_iter]->pos, 0, mbuf[m_iter]->yaw);
 
@@ -208,7 +208,7 @@ int m_rendermeshes(bool debug_overlay, camera *cam) {
 	deltaticks = time_e2-time_s;
 	if (deltaticks < 1) deltaticks = 1; 
 
-	//if (deltaticks > 128) deltaticks -= 128; // the emulator sometimes skips a whole second :)
+	if (deltaticks > 128) deltaticks -= 128; // the emulator sometimes skips a whole second :)
 
 #ifndef BENCHMARK_RASTER
 	if (debug_overlay) {

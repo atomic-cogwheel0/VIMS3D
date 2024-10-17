@@ -96,6 +96,14 @@ void w_tick(fixed timescale) {
 	}
 }
 
+int w_run_on_every_obj(int (*func)(world_obj *obj, llist l, world_obj *pl, void *data), void *arg) {
+	node *curr_ptr = wlist.head;
+	while (curr_ptr != NULL) {
+		func(curr_ptr->data, wlist, &player, arg);
+		curr_ptr = curr_ptr->next;
+	}
+}
+
 int _tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timescale) {
 	return S_SUCCESS;
 }

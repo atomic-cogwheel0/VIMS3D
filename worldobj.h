@@ -3,9 +3,6 @@
 
 #include "world.h"
 
-// returns vec from x and z of v
-vec3f remove_y_data(vec3f v);
-
 // default functions for handling static mesh world objects
 
 // calls m_addmesh()
@@ -18,8 +15,10 @@ world_obj iworld_obj_static_mesh(uint8_t t, mesh *m);
 
 // ---- specific handlers ----
 
+int tick_person(world_obj *person, llist l, world_obj *player, fixed timescale);
+
 int add_tank(world_obj *tank, llist l);
 #define del_tank common_del_object_with_mesh
-int tick_tank(world_obj *this_tank, llist l, world_obj *player, fixed timescale);
+int tick_tank(world_obj *tank, llist l, world_obj *player, fixed timescale);
 
 #endif

@@ -14,7 +14,7 @@ typedef struct _node {
 	struct _wobj *data;
 } node;
 
-// linked list (has a single instance, world objects are added to it)
+// linked list (has a single instance in world.c, world objects are added to it)
 typedef struct {
 	struct _node *head;
 	struct _node *tail;
@@ -56,6 +56,9 @@ node *w_register(world_obj *obj, int *status);
 // remove an object (don't tick it anymore, run obj->data->del_obj()) by a pointer to its node
 int w_deregister(node *obj);
 
+// run the given function on every object
+int w_run_on_every_obj(int (*func)(world_obj *obj, llist l, world_obj *pl, void *data), void *arg);
+
 // get the player w_obj instance
 world_obj *w_getplayer(void);
 
@@ -69,6 +72,7 @@ camera *w_getcam(void);
 
 // tick every object, passes timescale as arg to tick_obj()
 void w_tick(fixed timescale);
+
 
 // allocate a new node on the heap
 node *alloc_node(world_obj *data);
