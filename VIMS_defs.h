@@ -3,6 +3,12 @@
 
 #include "fxlib.h"
 
+/*
+
+
+
+*/
+
 // rebuild all if changed
 //#define DEBUG_BUILD
 //#define BENCHMARK_RASTER
@@ -39,14 +45,14 @@ void toggle_rising(toggle_t *t, bool state);
 void toggle_falling(toggle_t *t, bool state);
 
 // status codes
-#define S_SUCCESS 0
-#define S_EALLOC -1
-#define S_EEMPTY -2
-#define S_EBUFFULL -3
-#define S_ENEXIST -4
-#define S_ENULLPTR -5
-#define S_EALREADYINITED -6
-#define S_EDOWN -7
-#define S_EIMPLEMENT -8
+#define S_SUCCESS 0			// function did everything successfully/error-free
+#define S_EALLOC -1			// function could not allocate needed RAM
+#define S_EEMPTY -2			// function was run with an empty buffer
+#define S_EBUFFULL -3		// the subsystem's array is full
+#define S_ENEXIST -4		// argument was not in the subsystem's array
+#define S_ENULLPTR -5		// function was passed a NULL pointer
+#define S_EALREADYINITED -6	// subsystem was already initialized [init() called twice]
+#define S_EDOWN -7			// subsystem is down
+#define S_EIMPLEMENT -8		// requested feature not implemented
 
 #endif

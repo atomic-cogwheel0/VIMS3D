@@ -80,6 +80,8 @@ void init(void) {
 
 	w_setcam(&game_cam);
 
+	srand(RTC_GetTicks());
+
 	for (i = 0; i < 72; i++) {
 		tank_txarr[i] = &textures[TX_WHITE];
 	}
@@ -176,20 +178,18 @@ void init(void) {
 
 	person_txarr[0] = &textures[TX_PERSON];
 
-	person_meshobj = ibill(person_mesh, person_txarr, ivec3f(float2f(6.0),0,float2f(5.0)));
-	person_worldobj = iworld_obj_static_mesh(WORLDOBJ_PERSON, &person_meshobj);
+	person_meshobj = ibill(person_mesh, person_txarr, ivec3f(int2f(rand()%40-20), 0, int2f(rand()%40-20)));
+	person_worldobj = iworld_obj(WORLDOBJ_PERSON, &person_meshobj, NULL, common_add_object_with_mesh, common_del_object_with_mesh, tick_person);
 
 
 	tree_mesh[0] = itrianglef(ivec3f(0, int2f(12), 0), ivec3f(int2f(6), int2f(12), 0), ivec3f(0, 0, 0), 0, 0);
 	tree_mesh[1] = itrianglef(ivec3f(int2f(6), 0, 0), ivec3f(0, 0, 0), ivec3f(int2f(6), int2f(12), 0), 0, 0);
 
 	tree_txarr[0] = &textures[TX_TREE];
-
-	for (i = 0; i < 5; i++) {
-		tree_meshobj = ibill(tree_mesh, tree_txarr, ivec3f(int2f(6), 0, int2f(i*18)));
+	
+	for (i = 0; i < 10; i++) {
+		tree_meshobj = ibill(tree_mesh, tree_txarr, ivec3f(int2f(rand()%40-20) * 4, 0, int2f(rand()%40-20) * 4));
 		tree_worldobjs[i] = iworld_obj_static_mesh(WORLDOBJ_TREE, &tree_meshobj);
-		tree_meshobj = ibill(tree_mesh, tree_txarr, ivec3f(int2f(-6),0,int2f(i*18)));
-		tree_worldobjs[i+5] = iworld_obj_static_mesh(WORLDOBJ_TREE, &tree_meshobj);
 	}
 
 	w_register(&tank_worldobj, NULL);

@@ -151,9 +151,8 @@ int g_rasterize_buf(camera *cam) {
 		ctot = subvv(curr_t.a, cam->pos);
 
 		// cull
-		if (t.a.z < float2f(.5f) || t.b.z < float2f(.5f) || t.c.z < float2f(.5f) ||							// near-plane
-		    (t.a.z > int2f(64) && t.b.z > int2f(64) && t.c.z > int2f(64)) ||								// far-plane
-		    dotp(ctot, nrm) >= 0) {													// backface
+		if (t.a.z < float2f(.5f) || t.b.z < float2f(.5f) || t.c.z < float2f(.5f) ||		// near-plane
+		    dotp(ctot, nrm) >= 0) {														// backface
 			continue;
 		}
 
