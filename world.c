@@ -133,7 +133,7 @@ int _tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timesc
 static unsigned char buf[64]; // for sprintf()
 
 int w_render_world(bool debug_overlay, camera *cam) {
-	int m_iter, t_iter, dx, dy, i;
+	int m_cnt = 0, t_iter, dx, dy, i;
 	unsigned int time_s, time_e2, deltaticks, tr_cnt = 0;
 	trianglef curr;
 	int16_t **depthbuf; // the pixel depth buffer, reset before meshes are rendered
@@ -181,6 +181,7 @@ int w_render_world(bool debug_overlay, camera *cam) {
 #endif
 				tr_cnt += g_rasterize_buf(cam);
 		}
+		m_cnt++;
 		curr_ptr = curr_ptr->next;
 	}
 	// time after rendering
@@ -195,7 +196,7 @@ int w_render_world(bool debug_overlay, camera *cam) {
 	if (debug_overlay)
 #endif
 	{
-		sprintf(buf, "%4.1fms (%2.1ffps) %dt/%dm", (deltaticks)*(1000.0/128.0), 1000.0/((deltaticks)*(1000.0/128.0)), tr_cnt, m_iter);
+		sprintf(buf, "%4.1fms (%2.1ffps) %dt/%dm", (deltaticks)*(1000.0/128.0), 1000.0/((deltaticks)*(1000.0/128.0)), tr_cnt, m_cnt);
 		PrintMini(0, 0, (unsigned char *)buf, 0);
 
 		sprintf(buf, "%4.1f %4.1f %4.1f %4.1fp %4.1fy",	f2float(cam->pos.x),
