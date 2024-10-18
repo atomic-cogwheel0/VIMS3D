@@ -32,9 +32,11 @@ int g_init(void) {
 		return S_EALLOC;
 	}
 
+	// allocate every row of the depth buffer
 	for (i = 0; i < 64; i++) {
 		depthbuf[i] = (int16_t *) malloc(128*sizeof(int16_t));
 		if (depthbuf[i] == NULL) {
+			// cancel all previous allocations and return
 			g_dealloc();
 			g_status = SUBSYS_ERR;
 			return S_EALLOC;
@@ -42,14 +44,15 @@ int g_init(void) {
 	}
 	g_status = SUBSYS_UP;
 
+	// initialize bufs
 	g_clrbuf();
 
 	return S_SUCCESS;
 }
 
-// clear buffers, initialize 
 int g_clrbuf(void) {
 	if (g_status != SUBSYS_UP) return S_EDOWN;
+	// zero out buf
 	memset((char *)tbuf, 0, TBUF_SIZ*sizeof(trianglef));
 	tbuf_idx = 0;
 	return S_SUCCESS;
@@ -57,6 +60,7 @@ int g_clrbuf(void) {
 
 void g_dealloc(void) {
 	int i;
+	// free all buffers
 	if (tbuf != NULL) {
 		free(tbuf);
 		tbuf = NULL;
@@ -80,6 +84,7 @@ int16_t **g_getdepthbuf(void) {
 
 int g_addtriangle(trianglef t) {
 	if (g_status != SUBSYS_UP) return S_EDOWN;
+	// is there space left?
 	if (tbuf_idx < TBUF_SIZ-1) {
 		tbuf[tbuf_idx++] = t;
 		return S_SUCCESS;
@@ -90,10 +95,13 @@ int g_addtriangle(trianglef t) {
 int g_draw_horizon(camera *cam) {
 	int sspace_horiz_y;
 	if (g_status != SUBSYS_UP) return S_EDOWN;
+	// calculate onscreen y coordinate of the horizon line
 	sspace_horiz_y = f2int(mulff(sin_f(-cam->pitch), int2f(64))) + 32;
+	// is on screen?
 	if (sspace_horiz_y < 0 || sspace_horiz_y >= 64) {
 		return 0;
 	}
+	// draw line FAST
 	Bdisp_SYS_FastDrawLineVRAM(0, sspace_horiz_y, 127, sspace_horiz_y);
 	return 128;
 }
@@ -108,7 +116,7 @@ texture_t fallback_texture = {2, 2, 1, 1, tx_o_fallback};
 int g_rasterize_buf(camera *cam) {
 	int curr_tidx, xiterl, xiterr, xiter, yiter;
 	int bbox_left, bbox_right, bbox_top, bbox_bottom; // bounding box (on screen)
-	int q_cnt = 0;
+	int tri_cnt = 0;
 	trianglef curr_t;
 	fixed diff;
 
@@ -122,7 +130,7 @@ int g_rasterize_buf(camera *cam) {
 	fixed dot11_dot02, dot01_dot12, dot00_dot12, dot01_dot02;
 	fixed dot11_dot02_increment, dot01_dot12_increment, dot00_dot12_increment, dot01_dot02_increment;
 
-	uint8_t px, pxl;
+	uint8_t px, px_offset;
 	uint16_t u_mult, v_mult;
 
 	signed short depthval;
@@ -180,6 +188,7 @@ int g_rasterize_buf(camera *cam) {
 		bbox_right  = f2int(max(max(a.x, b.x), c.x));
 		bbox_bottom = f2int(max(max(a.y, b.y), c.y));
 
+		// is it entirely offscreen? (sanity check)
 		if (bbox_right < 0 || bbox_left > 127 || bbox_bottom < 0 || bbox_top > 63) continue;
 
 		bbox_left = clamp_i(bbox_left, 0, 127);
@@ -187,10 +196,9 @@ int g_rasterize_buf(camera *cam) {
 		bbox_right = clamp_i(bbox_right, 0, 127);
 		bbox_bottom = clamp_i(bbox_bottom, 0, 63);
 		
-		// is it entirely offscreen? (sanity check)
+		tri_cnt++;
 
-		q_cnt++;
-
+		// show missing texture instead of SYSTEM ERROR
 		if (t.tx == NULL) t.tx = &fallback_texture;
 
 		// U and V are the barycentric coordinates of a pixel within the current triangle in screen space
@@ -250,11 +258,13 @@ int g_rasterize_buf(camera *cam) {
 			dot02 = dotp2(v0, v2);
 			dot12 = dotp2(v1, v2);
 
+			// calculate products of dot products
 			dot11_dot02 = mulff(dot11, dot02);
 			dot01_dot12 = mulff(dot01, dot12);
 			dot00_dot12 = mulff(dot00, dot12);
 			dot01_dot02 = mulff(dot01, dot02);
 
+			// how much does a product of dotp's change in a cycle
 			dot11_dot02_increment = mulff(dot11, v0x_sc);
 			dot01_dot12_increment = mulff(dot01, v1x_sc);
 			dot00_dot12_increment = mulff(dot00, v1x_sc);
@@ -320,6 +330,7 @@ int g_rasterize_buf(camera *cam) {
 
 			if ((xiterr-xiterl) <= 0) continue; // probably a good idea to not render
 
+			// number of pixels to interpolate over
 			diff = int2f(xiterr-xiterl);
 
 			ozstep = divff(ozq-ozp, diff);
@@ -332,46 +343,51 @@ int g_rasterize_buf(camera *cam) {
 
 				depthval = (f2int(zci) << 5) | ((zci & FIXED_FRAC_MASK) >> (FIXED_PRECISION-5)); // transform 22+10bit zci to 11+5bit depth
 
+				// is current pixel closer than the last depth written there?
 				if (depthbuf[yiter][xiter] > depthval) {			
 					ui = divshiftfi(mulff(uzi, zci), ZREC_EXP+ZREC_EXP); // only use of divshiftfi is here
 					vi = divshiftfi(mulff(vzi, zci), ZREC_EXP+ZREC_EXP);
 
-					// index coordinates from the bottom right instead of top left
+					// calculate pixel offset into the array (row by row)
 					if (t.flip_texture) {
-						pxl = (t.tx->h-1 - f2int(ui)%t.tx->h)*t.tx->w + (t.tx->w-1 - f2int(vi)%t.tx->w);
+						// index coordinates from the bottom right instead of top left
+						px_offset = (t.tx->h-1 - f2int(ui)%t.tx->h)*t.tx->w + (t.tx->w-1 - f2int(vi)%t.tx->w);
 					}
 					else {
-						pxl = (f2int(ui)%t.tx->h)*t.tx->w + (f2int(vi)%t.tx->w);
+						px_offset = (f2int(ui)%t.tx->h)*t.tx->w + (f2int(vi)%t.tx->w);
 					}
-					px = (t.tx->tx_data[pxl>>2] & (3<<(2*(3-(pxl&3))))) >> (2*(3-(pxl&3))); // pxl>>2 = pxl/4; pxl&3 = pxl%4
+					// extract pixel at given offset (2 bit pixel extracted from byte arr)
+					px = (t.tx->tx_data[px_offset>>2] & (3<<(2*(3-(px_offset&3))))) >> (2*(3-(px_offset&3))); // pxl>>2 = pxl/4; pxl&3 = pxl%4
+					// is transparency bit set?
 					if (!(px & 2)) {
 						Bdisp_SetPoint_VRAM(xiter, yiter, px & 1);
-						depthbuf[yiter][xiter] = depthval;
+						depthbuf[yiter][xiter] = depthval; // write new depthval
 					}
 				}
 			}
 		}	
 	}
-	return q_cnt;
+	return tri_cnt;
 }
 
 int g_text3d(camera *cam, unsigned char *text, vec3f pos, unsigned int params) {
 	int sspace_x, sspace_y;
 	vec3f viewport_pos;
-	vec3f ctot;
 
 	if (text == NULL) return S_ENULLPTR;
 	if (g_status != SUBSYS_UP) return S_EDOWN;
 
-	ctot = subvv(pos, cam->pos);
-	viewport_pos = rot(subvv(pos, cam->pos), -cam->pitch, -cam->yaw);
+	viewport_pos = transform_vec_to_camera(pos, *cam);
 
+	// find screenspace coordinates of top left corner
 	sspace_x = f2int(divff(mulff(viewport_pos.x, int2f(64)), -viewport_pos.z)) + 64;
 	sspace_y = f2int(divff(mulff(viewport_pos.y, int2f(64)), -viewport_pos.z)) + 32;
 
-	// is in view?
+	// is in front of player (also near plane culling)
 	if (!(viewport_pos.z < float2f(0.25f))) {	
+		// is on screen?
 		if (sspace_x <= 127 && sspace_x >= 0 && sspace_y <= 63 && sspace_y >= 0) {
+			// pass drawing params over
 			return g_text2d(text, sspace_x, sspace_y, params);
 		}
 	}
@@ -398,14 +414,19 @@ int g_texture2d(texture_ptr_t tx, unsigned int x, unsigned int y) {
 
 	if (tx == NULL) return S_ENULLPTR;
 
+	// if tx is tiled, draw it multiple times
 	tiled_width = tx->w * tx->u_tile_size;
 	tiled_height = tx->h * tx->v_tile_size;
 
 	for (yiter = 0; yiter < tiled_height; yiter++) {
 		for (xiter = 0; xiter < tiled_width; xiter++) {
+			// add top left coords; is still onscreen?
 			if (xiter+x >= 0 && xiter+x < 128 && yiter+y >= 0 && yiter+y < 64) {
+				// calculate pixel offset into the array (row by row)
 				px_offset = ((yiter % tx->h) * tx->w) + xiter % tx->w;
+				// extract pixel at given offset (2 bit pixel extracted from byte arr)
 				px = (tx->tx_data[px_offset>>2] & (3<<(2*(3-px_offset&3)))) >> (2*(3-(px_offset&3)));
+				// is transparency bit set?
 				if (!(px & 2)) {
 					Bdisp_SetPoint_VRAM(xiter+x, yiter+y, px & 1);
 				}

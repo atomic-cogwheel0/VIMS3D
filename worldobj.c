@@ -20,13 +20,14 @@ int tick_person(world_obj *person, llist l, world_obj *player, fixed timescale) 
 
 int add_tank(world_obj *tank, llist l) {
 	common_add_object_with_mesh(tank, l);
-	tank->mesh->yaw = float2f(90*DEG2RAD_MULT);
+	tank->mesh->yaw = float2f(90*DEG2RAD_MULT); // the model is oriented on the wrong axis
 	return S_SUCCESS;
 }
 
+// finds angle between the horizontal components of two vectors (useful for pathfinding)
 fixed angle_horizontal_plane(vec3f u, vec3f v) {
-	fixed dot = mulff(u.x, v.x) + mulff(u.z, v.z);
-	fixed det = mulff(u.x, v.z) - mulff(u.z, v.x);
+	fixed dot = mulff(u.x, v.x) + mulff(u.z, v.z); // dot product
+	fixed det = mulff(u.x, v.z) - mulff(u.z, v.x); // determinant
 	fixed angle = float2f((float)atan2(f2float(det), f2float(dot)));
 	return angle;
 }
@@ -43,13 +44,16 @@ int tick_tank(world_obj *tank, llist l, world_obj *player, fixed timescale) {
 		if (ptr->data->type == WORLDOBJ_PERSON) {
 			person_to_tank = subvv(tank->mesh->pos, ptr->data->mesh->pos);
 
+			// check distance, find nearest person object
 			dist = magnitude(person_to_tank);
 			if (dist < dist_min) dist_min = dist;
 		}
 		ptr = ptr->next;
 	}
 	if (dist_min != FIXED_MAX) {
+		// nearest person has been found; target it
 		tank->mesh->yaw = float2f(90*DEG2RAD_MULT) + angle_horizontal_plane(person_to_tank, z_axis);
+		// move slowly towards the target
 		tank->mesh->pos = addvv(tank->mesh->pos, mulvf(normalize(neg(person_to_tank)), divfi(timescale, 8)));
 	}
 }

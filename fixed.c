@@ -123,14 +123,13 @@ void divpfi(fixed *t, int i) {
 	(*t) /= i;
 }
 
-// Bhaskara I sine approximation
-
 fixed sin_f(fixed t) {
 	const fixed      hpi = float2f(1.570796f);
 
 	return cos_f(t - hpi);
 }
 
+// Bhaskara I-based cosine approximation
 fixed cos_f(fixed t) {
 	const fixed      hpi = float2f(1.570796f);
 	const fixed       pi = float2f(3.141593f);

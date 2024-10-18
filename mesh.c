@@ -40,10 +40,11 @@ mesh ibill(trianglef *arr, texture_ptr_t *tx_pseudo_arr, vec3f pos) {
 	mesh m;
 	m.mesh_arr = arr;
 	m.tx_arr = tx_pseudo_arr;
-	m.tr_cnt = 2;
+	m.tr_cnt = 2; // billboards must have precisely two triangles
 	m.coll_arr = NULL;
 	m.coll_cnt = 0;
 	m.pos = pos;
+	// center point is in the bottom middle of the mesh (find it by averaging the coords)
 	m.ctr = ivec3f((min(arr[0].a.x, min(arr[0].b.x, arr[0].c.x)) + max(arr[0].a.x, max(arr[0].b.x, arr[0].c.x)))/2, 0, (min(arr[0].a.z, min(arr[0].b.z, arr[0].c.z)) + max(arr[0].a.z, max(arr[0].b.z, arr[0].c.z)))/2);
 	m.yaw = 0;
 	m.flag_renderable = TRUE;
@@ -64,6 +65,7 @@ int m_init(void) {
 	}
 	m_status = SUBSYS_UP;
 
+	// initialize bufs
 	m_clrbuf();
 
 	return S_SUCCESS;
@@ -71,6 +73,7 @@ int m_init(void) {
 
 int m_clrbuf(void) {
 	if (m_status != SUBSYS_UP) return S_EDOWN;
+	// zero out buf
 	memset((char *)mbuf, 0, MBUF_SIZ*sizeof(mesh *));
 	mbuf_idx = 0;
 	zindex_max = 0;
@@ -78,6 +81,7 @@ int m_clrbuf(void) {
 }
 
 void m_dealloc(void) {
+	// free the buffer
 	if (mbuf != NULL) {
 		free(mbuf);
 		mbuf = NULL;
@@ -92,9 +96,11 @@ int m_getstatus(void) {
 int m_addmesh(mesh *m, mesh ***added_unique_ptr) {
 	if (m_status != SUBSYS_UP) return S_EDOWN;
 	if (m == NULL) return S_ENULLPTR;
+	// is there space left?
 	if (mbuf_idx < MBUF_SIZ-1) {
 		mbuf[mbuf_idx] = m;
 		if (added_unique_ptr != NULL)
+			// set unique_ptr to the mesh pointer's address in the array
 			*added_unique_ptr = &mbuf[mbuf_idx];
 		mbuf_idx++;
 		return S_SUCCESS;
@@ -102,21 +108,28 @@ int m_addmesh(mesh *m, mesh ***added_unique_ptr) {
 	return S_EBUFFULL;
 }
 
+/*
+CURRENTLY NONFUNCTIONAL AS SHIFTING THE ARRAY DESTROYS ALL UNIQUE POINTERS!!! DO NOT CALL
+*/
 int m_removemesh(mesh ***unique_ptr_to_remove) {
-	int i, j;
+	int index, j;
 	if (m_status != SUBSYS_UP) return S_EDOWN;
 	if (unique_ptr_to_remove == NULL || *unique_ptr_to_remove == NULL) return S_ENULLPTR;
-	for(i = 0; i < mbuf_idx; i++) {
-		if (&mbuf[i] == *unique_ptr_to_remove) {
-			for (j = i; j < (mbuf_idx-1); j++) {
-				mbuf[j] = mbuf[j+1];
-			}
-			mbuf_idx--;
-			*unique_ptr_to_remove = NULL;
-			return S_SUCCESS;
-		}
+	
+	// find offset of unique_ptr into mbuf
+	index = (*unique_ptr_to_remove - mbuf)/sizeof(mesh *);
+
+	if (index < 0 || index >= mbuf_idx)
+		return S_ENEXIST;
+
+	// shift remaining array by one
+	for (j = index; j < (mbuf_idx-1); j++) {
+		mbuf[j] = mbuf[j+1];
 	}
-	return S_ENEXIST;
+	mbuf_idx--;
+
+	*unique_ptr_to_remove = NULL;
+	return S_SUCCESS;
 }
 
 
@@ -132,6 +145,7 @@ int m_collide(mesh *a, mesh *b) {
 	if (a->coll_cnt == 0 && b->coll_cnt == 0)
 		return FALSE;
 
+	// check every collider in their arrays, offset by their coordinates
 	for (i = 0; i < a->coll_cnt; i++) {
 		tr_a = c_move_collider(a->coll_arr[i], subvv(a->pos, a->ctr));
 		for (j = 0; j < b->coll_cnt; j++) {
@@ -156,13 +170,14 @@ int m_rendermeshes(bool debug_overlay, camera *cam) {
 
 	depthbuf = g_getdepthbuf();
 
+	// time before rendering
 	time_s = RTC_GetTicks();
 
+	// clear pixels and depth values
 	Bdisp_AllClr_VRAM();
-
 	for (dx = 0; dx < 128; dx++) {
 		for (dy = 0; dy < 64; dy++) {
-			depthbuf[dy][dx] = 0x7FFF;
+			depthbuf[dy][dx] = 0x7FFF; // MAX_FIXED16
 		}
 	}
 	
@@ -171,16 +186,19 @@ int m_rendermeshes(bool debug_overlay, camera *cam) {
 	for (m_iter = 0; m_iter < mbuf_idx; m_iter++) {
 		// TODO: separate this into physics ticks
 		if (mbuf[m_iter]->flag_is_billboard) {
-			mbuf[m_iter]->yaw = cam->yaw;
+			mbuf[m_iter]->yaw = cam->yaw; // rotate billboard towards camera
 		}
 		if (!mbuf[m_iter]->flag_renderable)
 			continue;
 		g_clrbuf();
+		// add every triangle in mesh
 		for (t_iter = 0; t_iter < mbuf[m_iter]->tr_cnt; t_iter++) {
-			curr = transform_tri_from_zero(mbuf[m_iter]->mesh_arr[t_iter], subvv(ivec3f(0, 0, 0), mbuf[m_iter]->ctr), 0, 0);
+			// move triangle to mesh coordinates
+			curr = transform_tri_from_zero(mbuf[m_iter]->mesh_arr[t_iter], neg(mbuf[m_iter]->ctr), 0, 0);
 			curr = transform_tri_from_zero(curr, mbuf[m_iter]->pos, 0, mbuf[m_iter]->yaw);
 
 			curr.tx = mbuf[m_iter]->tx_arr[mbuf[m_iter]->flag_is_billboard?0:t_iter];
+			// flip the second texture of billboards
 			if (mbuf[m_iter]->flag_is_billboard) {
 				curr.flip_texture = t_iter == 0 ? FALSE : TRUE;
 			}
@@ -203,13 +221,16 @@ int m_rendermeshes(bool debug_overlay, camera *cam) {
 #endif
 	}
 	
+	// time after rendering
 	time_e2 = RTC_GetTicks();
 
+	// calculate correct deltatick value
 	deltaticks = time_e2-time_s;
 	if (deltaticks < 1) deltaticks = 1; 
 
-	if (deltaticks > 128) deltaticks -= 128; // the emulator sometimes skips a whole second :)
+	//if (deltaticks > 128) deltaticks -= 128; // the emulator sometimes skips a whole second :)
 
+	// print debug data
 #ifndef BENCHMARK_RASTER
 	if (debug_overlay) {
 #else
@@ -227,7 +248,7 @@ int m_rendermeshes(bool debug_overlay, camera *cam) {
 #ifdef CROSSHAIR
 	Bdisp_AreaReverseVRAM(61, 32, 67, 32);
 	Bdisp_AreaReverseVRAM(64, 29, 64, 35);
-	Bdisp_AreaReverseVRAM(64, 32, 64, 32); //crosshair
+	Bdisp_AreaReverseVRAM(64, 32, 64, 32); 
 #endif
 
 	return deltaticks;

@@ -54,6 +54,7 @@ void toggle_falling(toggle_t *t, bool state);
 #define S_EDOWN -7			// subsystem is down
 #define S_EIMPLEMENT -8		// requested feature not implemented
 
+// if given expression is true, continues exec; if it is false, prints error and expression and halt()s program
 #define assert(a)	do { \
 						if (!(a)) { \
 							void halt(void); \

@@ -12,6 +12,7 @@ world_obj iworld_obj(uint8_t t, mesh *m, void *dataptr, int (*a)(world_obj *, ll
 	w.type = t;
 	w.mesh = NULL;
 	if (m != NULL) {
+		// copy mesh to a new separate location
 		w.mesh = malloc(sizeof(mesh));
 		memcpy(w.mesh, m, sizeof(mesh));
 	}
@@ -27,14 +28,17 @@ void dworld_obj(world_obj w) {
 }
 
 node *w_register(world_obj *obj, int *status) {
+	// allocate new node for the object
 	node *to_add = alloc_node(obj);
 
 	if (to_add == NULL)
 		if (status != NULL)
 			*status = S_EALLOC;
 
+	// add it to the world
 	l_append(wlist, to_add);
 
+	// call the object's add function
 	if (obj->add_obj != NULL) {
 		obj->add_obj(to_add->data, wlist);
 	}
@@ -48,13 +52,14 @@ int w_deregister(node *n) {
 	if (n == NULL)
 		return S_ENULLPTR;
 
+	// call the object's delete function
 	if (n->data->del_obj != NULL) {
 		n->data->del_obj(n->data, wlist);
 	}
 
+	// remove every trace of existence
 	l_rmnode(wlist, n);
 	free_node(n);
-	n = NULL;
 	return S_SUCCESS;
 }
 
@@ -76,6 +81,7 @@ world_obj *w_getplayer(void) {
 int _tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timescale);
 
 int w_init(void) {
+	// create a player obj without a mesh
 	player = iworld_obj(WORLDOBJ_PLAYER, NULL, &global_cam, NULL, NULL, _tick_player);
 	player_node = w_register(&player, NULL);
 	if (player_node == NULL)
@@ -88,6 +94,7 @@ int w_init(void) {
 }
 
 int w_free_world(void) {
+	// free everything and reset linked list
 	node *curr_ptr = wlist.head;
 	node *prev_ptr = NULL;
 	while (curr_ptr != NULL) {
@@ -103,6 +110,7 @@ int w_free_world(void) {
 void w_tick(fixed timescale) {
 	node *curr_ptr = wlist.head;
 	while (curr_ptr != NULL) {
+		// call the object's tick function
 		if (curr_ptr->data->tick_obj != NULL)
 			curr_ptr->data->tick_obj(curr_ptr->data, wlist, &player, timescale);
 		curr_ptr = curr_ptr->next;
@@ -110,6 +118,7 @@ void w_tick(fixed timescale) {
 }
 
 int w_run_on_every_obj(int (*func)(world_obj *obj, llist l, world_obj *pl, void *data), void *arg) {
+	// iterate over every registered object and run func() on them; the currently processed object is passed as obj
 	node *curr_ptr = wlist.head;
 	while (curr_ptr != NULL) {
 		func(curr_ptr->data, wlist, &player, arg);

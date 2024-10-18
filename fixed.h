@@ -20,6 +20,7 @@ the following operations do not need extra functions (use the built-in operators
 	mul/div fi
 */
 
+// fixed point constants
 #define FIXED_MAX ((fixed)0x7FFFFFFF)
 #define FIXED_MIN ((fixed)0x80000000)
 #define FIXED_EPSILON ((fixed)1)
@@ -28,6 +29,7 @@ the following operations do not need extra functions (use the built-in operators
 #define FIXED_WHOLE_MASK ((fixed)(0xFFFFFFFF>>FIXED_PRECISION)<<FIXED_PRECISION)
 #define FIXED_FRAC_MASK ((fixed)0xFFFFFFFF^FIXED_WHOLE_MASK)
 
+// for angle unit conversion (done as floats)
 #define DEG2RAD_MULT (3.1415926535898f/180.0f)
 #define RAD2DEG_MULT (180.0f/3.1415926535898f)
 
@@ -36,6 +38,8 @@ typedef int32_t fixed_full_t;
 typedef int64_t fixed_double_t;
 typedef fixed_full_t fixed;
 
+// defines certain functions as macros or real functions
+// rebuild all if changed
 #define MACRO_VAL2F
 #define MACRO_F2VAL
 #define MACRO_MULDIVF

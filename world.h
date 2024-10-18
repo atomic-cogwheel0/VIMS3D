@@ -32,11 +32,11 @@ typedef struct _wobj {
 	uint8_t type;
 
 	mesh *mesh; // may be NULL
-	mesh **instance_in_mesharr; // set this in add_obj
+	mesh **instance_in_mesharr; // set this in add_obj, points to the copy of `mesh` in the mesh subsystem's storage
 
 	void *data; // pointer to basically any data needed for this object
 
-	// function pointers (obj is a ptr to this object, l is the list of world objects, pl is the player)
+	// function pointers (when called: obj is a ptr to this object, l is the list of world objects, pl is the player)
 	int (*add_obj)(struct _wobj *obj, llist l); // runs automatically, immediately after w_register() adds it to its list of objects
 	int (*del_obj)(struct _wobj *obj, llist l); // runs automatically, before w_deregister() removes it from the list
 	int (*tick_obj)(struct _wobj *obj, llist l, struct _wobj *pl, fixed timescale); // run this every tick, with timescale based on the time it took to render last frame
@@ -56,7 +56,7 @@ node *w_register(world_obj *obj, int *status);
 // remove an object (don't tick it anymore, run obj->data->del_obj()) by a pointer to its node
 int w_deregister(node *obj);
 
-// run the given function on every object
+// run the given function on every object (currently processed object is passed as argument 1 (obj)
 int w_run_on_every_obj(int (*func)(world_obj *obj, llist l, world_obj *pl, void *data), void *arg);
 
 // get the player w_obj instance

@@ -26,6 +26,8 @@ typedef struct {
 	fixed z;
 } vec3f;
 
+// defines certain functions as macros or real functions
+// rebuild all if changed
 #define MACRO_DOTP
 #define MACRO_ADDSUBPV
 
@@ -89,12 +91,17 @@ typedef struct {
 // initialize trianglef
 trianglef itrianglef(vec3f a, vec3f b, vec3f c, texture_t *tx, bool flip);
 
+// rotate vector u around (0;0;0) with given angles and offset it with v
 vec3f transform_vec_from_zero(vec3f u, vec3f v, fixed pitch, fixed yaw);
+// transform vector from world space to camera relative space
 vec3f transform_vec_to_camera(vec3f u, camera cam);
 
+// rotate triangle q around (0;0;0) with given angles and offset it with v
 trianglef transform_tri_from_zero(trianglef q, vec3f v, fixed pitch, fixed yaw);
+// transform triangle from world space to camera relative space
 trianglef transform_tri_to_camera(trianglef q, camera cam);
 
+// calculate surface normal
 vec3f normal(trianglef q);
 
 #endif
