@@ -180,12 +180,6 @@ int w_render_world(bool debug_overlay, camera *cam) {
 			for (i = 0; i < 40; i++)
 #endif
 				tr_cnt += g_rasterize_buf(cam);
-#ifdef DEBUG_BUILD
-			if (debug_overlay) {
-				sprintf((char *)buf, "%d", m_iter);
-				g_text3d(cam, buf, subvv(ivec3f(0,int2f(16),0), mbuf[m_iter].pos), TEXT_SMALL | TEXT_INVERTED);
-			}
-#endif
 		}
 		curr_ptr = curr_ptr->next;
 	}
