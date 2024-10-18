@@ -4,9 +4,8 @@
 #include "fxlib.h"
 
 /*
-
-
-
+VIMS_defs:
+ defines miscellaneous utility functions
 */
 
 // rebuild all if changed

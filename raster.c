@@ -17,8 +17,6 @@ unsigned short tbuf_idx = 0;
 // depth buffer: a 128*64 array, every pixel has a 11+5 bit fixed-point depth value
 int16_t *depthbuf[64];
 
-unsigned char *vram;
-
 unsigned int g_status = SUBSYS_DOWN;
 
 // initialize all buffers (static alloc for buffers isn't possible)
@@ -45,8 +43,6 @@ int g_init(void) {
 	g_status = SUBSYS_UP;
 
 	g_clrbuf();
-
-	vram = GetVRAMAddress();
 
 	return S_SUCCESS;
 }

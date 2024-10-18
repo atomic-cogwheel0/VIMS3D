@@ -44,7 +44,7 @@ mesh ibill(trianglef *arr, texture_ptr_t *tx_pseudo_arr, vec3f pos) {
 	m.coll_arr = NULL;
 	m.coll_cnt = 0;
 	m.pos = pos;
-	m.ctr = ivec3f(divfi(min(arr[0].a.x, arr[0].b.x, arr[0].c.x) + max(arr[0].a.x, arr[0].b.x, arr[0].c.x), 2), 0, divfi(min(arr[0].a.z, arr[0].b.z, arr[0].c.z) + max(arr[0].a.z, arr[0].b.z, arr[0].c.z), 2));
+	m.ctr = ivec3f((min(arr[0].a.x, min(arr[0].b.x, arr[0].c.x)) + max(arr[0].a.x, max(arr[0].b.x, arr[0].c.x)))/2, 0, (min(arr[0].a.z, min(arr[0].b.z, arr[0].c.z)) + max(arr[0].a.z, max(arr[0].b.z, arr[0].c.z)))/2);
 	m.yaw = 0;
 	m.flag_renderable = TRUE;
 	m.flag_has_collision = FALSE;

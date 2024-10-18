@@ -16,12 +16,6 @@ _RTC_GetTicks:
 	jmp @r1
 	nop
 
-_GetVRAMAddress:
-	mov.l #H'80010070,r1
-	mov.w #H'0135, r0
-	jmp @r1
-	nop
-
 ; draws a line to VRAM, faster than the library one
 _Bdisp_SYS_FastDrawLineVRAM:
 	mov.l #H'80010070,r1

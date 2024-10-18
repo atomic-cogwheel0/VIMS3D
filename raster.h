@@ -9,7 +9,6 @@
 
 // syscalls
 int RTC_GetTicks(void);
-unsigned char *GetVRAMAddress(void);
 int Bdisp_SYS_FastDrawLineVRAM(int x1, int y1, int x2, int y2);
 
 #define MAX_TRIANGLES 72
