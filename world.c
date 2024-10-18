@@ -87,6 +87,19 @@ int w_init(void) {
 	return S_SUCCESS;
 }
 
+int w_free_world(void) {
+	node *curr_ptr = wlist.head;
+	node *prev_ptr = NULL;
+	while (curr_ptr != NULL) {
+		prev_ptr = curr_ptr;
+		curr_ptr = curr_ptr->next;
+		free_node(prev_ptr);
+	}
+	wlist.head = NULL;
+	wlist.tail = NULL;
+	return S_SUCCESS;
+}
+
 void w_tick(fixed timescale) {
 	node *curr_ptr = wlist.head;
 	while (curr_ptr != NULL) {

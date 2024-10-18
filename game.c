@@ -47,7 +47,6 @@ extern llist wlist;
 void init(void) {
 	int i;
 	mesh m, m2;
-	int g_ret, m_ret, w_ret;
 
 	game_cam.pos = ivec3f(float2f(-3.3), float2f(2.0), float2f(-13.0));
 	game_cam.pitch = float2f(10.0*DEG2RAD_MULT); 
@@ -56,27 +55,9 @@ void init(void) {
 	gdelta = 32.0f*DEG2RAD_MULT;
 	gspeed = 1.0f;
 
-	g_ret = g_init();
-	m_ret = m_init();
-	w_ret = w_init();
-
-	if (g_ret != S_SUCCESS || m_ret != S_SUCCESS || w_ret != S_SUCCESS) {
-		locate(1, 1);
-		Print((unsigned char *)"init() failed!");
-		if (g_ret == S_EALLOC) {
-			locate(1, 2);
-			Print((unsigned char *)"g_init() alloc fail");
-		}
-		if (m_ret == S_EALLOC) {
-			locate(1, 3);
-			Print((unsigned char *)"m_init() alloc fail");
-		}
-		if (w_ret == S_EALLOC) {
-			locate(1, 4);
-			Print((unsigned char *)"w_init() alloc fail");
-		}
-		return;
-	}
+	assert(g_init() == S_SUCCESS);
+	assert(m_init() == S_SUCCESS);
+	assert(w_init() == S_SUCCESS);
 
 	w_setcam(&game_cam);
 
@@ -200,7 +181,7 @@ void init(void) {
 
 	w_tick(0);
 
-	// some call might have modified it (called quit())
+	// some call might have modified it (called quit()/halt())
 	if (gamestate == GAMESTATE_PREINIT) {
 #ifndef BENCHMARK_RASTER
 		SetTimer(TICK_TIMER, TICK_MS, tick);
@@ -215,8 +196,31 @@ void init(void) {
 void quit(void) {
 	gamestate = GAMESTATE_QUIT_INPROG;
 	KillTimer(TICK_TIMER);
-	//KillTimer(DRAW_TIMER);
+	g_dealloc();
+	m_dealloc();
+	w_free_world();
 	gamestate = GAMESTATE_QUIT_DONE;
+}
+
+jmp_buf jmpbuf; // for halt handling
+
+void halt(void) {
+	gamestate = GAMESTATE_ERR;
+	KillTimer(TICK_TIMER);
+	g_dealloc();
+	m_dealloc();
+	w_free_world();
+	longjmp(jmpbuf, 1); // jump back to main (displays error screen)
+}
+
+void halt_msg(char *msg) {
+	locate(1,2);
+	Print((unsigned char *)msg);
+	halt();
+}
+
+jmp_buf *get_jmpbuf_ptr(void) {
+	return &jmpbuf;
 }
 
 void tick(void) {

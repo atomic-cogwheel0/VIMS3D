@@ -65,6 +65,9 @@ world_obj *w_getplayer(void);
 // initialize list, player, bufs
 int w_init(void);
 
+// free every node of the world list
+int w_free_world(void);
+
 // sets the world's camera object to be newcam
 int w_setcam(camera *newcam);
 // gets the current camera instance of the world

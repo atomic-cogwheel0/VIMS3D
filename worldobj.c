@@ -41,7 +41,6 @@ int tick_tank(world_obj *tank, llist l, world_obj *player, fixed timescale) {
 	ptr = l.head;
 	while (ptr->next != NULL) {
 		if (ptr->data->type == WORLDOBJ_PERSON) {
-
 			person_to_tank = subvv(tank->mesh->pos, ptr->data->mesh->pos);
 
 			dist = magnitude(person_to_tank);

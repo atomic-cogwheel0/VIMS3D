@@ -54,4 +54,13 @@ void toggle_falling(toggle_t *t, bool state);
 #define S_EDOWN -7			// subsystem is down
 #define S_EIMPLEMENT -8		// requested feature not implemented
 
+#define assert(a)	do { \
+						if (!(a)) { \
+							void halt(void); \
+							locate(1,2); Print((unsigned char *)"assertion failed!"); \
+							PrintMini(0,17,(unsigned char *)" " ## #a,MINI_OVER); \
+							halt(); \
+						} \
+					} while(0)
+
 #endif
