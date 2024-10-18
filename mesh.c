@@ -3,22 +3,7 @@
 /*
  MESH.C:
   functions for handling meshes and colliders
-  supported:
-	mesh addition, deletion, rotation, translation
-	collision boxes & spheres
-  the render process starts here
-    fills triangle buffers and calls g_rasterize_buf for each mesh
-    this adds some overhead but drastically reduces memory usage
 */
-
-// max number of meshes
-#define MBUF_SIZ 12
-
-mesh **mbuf;
-unsigned short mbuf_idx = 0;
-signed short zindex_max = 0;
-
-int m_status = SUBSYS_DOWN;
 
 mesh imesh(trianglef *arr, texture_ptr_t *tx_arr, uint8_t arrlen, vec3f pos, vec3f ctr) {
 	mesh m;
@@ -53,86 +38,6 @@ mesh ibill(trianglef *arr, texture_ptr_t *tx_pseudo_arr, vec3f pos) {
 	return m;
 }
 
-// initialize all buffers (static alloc for buffers is not possible)
-int m_init(void) {
-	if (m_status != SUBSYS_DOWN) return S_EALREADYINITED;
-
-	mbuf = (mesh **)malloc(MBUF_SIZ*sizeof(mesh *));
-
-	if (mbuf == NULL) {
-		m_status = SUBSYS_ERR;
-		return S_EALLOC;
-	}
-	m_status = SUBSYS_UP;
-
-	// initialize bufs
-	m_clrbuf();
-
-	return S_SUCCESS;
-}
-
-int m_clrbuf(void) {
-	if (m_status != SUBSYS_UP) return S_EDOWN;
-	// zero out buf
-	memset((char *)mbuf, 0, MBUF_SIZ*sizeof(mesh *));
-	mbuf_idx = 0;
-	zindex_max = 0;
-	return S_SUCCESS;
-}
-
-void m_dealloc(void) {
-	// free the buffer
-	if (mbuf != NULL) {
-		free(mbuf);
-		mbuf = NULL;
-	}
-	m_status = SUBSYS_DOWN;
-}
-
-int m_getstatus(void) {
-	return m_status;
-}
-
-int m_addmesh(mesh *m, mesh ***added_unique_ptr) {
-	if (m_status != SUBSYS_UP) return S_EDOWN;
-	if (m == NULL) return S_ENULLPTR;
-	// is there space left?
-	if (mbuf_idx < MBUF_SIZ-1) {
-		mbuf[mbuf_idx] = m;
-		if (added_unique_ptr != NULL)
-			// set unique_ptr to the mesh pointer's address in the array
-			*added_unique_ptr = &mbuf[mbuf_idx];
-		mbuf_idx++;
-		return S_SUCCESS;
-	}
-	return S_EBUFFULL;
-}
-
-/*
-CURRENTLY NONFUNCTIONAL AS SHIFTING THE ARRAY DESTROYS ALL UNIQUE POINTERS!!! DO NOT CALL
-*/
-int m_removemesh(mesh ***unique_ptr_to_remove) {
-	int index, j;
-	if (m_status != SUBSYS_UP) return S_EDOWN;
-	if (unique_ptr_to_remove == NULL || *unique_ptr_to_remove == NULL) return S_ENULLPTR;
-	
-	// find offset of unique_ptr into mbuf
-	index = (*unique_ptr_to_remove - mbuf)/sizeof(mesh *);
-
-	if (index < 0 || index >= mbuf_idx)
-		return S_ENEXIST;
-
-	// shift remaining array by one
-	for (j = index; j < (mbuf_idx-1); j++) {
-		mbuf[j] = mbuf[j+1];
-	}
-	mbuf_idx--;
-
-	*unique_ptr_to_remove = NULL;
-	return S_SUCCESS;
-}
-
-
 int m_collide(mesh *a, mesh *b) {
 	collider tr_a, tr_b;
 	int i, j;
@@ -155,103 +60,6 @@ int m_collide(mesh *a, mesh *b) {
 		}
 	}
 	return FALSE;
-}
-
-char buf[64]; // for sprintf
-
-int m_rendermeshes(bool debug_overlay, camera *cam) {
-	int m_iter, t_iter, dx, dy, i;
-	unsigned int time_s, time_e2, deltaticks, tr_cnt = 0;
-	trianglef curr;
-	int16_t **depthbuf; // the pixel depth buffer, reset before meshes are rendered
-	
-	if (m_status != SUBSYS_UP) return S_EDOWN;
-	if (g_getstatus() != SUBSYS_UP) return S_EDOWN;
-
-	depthbuf = g_getdepthbuf();
-
-	// time before rendering
-	time_s = RTC_GetTicks();
-
-	// clear pixels and depth values
-	Bdisp_AllClr_VRAM();
-	for (dx = 0; dx < 128; dx++) {
-		for (dy = 0; dy < 64; dy++) {
-			depthbuf[dy][dx] = 0x7FFF; // MAX_FIXED16
-		}
-	}
-	
-	g_draw_horizon(cam);
-
-	for (m_iter = 0; m_iter < mbuf_idx; m_iter++) {
-		// TODO: separate this into physics ticks
-		if (mbuf[m_iter]->flag_is_billboard) {
-			mbuf[m_iter]->yaw = cam->yaw; // rotate billboard towards camera
-		}
-		if (!mbuf[m_iter]->flag_renderable)
-			continue;
-		g_clrbuf();
-		// add every triangle in mesh
-		for (t_iter = 0; t_iter < mbuf[m_iter]->tr_cnt; t_iter++) {
-			// move triangle to mesh coordinates
-			curr = transform_tri_from_zero(mbuf[m_iter]->mesh_arr[t_iter], neg(mbuf[m_iter]->ctr), 0, 0);
-			curr = transform_tri_from_zero(curr, mbuf[m_iter]->pos, 0, mbuf[m_iter]->yaw);
-
-			curr.tx = mbuf[m_iter]->tx_arr[mbuf[m_iter]->flag_is_billboard?0:t_iter];
-			// flip the second texture of billboards
-			if (mbuf[m_iter]->flag_is_billboard) {
-				curr.flip_texture = t_iter == 0 ? FALSE : TRUE;
-			}
-			g_addtriangle(curr);
-		}
-
-#ifndef BENCHMARK_RASTER
-		tr_cnt += g_rasterize_buf(cam);
-#else
-		for (i = 0; i < 40; i++) {
-			tr_cnt += g_rasterize_buf(cam);
-		}
-#endif
-		
-#ifdef DEBUG_BUILD
-		if (debug_overlay) {
-			sprintf((char *)buf, "%d", m_iter);
-			g_text3d(cam, buf, subvv(ivec3f(0,int2f(16),0), mbuf[m_iter].pos), TEXT_SMALL | TEXT_INVERTED);
-		}
-#endif
-	}
-	
-	// time after rendering
-	time_e2 = RTC_GetTicks();
-
-	// calculate correct deltatick value
-	deltaticks = time_e2-time_s;
-	if (deltaticks < 1) deltaticks = 1; 
-
-	//if (deltaticks > 128) deltaticks -= 128; // the emulator sometimes skips a whole second :)
-
-	// print debug data
-#ifndef BENCHMARK_RASTER
-	if (debug_overlay) {
-#else
-	if (TRUE) {
-#endif
-		sprintf(buf, "%4.1fms (%2.1ffps) %dt/%dm", (deltaticks)*(1000.0/128.0), 1000.0/((deltaticks)*(1000.0/128.0)), tr_cnt, m_iter);
-		PrintMini(0, 0, (unsigned char *)buf, 0);
-	
-		sprintf(buf, "%4.1f %4.1f %4.1f %4.1fp %4.1fy",	f2float(cam->pos.x),
-														f2float(cam->pos.y),
-														f2float(cam->pos.z), f2float(cam->pitch)*RAD2DEG_MULT, f2float(cam->yaw)*RAD2DEG_MULT);
-		PrintMini(0, 6, (unsigned char *)buf, 0);
-	}
-
-#ifdef CROSSHAIR
-	Bdisp_AreaReverseVRAM(61, 32, 67, 32);
-	Bdisp_AreaReverseVRAM(64, 29, 64, 35);
-	Bdisp_AreaReverseVRAM(64, 32, 64, 32); 
-#endif
-
-	return deltaticks;
 }
 
 // --- collision code ---

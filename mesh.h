@@ -61,25 +61,7 @@ mesh imesh(trianglef *arr, texture_ptr_t *tx_arr, uint8_t arrlen, vec3f pos, vec
 // tx_pseudo_arr should be a pointer to a pointer to a texture
 mesh ibill(trianglef *arr, texture_ptr_t *tx_pseudo_arr, vec3f pos);
 
-// NEEDS CALLING (allocate bufs)
-int m_init(void);
-// clear buffers, reset indexes
-int m_clrbuf(void);
-// deallocate buffers (MAKES THE MESH SYSTEM UNUSABLE)
-void m_dealloc(void);
-// get status
-int m_getstatus(void);
-
-// adds a mesh to the global mesh * array; the value referenced by added_unique_ptr will be a pointer to the added instance in the global mesh * array
-// the mesh will be rendered in the next pass
-int m_addmesh(mesh *m, mesh ***added_unique_ptr);
-// removes a mesh that was added with addmesh; sets the value referenced by unique_ptr_to_remove to NULL
-int m_removemesh(mesh ***unique_ptr_to_remove);
-
 // do the given meshes collide?
 int m_collide(mesh *a, mesh *b);
-
-// run rendering pass with current meshes (returns draw time in ticks)
-int m_rendermeshes(bool debug_overlay, camera *cam);
 
 #endif

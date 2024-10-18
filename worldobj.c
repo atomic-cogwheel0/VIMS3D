@@ -1,11 +1,11 @@
 #include "worldobj.h"
 
 int common_add_object_with_mesh(world_obj *obj, llist l) {
-	return m_addmesh(obj->mesh, &obj->instance_in_mesharr);
+	return S_SUCCESS;
 }
 
 int common_del_object_with_mesh(world_obj *obj, llist l) {
-	return m_removemesh(&obj->instance_in_mesharr);
+	return S_SUCCESS;
 }
 
 world_obj iworld_obj_static_mesh(uint8_t t, mesh *m) {

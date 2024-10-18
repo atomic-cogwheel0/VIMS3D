@@ -59,7 +59,6 @@ void init(void) {
 
 	// make sure subsystems are initialized
 	assert(g_init() == S_SUCCESS);
-	assert(m_init() == S_SUCCESS);
 	assert(w_init() == S_SUCCESS);
 
 	w_setcam(&game_cam);
@@ -208,7 +207,6 @@ void quit(void) {
 	KillTimer(TICK_TIMER);
 	// deinit every subsystem
 	g_dealloc();
-	m_dealloc();
 	w_free_world();
 	gamestate = GAMESTATE_QUIT_DONE; // finished everything
 }
@@ -220,7 +218,6 @@ void halt(void) {
 	KillTimer(TICK_TIMER);
 	// deinit every subsystem
 	g_dealloc();
-	m_dealloc();
 	w_free_world();
 	longjmp(jmpbuf, 1); // jump back to main (displays error screen)
 }
@@ -243,11 +240,9 @@ void tick(void) {
 	fixed speed, delta;
 	camera *cam;
 
-	if (m_getstatus() != SUBSYS_UP) return;
-
 	cam = w_getcam();
 
-	dtime = m_rendermeshes(overlay.is_on, cam); // 1/128 s ticks
+	dtime = w_render_world(overlay.is_on, cam); // 1/128 s ticks
 	scale = (float)dtime/128.0f*5.0f; // convert deltatime to scaler; this makes movement speed unaffected by rendering speed
 
 	// TODO: 1/128 s is not enough resolution; noticeable movement speed changes

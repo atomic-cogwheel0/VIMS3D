@@ -32,7 +32,6 @@ typedef struct _wobj {
 	uint8_t type;
 
 	mesh *mesh; // may be NULL
-	mesh **instance_in_mesharr; // set this in add_obj, points to the copy of `mesh` in the mesh subsystem's storage
 
 	void *data; // pointer to basically any data needed for this object
 
@@ -76,6 +75,8 @@ camera *w_getcam(void);
 // tick every object, passes timescale as arg to tick_obj()
 void w_tick(fixed timescale);
 
+// renders every renderable object in the world
+int w_render_world(bool debug_overlay, camera *cam);
 
 // allocate a new node on the heap
 node *alloc_node(world_obj *data);

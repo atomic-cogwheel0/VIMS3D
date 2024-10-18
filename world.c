@@ -130,6 +130,89 @@ int _tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timesc
 	return S_SUCCESS;
 }
 
+static unsigned char buf[64]; // for sprintf()
+
+int w_render_world(bool debug_overlay, camera *cam) {
+	int m_iter, t_iter, dx, dy, i;
+	unsigned int time_s, time_e2, deltaticks, tr_cnt = 0;
+	trianglef curr;
+	int16_t **depthbuf; // the pixel depth buffer, reset before meshes are rendered
+	node *curr_ptr = wlist.head;
+
+	if (g_getstatus() != SUBSYS_UP) return S_EDOWN;
+
+	depthbuf = g_getdepthbuf();
+
+	// time before rendering
+	time_s = RTC_GetTicks();
+
+	// clear pixels and depth values
+	Bdisp_AllClr_VRAM();
+	for (dx = 0; dx < 128; dx++) {
+		for (dy = 0; dy < 64; dy++) {
+			depthbuf[dy][dx] = 0x7FFF; // FIXED16_MAX
+		}
+	}
+	g_draw_horizon(cam);
+	// iterate over the world object list
+	while (curr_ptr != NULL) {
+		if (curr_ptr->data->mesh != NULL) {
+			if (curr_ptr->data->mesh->flag_is_billboard) {
+				curr_ptr->data->mesh->yaw = cam->yaw; // rotate billboard towards camera
+			}
+			if (!curr_ptr->data->mesh->flag_renderable)
+				continue;
+			g_clrbuf();
+			// add every triangle in mesh
+			for (t_iter = 0; t_iter < curr_ptr->data->mesh->tr_cnt; t_iter++) {
+				// move triangle to mesh coordinates
+				curr = transform_tri_from_zero(curr_ptr->data->mesh->mesh_arr[t_iter], neg(curr_ptr->data->mesh->ctr), 0, 0);
+				curr = transform_tri_from_zero(curr, curr_ptr->data->mesh->pos, 0, curr_ptr->data->mesh->yaw);
+
+				curr.tx = curr_ptr->data->mesh->tx_arr[curr_ptr->data->mesh->flag_is_billboard?0:t_iter];
+				// flip the second texture of billboards
+				if (curr_ptr->data->mesh->flag_is_billboard) {
+					curr.flip_texture = t_iter == 0 ? FALSE : TRUE;
+				}
+				g_addtriangle(curr);
+			}
+#ifdef BENCHMARK_RASTER
+			for (i = 0; i < 40; i++)
+#endif
+				tr_cnt += g_rasterize_buf(cam);
+#ifdef DEBUG_BUILD
+			if (debug_overlay) {
+				sprintf((char *)buf, "%d", m_iter);
+				g_text3d(cam, buf, subvv(ivec3f(0,int2f(16),0), mbuf[m_iter].pos), TEXT_SMALL | TEXT_INVERTED);
+			}
+#endif
+		}
+		curr_ptr = curr_ptr->next;
+	}
+	// time after rendering
+	time_e2 = RTC_GetTicks();
+	// calculate correct deltatick value
+	deltaticks = time_e2-time_s;
+	if (deltaticks < 1) deltaticks = 1; 
+	//if (deltaticks > 128) deltaticks -= 128; // the emulator sometimes skips a whole second :)
+
+	// print debug data
+#ifndef BENCHMARK_RASTER
+	if (debug_overlay)
+#endif
+	{
+		sprintf(buf, "%4.1fms (%2.1ffps) %dt/%dm", (deltaticks)*(1000.0/128.0), 1000.0/((deltaticks)*(1000.0/128.0)), tr_cnt, m_iter);
+		PrintMini(0, 0, (unsigned char *)buf, 0);
+
+		sprintf(buf, "%4.1f %4.1f %4.1f %4.1fp %4.1fy",	f2float(cam->pos.x),
+														f2float(cam->pos.y),
+														f2float(cam->pos.z), f2float(cam->pitch)*RAD2DEG_MULT, f2float(cam->yaw)*RAD2DEG_MULT);
+		PrintMini(0, 6, (unsigned char *)buf, 0);
+	}
+
+	return deltaticks;
+}
+
 //------------ linked list code ------------
 
 node *alloc_node(world_obj *data) {
