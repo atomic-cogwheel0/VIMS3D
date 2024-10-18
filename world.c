@@ -130,7 +130,7 @@ int _tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timesc
 	return S_SUCCESS;
 }
 
-static unsigned char buf[64]; // for sprintf()
+static char buf[64]; // for sprintf()
 
 int w_render_world(bool debug_overlay, camera *cam) {
 	int m_cnt = 0, t_iter, dx, dy, i;

@@ -357,7 +357,7 @@ int g_rasterize_buf(camera *cam) {
 						px_offset = (f2int(ui)%t.tx->h)*t.tx->w + (f2int(vi)%t.tx->w);
 					}
 					// extract pixel at given offset (2 bit pixel extracted from byte arr)
-					px = (t.tx->tx_data[px_offset>>2] & (3<<(2*(3-(px_offset&3))))) >> (2*(3-(px_offset&3))); // pxl>>2 = pxl/4; pxl&3 = pxl%4
+					px = (t.tx->tx_data[px_offset/4] & (3 << ((3 - (px_offset%4))*2))) >> ((3 - (px_offset%4))*2);
 					// is transparency bit set?
 					if (!(px & 2)) {
 						Bdisp_SetPoint_VRAM(xiter, yiter, px & 1);

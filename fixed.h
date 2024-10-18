@@ -27,7 +27,7 @@ the following operations do not need extra functions (use the built-in operators
 #define FIXED_PRECISION 12
 #define FIXED_CONST (1<<FIXED_PRECISION)
 #define FIXED_WHOLE_MASK ((fixed)(0xFFFFFFFF>>FIXED_PRECISION)<<FIXED_PRECISION)
-#define FIXED_FRAC_MASK ((fixed)0xFFFFFFFF^FIXED_WHOLE_MASK)
+#define FIXED_FRAC_MASK (~FIXED_WHOLE_MASK)
 
 // for angle unit conversion (done as floats)
 #define DEG2RAD_MULT (3.1415926535898f/180.0f)

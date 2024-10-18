@@ -124,17 +124,17 @@ void divpfi(fixed *t, int i) {
 }
 
 fixed sin_f(fixed t) {
-	const fixed      hpi = float2f(1.570796f);
+	static const fixed hpi = float2f(1.570796f);
 
 	return cos_f(t - hpi);
 }
 
 // Bhaskara I-based cosine approximation
 fixed cos_f(fixed t) {
-	const fixed      hpi = float2f(1.570796f);
-	const fixed       pi = float2f(3.141593f);
-	const fixed    twopi = float2f(6.283185f);
-	const fixed 	 pi2 = float2f(9.869604f);
+	static const fixed hpi = float2f(1.570796f);
+	static const fixed pi = float2f(3.141593f);
+	static const fixed twopi = float2f(6.283185f);
+	static const fixed pi2 = float2f(9.869604f);
 
 	fixed mod, x2, ret;
 

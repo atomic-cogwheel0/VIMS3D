@@ -63,7 +63,11 @@ void init(void) {
 
 	w_setcam(&game_cam);
 
+#ifndef BENCHMARK_RASTER
 	srand(RTC_GetTicks());
+#else
+	srand(42);
+#endif
 
 	// initialize every texture of every triangle of the tank mesh
 	for (i = 0; i < TANK_MODEL_TRI_CNT; i++) {

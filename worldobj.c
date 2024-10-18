@@ -33,11 +33,11 @@ fixed angle_horizontal_plane(vec3f u, vec3f v) {
 }
 
 int tick_tank(world_obj *tank, llist l, world_obj *player, fixed timescale) {
-	vec3f person_to_tank, z_axis;
+	vec3f person_to_tank;
 	node *ptr;
 	fixed dist, dist_min = FIXED_MAX;
 
-	z_axis = ivec3f(0, 0, int2f(1));
+	static const vec3f z_axis = {0, 0, int2f(1)}; //ivec3f(0, 0, int2f(1));
 
 	ptr = l.head;
 	while (ptr->next != NULL) {
