@@ -45,8 +45,6 @@ int Bdisp_SYS_FastDrawLineVRAM(int x1, int y1, int x2, int y2);
 
 // NEEDS CALLING (allocate bufs)
 int g_init(void);
-// clear buffers, reset indexes
-int g_clrbuf(void);
 // deallocate all buffers (MAKES THE RASTER SYSTEM UNUSABLE)
 void g_dealloc(void);
 // get status
@@ -55,13 +53,10 @@ int g_getstatus(void);
 // returns pointer to the depth buffer (128*64 arr of int16_t)
 int16_t **g_getdepthbuf(void);
 
-// adds a triangle to the array of global triangles
-int g_addtriangle(trianglef t);
-
 // draw the horizon (returns number of pixels drawn OR error code)
 int g_draw_horizon(camera *cam);
 // rasterize all triangles currently in the buffer (returns number of triangles drawn OR error code)
-int g_rasterize_buf(camera *cam);
+int g_rasterize_triangles(trianglef *tris, texture_ptr_t *textures, int len, camera cam, position pos, vec3f zero_offset);
 
 // draw text at a position in 3D space (pos is the top left corner) (overwrite!) (NEEDS g_init())
 int g_text3d(camera *cam, unsigned char *text, vec3f pos, unsigned int params);

@@ -62,27 +62,6 @@ vec3f divvi(vec3f t, int f) {
 	return ivec3f(divfi(t.x, f), divfi(t.y, f), divfi(t.z, f));
 }
 
-#ifndef MACRO_ADDSUBPV
-void addpvv(vec3f *t, vec3f v) {
-	(t->x)+=v.x;
-	(t->y)+=v.y;
-	(t->z)+=v.z;
-}
-
-void subpvv(vec3f *t, vec3f v) {
-	(t->x)-=v.x;
-	(t->y)-=v.y;
-	(t->z)-=v.z;
-}
-#endif
-
-void mulpvf(vec3f *t, fixed f) {
-	mulpff(&(t->x), f);
-	mulpff(&(t->y), f);
-	mulpff(&(t->z), f);
-}
-
-
 /*  |cos ?   -sin ?   0| |x|   |x cos ? - y sin ?|   |x'|
     |sin ?    cos ?   0| |y| = |x sin ? + y cos ?| = |y'|
     |  0       0      1| |z|   |        z        |   |z'|
@@ -121,12 +100,11 @@ vec3f rot(vec3f t, fixed pitch, fixed yaw) {
 	return resp;
 }
 
-trianglef itrianglef(vec3f _a, vec3f _b, vec3f _c, texture_t *_tx, bool _flip) {
+trianglef itrianglef(vec3f _a, vec3f _b, vec3f _c, bool _flip) {
 	trianglef r;
 	r.a = _a;
 	r.b = _b;
 	r.c = _c;
-	r.tx = _tx;
 	r.flip_texture = _flip;
 	return r;
 }
@@ -140,17 +118,15 @@ vec3f transform_vec_to_camera(vec3f u, camera cam) {
 }
 
 trianglef transform_tri_from_zero(trianglef q, vec3f v, fixed pitch, fixed yaw) {
-	return itrianglef(addvv(rot(q.a, pitch, yaw), v),
-	                  addvv(rot(q.b, pitch, yaw), v),
-		              addvv(rot(q.c, pitch, yaw), v),
-	                  q.tx, q.flip_texture);
+	return itrianglef(addvv(rot(q.a, pitch, yaw), v), addvv(rot(q.b, pitch, yaw), v), addvv(rot(q.c, pitch, yaw), v), q.flip_texture);
+}
+
+trianglef transform_tri_to_pos(trianglef q, position pos) {
+	return transform_tri_from_zero(q, pos.pos, pos.pitch, pos.yaw);
 }
 
 trianglef transform_tri_to_camera(trianglef q, camera cam) {
-	return itrianglef(rot(subvv(q.a, cam.pos), -cam.pitch, -cam.yaw),
-	                  rot(subvv(q.b, cam.pos), -cam.pitch, -cam.yaw),
-	                  rot(subvv(q.c, cam.pos), -cam.pitch, -cam.yaw),
-	                  q.tx, q.flip_texture);
+	return itrianglef(rot(subvv(q.a, cam.pos), -cam.pitch, -cam.yaw), rot(subvv(q.b, cam.pos), -cam.pitch, -cam.yaw), rot(subvv(q.c, cam.pos), -cam.pitch, -cam.yaw), q.flip_texture);
 }
 
 vec3f normal(trianglef q) {

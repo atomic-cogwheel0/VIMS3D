@@ -135,7 +135,7 @@ static char buf[64]; // for sprintf()
 int w_render_world(bool debug_overlay, camera *cam) {
 	int m_cnt = 0, t_iter, dx, dy, i;
 	unsigned int time_s, time_e2, deltaticks, tr_cnt = 0;
-	trianglef curr;
+	mesh *curr;
 	int16_t **depthbuf; // the pixel depth buffer, reset before meshes are rendered
 	node *curr_ptr = wlist.head;
 
@@ -146,6 +146,7 @@ int w_render_world(bool debug_overlay, camera *cam) {
 	// time before rendering
 	time_s = RTC_GetTicks();
 
+	curr_ptr = wlist.head;
 	// clear pixels and depth values
 	Bdisp_AllClr_VRAM();
 	for (dx = 0; dx < 128; dx++) {
@@ -157,33 +158,18 @@ int w_render_world(bool debug_overlay, camera *cam) {
 	// iterate over the world object list
 	while (curr_ptr != NULL) {
 		if (curr_ptr->data->mesh != NULL) {
-			if (curr_ptr->data->mesh->flag_is_billboard) {
-				curr_ptr->data->mesh->yaw = cam->yaw; // rotate billboard towards camera
+			curr = curr_ptr->data->mesh;
+			if (curr->flag_is_billboard) {
+				curr->pos.yaw = cam->yaw; // rotate billboard towards camera
 			}
-			if (!curr_ptr->data->mesh->flag_renderable)
+			if (!curr->flag_renderable)
 				continue;
-			g_clrbuf();
-			// add every triangle in mesh
-			for (t_iter = 0; t_iter < curr_ptr->data->mesh->tr_cnt; t_iter++) {
-				// move triangle to mesh coordinates
-				curr = transform_tri_from_zero(curr_ptr->data->mesh->mesh_arr[t_iter], neg(curr_ptr->data->mesh->ctr), 0, 0);
-				curr = transform_tri_from_zero(curr, curr_ptr->data->mesh->pos, 0, curr_ptr->data->mesh->yaw);
-
-				curr.tx = curr_ptr->data->mesh->tx_arr[curr_ptr->data->mesh->flag_is_billboard?0:t_iter];
-				// flip the second texture of billboards
-				if (curr_ptr->data->mesh->flag_is_billboard) {
-					curr.flip_texture = t_iter == 0 ? FALSE : TRUE;
-				}
-				g_addtriangle(curr);
-			}
-#ifdef BENCHMARK_RASTER
-			for (i = 0; i < 40; i++)
-#endif
-				tr_cnt += g_rasterize_buf(cam);
+			tr_cnt += g_rasterize_triangles(curr->mesh_arr, curr->tx_arr, curr->tr_cnt, *cam, curr->pos, curr->ctr);
 		}
 		m_cnt++;
 		curr_ptr = curr_ptr->next;
 	}
+
 	// time after rendering
 	time_e2 = RTC_GetTicks();
 	// calculate correct deltatick value

@@ -40,13 +40,12 @@ collider c_move_collider(collider c, vec3f v);
 typedef struct {
 	trianglef *mesh_arr;
 	texture_ptr_t *tx_arr;
-	uint8_t tr_cnt; // if not billboard, tx_arr and mesh_arr both must have tr_cnt elements
+	uint8_t tr_cnt; // tx_arr and mesh_arr both must have tr_cnt elements
 
 	collider *coll_arr; // array of colliders relative to pos
 	uint8_t coll_cnt;  // arr size
 
-	vec3f pos; // position (offset of triangles and hitbox)
-	fixed yaw; // around y axis (horizontal rot)
+	position pos; // position of mesh
 	vec3f ctr; // center of mesh (relative to pos)
 
 	bool flag_renderable : 1;
@@ -57,9 +56,8 @@ typedef struct {
 // init new mesh
 // tx_arr should be an array of pointers to the textures defined in "texturemap.c" (or anywhere else, really)
 mesh imesh(trianglef *arr, texture_ptr_t *tx_arr, uint8_t arrlen, vec3f pos, vec3f ctr);
-// init new billboard mesh (always faces player, single face = 2 tris)
-// tx_pseudo_arr should be a pointer to a pointer to a texture
-mesh ibill(trianglef *arr, texture_ptr_t *tx_pseudo_arr, vec3f pos);
+// init new billboard mesh (always faces player, single face = 2 tris, one with flipped texture, 2 textures)
+mesh ibill(trianglef *arr, texture_ptr_t *tx_arr, vec3f pos);
 
 // do the given meshes collide?
 int m_collide(mesh *a, mesh *b);

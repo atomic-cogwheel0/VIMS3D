@@ -8,12 +8,6 @@
   using the higher level mesh system is preferred to raw triangles
 */
 
-#define TBUF_SIZ MAX_TRIANGLES
-
-// triangle buffer, triangle indexing
-trianglef *tbuf;
-unsigned short tbuf_idx = 0;
-
 // depth buffer: a 128*64 array, every pixel has a 11+5 bit fixed-point depth value
 int16_t *depthbuf[64];
 
@@ -24,13 +18,6 @@ int g_init(void) {
 	int i;
 
 	if (g_status != SUBSYS_DOWN) return S_EALREADYINITED;
-
-	tbuf = (trianglef *)malloc(TBUF_SIZ*sizeof(trianglef));
-
-	if (tbuf == NULL) {
-		g_status = SUBSYS_ERR;
-		return S_EALLOC;
-	}
 
 	// allocate every row of the depth buffer
 	for (i = 0; i < 64; i++) {
@@ -44,27 +31,12 @@ int g_init(void) {
 	}
 	g_status = SUBSYS_UP;
 
-	// initialize bufs
-	g_clrbuf();
-
-	return S_SUCCESS;
-}
-
-int g_clrbuf(void) {
-	if (g_status != SUBSYS_UP) return S_EDOWN;
-	// zero out buf
-	memset((char *)tbuf, 0, TBUF_SIZ*sizeof(trianglef));
-	tbuf_idx = 0;
 	return S_SUCCESS;
 }
 
 void g_dealloc(void) {
 	int i;
 	// free all buffers
-	if (tbuf != NULL) {
-		free(tbuf);
-		tbuf = NULL;
-	}
 	for (i = 0; i < 64; i++) {
 		if (depthbuf[i] != NULL) {
 			free(depthbuf[i]);
@@ -80,16 +52,6 @@ int g_getstatus(void) {
 
 int16_t **g_getdepthbuf(void) {
 	return (int16_t **)depthbuf;
-}
-
-int g_addtriangle(trianglef t) {
-	if (g_status != SUBSYS_UP) return S_EDOWN;
-	// is there space left?
-	if (tbuf_idx < TBUF_SIZ-1) {
-		tbuf[tbuf_idx++] = t;
-		return S_SUCCESS;
-	}
-	return S_EBUFFULL;
 }
 
 int g_draw_horizon(camera *cam) {
@@ -113,12 +75,12 @@ texture_t fallback_texture = {2, 2, 1, 1, tx_o_fallback};
 // the One and Only Rendering(TM) function
 // have fun :)
 
-int g_rasterize_buf(camera *cam) {
+int g_rasterize_triangles(trianglef *tris, texture_ptr_t *textures, int len, camera cam, position pos, vec3f zero_offset) {
 	int curr_tidx, xiterl, xiterr, xiter, yiter;
 	int bbox_left, bbox_right, bbox_top, bbox_bottom; // bounding box (on screen)
 	int tri_cnt = 0;
-	trianglef curr_t;
 	fixed diff;
+	texture_t tx;
 
 	trianglef t;
 	vec3f v0, v1, v2, a, b, c, nrm, ctot; // ctot is Camera TO Triangle
@@ -147,12 +109,20 @@ int g_rasterize_buf(camera *cam) {
 #define ZREC_MULT (1<<ZREC_EXP)
 
 	// iterate on every triangle in the buffer
-	for (curr_tidx = 0; curr_tidx < tbuf_idx; curr_tidx++) {
-		curr_t = tbuf[curr_tidx];
-		t = transform_tri_to_camera(curr_t, *cam); // transform to camera
+	for (curr_tidx = 0; curr_tidx < len; curr_tidx++) {
+		t = tris[curr_tidx];
+		t = transform_tri_from_zero(t, neg(zero_offset), 0, 0);
+		t = transform_tri_to_pos(t, pos);
+		t = transform_tri_to_camera(t, cam); // transform to camera
 
-		nrm = normal(curr_t);
-		ctot = subvv(curr_t.a, cam->pos);
+#ifdef BENCHMARK_RASTER
+		{
+		int i;
+		for (i = 0; i < 40; i++) {
+#endif
+
+		nrm = normal(t);
+		ctot = t.a;
 
 		// cull
 		if (t.a.z < float2f(.5f) || t.b.z < float2f(.5f) || t.c.z < float2f(.5f) ||		// near-plane
@@ -199,13 +169,16 @@ int g_rasterize_buf(camera *cam) {
 		tri_cnt++;
 
 		// show missing texture instead of SYSTEM ERROR
-		if (t.tx == NULL) t.tx = &fallback_texture;
+		if (textures[curr_tidx] == NULL)
+			tx = fallback_texture;
+		else 
+			tx = *textures[curr_tidx];
 
 		// U and V are the barycentric coordinates of a pixel within the current triangle in screen space
 		// their range is from 0 to 1, calculate with both tiling and texture size
 
-		u_mult = t.tx->w * t.tx->u_tile_size;
-		v_mult = t.tx->h * t.tx->v_tile_size;
+		u_mult = tx.w * tx.u_tile_size;
+		v_mult = tx.h * tx.v_tile_size;
 
 		// the following code does barycentric coord calculation (u and v)
 		// src: https://web.archive.org/web/20240910155457/https://blackpawn.com/texts/pointinpoly/
@@ -341,7 +314,8 @@ int g_rasterize_buf(camera *cam) {
 			for (ozi = ozp, uzi = uzp, vzi = vzp, xiter = xiterl; xiter <= xiterr; xiter++, ozi+=ozstep, uzi+=uzstep, vzi+=vzstep) {
 				zci = divff(int2f(ZREC_MULT*ZREC_MULT), ozi);
 
-				depthval = (f2int(zci) << 5) | ((zci & FIXED_FRAC_MASK) >> (FIXED_PRECISION-5)); // transform 22+10bit zci to 11+5bit depth
+				// zci is halved to handle greater distances
+				depthval = (f2int(zci/2) << 5) | (((zci/2) & FIXED_FRAC_MASK) >> (FIXED_PRECISION-5)); // transform 22+10bit zci to 11+5bit depth
 
 				// is current pixel closer than the last depth written there?
 				if (depthbuf[yiter][xiter] > depthval) {			
@@ -351,13 +325,13 @@ int g_rasterize_buf(camera *cam) {
 					// calculate pixel offset into the array (row by row)
 					if (t.flip_texture) {
 						// index coordinates from the bottom right instead of top left
-						px_offset = (t.tx->h-1 - f2int(ui)%t.tx->h)*t.tx->w + (t.tx->w-1 - f2int(vi)%t.tx->w);
+						px_offset = (tx.h-1 - f2int(ui)%tx.h)*tx.w + (tx.w-1 - f2int(vi)%tx.w);
 					}
 					else {
-						px_offset = (f2int(ui)%t.tx->h)*t.tx->w + (f2int(vi)%t.tx->w);
+						px_offset = (f2int(ui)%tx.h)*tx.w + (f2int(vi)%tx.w);
 					}
 					// extract pixel at given offset (2 bit pixel extracted from byte arr)
-					px = (t.tx->tx_data[px_offset/4] & (3 << ((3 - (px_offset%4))*2))) >> ((3 - (px_offset%4))*2);
+					px = (tx.tx_data[px_offset>>2] & (3 << ((3 - (px_offset & 3)) * 2))) >> ((3 - (px_offset & 3)) * 2);
 					// is transparency bit set?
 					if (!(px & 2)) {
 						Bdisp_SetPoint_VRAM(xiter, yiter, px & 1);
@@ -365,7 +339,10 @@ int g_rasterize_buf(camera *cam) {
 					}
 				}
 			}
-		}	
+		}
+#ifdef BENCHMARK_RASTER
+		}}
+#endif
 	}
 	return tri_cnt;
 }

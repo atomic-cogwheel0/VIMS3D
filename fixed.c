@@ -91,38 +91,6 @@ fixed shlfi(fixed t, int bits) {
 }
 #endif
 
-#ifndef MACRO_ADDSUBF
-void addpff(fixed *t, fixed f) {
-	(*t) += f;
-}
-#endif
-void addpfi(fixed *t, int i) {
-	(*t) += (i<<FIXED_PRECISION);
-}
-
-#ifndef MACRO_ADDSUBF
-void subpff(fixed *t, fixed f) {
-	(*t) -= f;
-}
-#endif
-void subpfi(fixed *t, int i) {
-	(*t) -= (i<<FIXED_PRECISION);
-}
-
-void mulpff(fixed *t, fixed f) {
-	(*t) = (fixed)(((fixed_double_t)t * (fixed_double_t)f) >> FIXED_PRECISION);
-}
-void mulpfi(fixed *t, int i) {
-	(*t) *= i;
-}
-
-void divpff(fixed *t, fixed f) {
-	(*t) = (fixed)((((fixed_double_t)t)<<FIXED_PRECISION) / f);
-}   
-void divpfi(fixed *t, int i) {
-	(*t) /= i;
-}
-
 fixed sin_f(fixed t) {
 	static const fixed hpi = float2f(1.570796f);
 
@@ -150,14 +118,6 @@ fixed cos_f(fixed t) {
 	return ret;
 }
 
-fixed tan_f(fixed t) {
-	return divff(sin_f(t),cos_f(t));
-}
-
-fixed cot_f(fixed t) {
-	return divff(cos_f(t),sin_f(t));
-}
-
 #ifndef MACRO_FLOORF
 fixed floor_f(fixed t) {
 	return t & FIXED_WHOLE_MASK;
@@ -169,12 +129,6 @@ fixed mod_f(fixed t, fixed f) {
 }
 
 fixed clamp_f(fixed val, fixed min, fixed max) {
-	if (val < min) return min;
-	if (val > max) return max;
-	return val;
-}
-
-int clamp_i(int val, int min, int max) {
 	if (val < min) return min;
 	if (val > max) return max;
 	return val;

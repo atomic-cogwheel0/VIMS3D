@@ -12,26 +12,28 @@ mesh imesh(trianglef *arr, texture_ptr_t *tx_arr, uint8_t arrlen, vec3f pos, vec
 	m.tr_cnt = arrlen;
 	m.coll_arr = NULL;
 	m.coll_cnt = 0;
-	m.pos = pos;
+	m.pos.pos = pos;
+	m.pos.pitch = 0;
+	m.pos.yaw = 0;
 	m.ctr = ctr;
-	m.yaw = 0;
 	m.flag_renderable = TRUE;
 	m.flag_has_collision = FALSE;
 	m.flag_is_billboard = FALSE;
 	return m;
 }
 
-mesh ibill(trianglef *arr, texture_ptr_t *tx_pseudo_arr, vec3f pos) {
+mesh ibill(trianglef *arr, texture_ptr_t *tx_arr, vec3f pos) {
 	mesh m;
 	m.mesh_arr = arr;
-	m.tx_arr = tx_pseudo_arr;
+	m.tx_arr = tx_arr;
 	m.tr_cnt = 2; // billboards must have precisely two triangles
 	m.coll_arr = NULL;
 	m.coll_cnt = 0;
-	m.pos = pos;
+	m.pos.pos = pos;
+	m.pos.pitch = 0;
+	m.pos.yaw = 0;
 	// center point is in the bottom middle of the mesh (find it by averaging the coords)
 	m.ctr = ivec3f((min(arr[0].a.x, min(arr[0].b.x, arr[0].c.x)) + max(arr[0].a.x, max(arr[0].b.x, arr[0].c.x)))/2, 0, (min(arr[0].a.z, min(arr[0].b.z, arr[0].c.z)) + max(arr[0].a.z, max(arr[0].b.z, arr[0].c.z)))/2);
-	m.yaw = 0;
 	m.flag_renderable = TRUE;
 	m.flag_has_collision = FALSE;
 	m.flag_is_billboard = TRUE;
@@ -52,9 +54,9 @@ int m_collide(mesh *a, mesh *b) {
 
 	// check every collider in their arrays, offset by their coordinates
 	for (i = 0; i < a->coll_cnt; i++) {
-		tr_a = c_move_collider(a->coll_arr[i], subvv(a->pos, a->ctr));
+		tr_a = c_move_collider(a->coll_arr[i], subvv(a->pos.pos, a->ctr));
 		for (j = 0; j < b->coll_cnt; j++) {
-			tr_b = c_move_collider(b->coll_arr[i], subvv(b->pos, b->ctr));
+			tr_b = c_move_collider(b->coll_arr[i], subvv(b->pos.pos, b->ctr));
 			if (c_do_colliders_collide(tr_a, tr_b))
 				return TRUE;
 		}

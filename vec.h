@@ -29,7 +29,6 @@ typedef struct {
 // defines certain functions as macros or real functions
 // rebuild all if changed
 #define MACRO_DOTP
-#define MACRO_ADDSUBPV
 
 #pragma inline(ivec3f)
 // initialize vec3f
@@ -64,32 +63,22 @@ vec3f mulvi(vec3f t, int f);
 vec3f divvf(vec3f t, fixed f);
 vec3f divvi(vec3f t, int f);
 
-#ifdef MACRO_ADDSUBPV
-#define addpvv(t, v) (t)->x+=(v).x,(t)->y+=(v).y,(t)->z+=(v).z
-#define subpvv(t, v) (t)->x-=(v).x,(t)->y-=(v).y,(t)->z-=(v).z
-#else
-void addpvv(vec3f *t, vec3f v);
-void subpvv(vec3f *t, vec3f v);
-#endif
-
-void mulpvf(vec3f *t, fixed f);
-
 typedef struct {
 	vec3f pos;
 	fixed yaw;
 	fixed pitch;
-} camera;
+} position;
+typedef position camera;
 
 typedef struct {
 	vec3f a;
 	vec3f b;
 	vec3f c;
-	texture_t *tx;
 	bool flip_texture;
 } trianglef;
 
 // initialize trianglef
-trianglef itrianglef(vec3f a, vec3f b, vec3f c, texture_t *tx, bool flip);
+trianglef itrianglef(vec3f a, vec3f b, vec3f c, bool flip);
 
 // rotate vector u around (0;0;0) with given angles and offset it with v
 vec3f transform_vec_from_zero(vec3f u, vec3f v, fixed pitch, fixed yaw);
@@ -98,6 +87,8 @@ vec3f transform_vec_to_camera(vec3f u, camera cam);
 
 // rotate triangle q around (0;0;0) with given angles and offset it with v
 trianglef transform_tri_from_zero(trianglef q, vec3f v, fixed pitch, fixed yaw);
+// transform triangle from (0;0;0) to position with rotations performed first
+trianglef transform_tri_to_pos(trianglef q, position pos);
 // transform triangle from world space to camera relative space
 trianglef transform_tri_to_camera(trianglef q, camera cam);
 

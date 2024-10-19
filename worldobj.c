@@ -1,5 +1,7 @@
 #include "worldobj.h"
 
+// currently unused
+/*
 int common_add_object_with_mesh(world_obj *obj, llist l) {
 	return S_SUCCESS;
 }
@@ -7,20 +9,16 @@ int common_add_object_with_mesh(world_obj *obj, llist l) {
 int common_del_object_with_mesh(world_obj *obj, llist l) {
 	return S_SUCCESS;
 }
+*/
 
 world_obj iworld_obj_static_mesh(uint8_t t, mesh *m) {
-	return iworld_obj(t, m, NULL, common_add_object_with_mesh, common_del_object_with_mesh, NULL);
+	return iworld_obj(t, m, NULL, NULL, NULL, NULL);
 }
 
 //--------------------------
 
-int tick_person(world_obj *person, llist l, world_obj *player, fixed timescale) {
-	return S_SUCCESS;
-}
-
 int add_tank(world_obj *tank, llist l) {
-	common_add_object_with_mesh(tank, l);
-	tank->mesh->yaw = float2f(90*DEG2RAD_MULT); // the model is oriented on the wrong axis
+	tank->mesh->pos.yaw = float2f(90*DEG2RAD_MULT); // the model is oriented on the wrong axis
 	return S_SUCCESS;
 }
 
@@ -42,7 +40,7 @@ int tick_tank(world_obj *tank, llist l, world_obj *player, fixed timescale) {
 	ptr = l.head;
 	while (ptr->next != NULL) {
 		if (ptr->data->type == WORLDOBJ_PERSON) {
-			person_to_tank = subvv(tank->mesh->pos, ptr->data->mesh->pos);
+			person_to_tank = subvv(tank->mesh->pos.pos, ptr->data->mesh->pos.pos);
 
 			// check distance, find nearest person object
 			dist = magnitude(person_to_tank);
@@ -52,8 +50,8 @@ int tick_tank(world_obj *tank, llist l, world_obj *player, fixed timescale) {
 	}
 	if (dist_min != FIXED_MAX) {
 		// nearest person has been found; target it
-		tank->mesh->yaw = float2f(90*DEG2RAD_MULT) + angle_horizontal_plane(person_to_tank, z_axis);
+		tank->mesh->pos.yaw = float2f(90*DEG2RAD_MULT) + angle_horizontal_plane(person_to_tank, z_axis);
 		// move slowly towards the target
-		tank->mesh->pos = addvv(tank->mesh->pos, mulvf(normalize(neg(person_to_tank)), divfi(timescale, 8)));
+		tank->mesh->pos.pos = addvv(tank->mesh->pos.pos, mulvf(normalize(neg(person_to_tank)), divfi(timescale, 8)));
 	}
 }

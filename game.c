@@ -21,10 +21,10 @@ trianglef tank_mesh[TANK_MODEL_TRI_CNT];
 texture_ptr_t tank_txarr[TANK_MODEL_TRI_CNT];
 
 trianglef person_mesh[2];
-texture_ptr_t person_txarr[1];
+texture_ptr_t person_txarr[2];
 
 trianglef tree_mesh[2];
-texture_ptr_t tree_txarr[1];
+texture_ptr_t tree_txarr[2];
 
 // objects (these are global because they are referenced by address)
 mesh tank_meshobj;
@@ -111,70 +111,72 @@ void init(void) {
 	vertices[25] = ivec3f(int2f(-3), float2f(2.5), float2f(2.75));
 
 	// create all triangles of the tank model
-	tank_mesh[0] = itrianglef(vertices[0], vertices[5], vertices[1], 0, 0);
-	tank_mesh[1] = itrianglef(vertices[1], vertices[5], vertices[2], 0, 0);
-	tank_mesh[2] = itrianglef(vertices[4], vertices[2], vertices[5], 0, 0);
-	tank_mesh[3] = itrianglef(vertices[3], vertices[2], vertices[4], 0, 0);
+	tank_mesh[0] = itrianglef(vertices[0], vertices[5], vertices[1], FALSE);
+	tank_mesh[1] = itrianglef(vertices[1], vertices[5], vertices[2], FALSE);
+	tank_mesh[2] = itrianglef(vertices[4], vertices[2], vertices[5], FALSE);
+	tank_mesh[3] = itrianglef(vertices[3], vertices[2], vertices[4], FALSE);
 	
-	tank_mesh[4] = itrianglef(vertices[6], vertices[7], vertices[11], 0, 0);
-	tank_mesh[5] = itrianglef(vertices[8], vertices[10], vertices[7], 0, 0);
-	tank_mesh[6] = itrianglef(vertices[11], vertices[7], vertices[10], 0, 0);
-	tank_mesh[7] = itrianglef(vertices[9], vertices[10], vertices[8], 0, 0);
+	tank_mesh[4] = itrianglef(vertices[6], vertices[7], vertices[11], FALSE);
+	tank_mesh[5] = itrianglef(vertices[8], vertices[10], vertices[7], FALSE);
+	tank_mesh[6] = itrianglef(vertices[11], vertices[7], vertices[10], FALSE);
+	tank_mesh[7] = itrianglef(vertices[9], vertices[10], vertices[8], FALSE);
 
-	tank_mesh[8] = itrianglef(vertices[7], vertices[1], vertices[8], 0, 0);
-	tank_mesh[9] = itrianglef(vertices[2], vertices[8], vertices[1], 0, 0);	
-	tank_mesh[10] = itrianglef(vertices[2], vertices[3], vertices[8], 0, 0);
-	tank_mesh[11] = itrianglef(vertices[9], vertices[8], vertices[3], 0, 0);
-	tank_mesh[12] = itrianglef(vertices[3], vertices[4], vertices[9], 0, 0);
-	tank_mesh[13] = itrianglef(vertices[10], vertices[9], vertices[4], 0, 0);
+	tank_mesh[8] = itrianglef(vertices[7], vertices[1], vertices[8], FALSE);
+	tank_mesh[9] = itrianglef(vertices[2], vertices[8], vertices[1], FALSE);	
+	tank_mesh[10] = itrianglef(vertices[2], vertices[3], vertices[8], FALSE);
+	tank_mesh[11] = itrianglef(vertices[9], vertices[8], vertices[3], FALSE);
+	tank_mesh[12] = itrianglef(vertices[3], vertices[4], vertices[9], FALSE);
+	tank_mesh[13] = itrianglef(vertices[10], vertices[9], vertices[4], FALSE);
 	
-	tank_mesh[14] = itrianglef(vertices[5], vertices[11], vertices[4], 0, 0);
-	tank_mesh[15] = itrianglef(vertices[10], vertices[4], vertices[11], 0, 0);
-	tank_mesh[16] = itrianglef(vertices[6], vertices[11], vertices[0], 0, 0);
-	tank_mesh[17] = itrianglef(vertices[5], vertices[0], vertices[11], 0, 0);
-	tank_mesh[18] = itrianglef(vertices[7], vertices[6], vertices[1], 0, 0);
-	tank_mesh[19] = itrianglef(vertices[0], vertices[1], vertices[6], 0, 0);
+	tank_mesh[14] = itrianglef(vertices[5], vertices[11], vertices[4], FALSE);
+	tank_mesh[15] = itrianglef(vertices[10], vertices[4], vertices[11], FALSE);
+	tank_mesh[16] = itrianglef(vertices[6], vertices[11], vertices[0], FALSE);
+	tank_mesh[17] = itrianglef(vertices[5], vertices[0], vertices[11], FALSE);
+	tank_mesh[18] = itrianglef(vertices[7], vertices[6], vertices[1], FALSE);
+	tank_mesh[19] = itrianglef(vertices[0], vertices[1], vertices[6], FALSE);
 
 	
-	tank_mesh[20] = itrianglef(vertices[13], vertices[12], vertices[14], 0, 0);
-	tank_mesh[21] = itrianglef(vertices[15], vertices[14], vertices[12], 0, 0);	
-	tank_mesh[22] = itrianglef(vertices[14], vertices[15], vertices[18], 0, 0);
-	tank_mesh[23] = itrianglef(vertices[19], vertices[18], vertices[15], 0, 0);
-	tank_mesh[24] = itrianglef(vertices[18], vertices[19], vertices[17], 0, 0);
-	tank_mesh[25] = itrianglef(vertices[16], vertices[17], vertices[19], 0, 0);	
-	tank_mesh[26] = itrianglef(vertices[17], vertices[16], vertices[13], 0, 0);
-	tank_mesh[27] = itrianglef(vertices[12], vertices[13], vertices[16], 0, 0);
+	tank_mesh[20] = itrianglef(vertices[13], vertices[12], vertices[14], FALSE);
+	tank_mesh[21] = itrianglef(vertices[15], vertices[14], vertices[12], FALSE);	
+	tank_mesh[22] = itrianglef(vertices[14], vertices[15], vertices[18], FALSE);
+	tank_mesh[23] = itrianglef(vertices[19], vertices[18], vertices[15], FALSE);
+	tank_mesh[24] = itrianglef(vertices[18], vertices[19], vertices[17], FALSE);
+	tank_mesh[25] = itrianglef(vertices[16], vertices[17], vertices[19], FALSE);	
+	tank_mesh[26] = itrianglef(vertices[17], vertices[16], vertices[13], FALSE);
+	tank_mesh[27] = itrianglef(vertices[12], vertices[13], vertices[16], FALSE);
 
-	tank_mesh[28] = itrianglef(vertices[17], vertices[13], vertices[18], 0, 0);
-	tank_mesh[29] = itrianglef(vertices[14], vertices[18], vertices[13], 0, 0);
+	tank_mesh[28] = itrianglef(vertices[17], vertices[13], vertices[18], FALSE);
+	tank_mesh[29] = itrianglef(vertices[14], vertices[18], vertices[13], FALSE);
 
 
-	tank_mesh[30] = itrianglef(vertices[21], vertices[22], vertices[20], 0, 0);
+	tank_mesh[30] = itrianglef(vertices[21], vertices[22], vertices[20], FALSE);
 
-	tank_mesh[31] = itrianglef(vertices[21], vertices[20], vertices[24], 0, 0);
-	tank_mesh[32] = itrianglef(vertices[23], vertices[24], vertices[20], 0, 0);	
-	tank_mesh[33] = itrianglef(vertices[20], vertices[22], vertices[23], 0, 0);
-	tank_mesh[34] = itrianglef(vertices[25], vertices[23], vertices[22], 0, 0);
-	tank_mesh[35] = itrianglef(vertices[22], vertices[21], vertices[25], 0, 0);
-	tank_mesh[36] = itrianglef(vertices[24], vertices[25], vertices[21], 0, 0);
+	tank_mesh[31] = itrianglef(vertices[21], vertices[20], vertices[24], FALSE);
+	tank_mesh[32] = itrianglef(vertices[23], vertices[24], vertices[20], FALSE);	
+	tank_mesh[33] = itrianglef(vertices[20], vertices[22], vertices[23], FALSE);
+	tank_mesh[34] = itrianglef(vertices[25], vertices[23], vertices[22], FALSE);
+	tank_mesh[35] = itrianglef(vertices[22], vertices[21], vertices[25], FALSE);
+	tank_mesh[36] = itrianglef(vertices[24], vertices[25], vertices[21], FALSE);
 
 	tank_meshobj = imesh(tank_mesh, tank_txarr, TANK_MODEL_TRI_CNT, ivec3f(float2f(1.5), 0, float2f(12.0)), ivec3f(int2f(-3), 0, float2f(2.5f)));
-	tank_worldobj = iworld_obj(WORLDOBJ_TANK, &tank_meshobj, NULL, add_tank, del_tank, tick_tank);
+	tank_worldobj = iworld_obj(WORLDOBJ_TANK, &tank_meshobj, NULL, add_tank, NULL, tick_tank);
 
 	// a billboard has two symmetric halves
-	person_mesh[0] = itrianglef(ivec3f(0, int2f(4), 0), ivec3f(int2f(2), int2f(4), 0), ivec3f(0, 0, 0), 0, 0);
-	person_mesh[1] = itrianglef(ivec3f(int2f(2), 0, 0), ivec3f(0, 0, 0), ivec3f(int2f(2), int2f(4), 0), 0, 0);
+	person_mesh[0] = itrianglef(ivec3f(0, int2f(4), 0), ivec3f(int2f(2), int2f(4), 0), ivec3f(0, 0, 0), FALSE);
+	person_mesh[1] = itrianglef(ivec3f(int2f(2), 0, 0), ivec3f(0, 0, 0), ivec3f(int2f(2), int2f(4), 0), TRUE);
 
 	person_txarr[0] = &textures[TX_PERSON];
+	person_txarr[1] = &textures[TX_PERSON];
 
 	person_meshobj = ibill(person_mesh, person_txarr, ivec3f(int2f(rand()%40-20), 0, int2f(rand()%40-20)));
-	person_worldobj = iworld_obj(WORLDOBJ_PERSON, &person_meshobj, NULL, common_add_object_with_mesh, common_del_object_with_mesh, tick_person);
+	person_worldobj = iworld_obj_static_mesh(WORLDOBJ_PERSON, &person_meshobj);
 
 	// also a billboard
-	tree_mesh[0] = itrianglef(ivec3f(0, int2f(12), 0), ivec3f(int2f(6), int2f(12), 0), ivec3f(0, 0, 0), 0, 0);
-	tree_mesh[1] = itrianglef(ivec3f(int2f(6), 0, 0), ivec3f(0, 0, 0), ivec3f(int2f(6), int2f(12), 0), 0, 0);
+	tree_mesh[0] = itrianglef(ivec3f(0, int2f(12), 0), ivec3f(int2f(6), int2f(12), 0), ivec3f(0, 0, 0), FALSE);
+	tree_mesh[1] = itrianglef(ivec3f(int2f(6), 0, 0), ivec3f(0, 0, 0), ivec3f(int2f(6), int2f(12), 0), TRUE);
 
 	tree_txarr[0] = &textures[TX_TREE];
+	tree_txarr[1] = &textures[TX_TREE];
 	
 	for (i = 0; i < 10; i++) {
 		// the mesh is memcpyed in iworld_obj, so we can reinit tree_meshobj every time, just don't modify tree_mesh or tree_txarr
@@ -188,9 +190,6 @@ void init(void) {
 	for (i = 0; i < 10; i++) {
 		tree_nodes[i] = w_register(&tree_worldobjs[i], NULL);
 	}
-
-	// do a first tick before rendering to setup everything correctly
-	w_tick(0);
 
 	// some call might have modified it (called quit()/halt())
 	if (gamestate == GAMESTATE_PREINIT) {
@@ -240,18 +239,18 @@ jmp_buf *get_jmpbuf_ptr(void) {
 void tick(void) {
 	vec3f t;
 	int dtime;
-	float scale;
+	static float scale = 0.0f;
 	fixed speed, delta;
 	camera *cam;
 
 	cam = w_getcam();
 
+	w_tick(float2f(scale)); // tick world objects with scaled movements
+
 	dtime = w_render_world(overlay.is_on, cam); // 1/128 s ticks
 	scale = (float)dtime/128.0f*5.0f; // convert deltatime to scaler; this makes movement speed unaffected by rendering speed
 
 	// TODO: 1/128 s is not enough resolution; noticeable movement speed changes
-
-	w_tick(float2f(scale)); // tick world objects with scaled movements
 
 	// calculate scaled values
 	delta = float2f(gdelta * scale);

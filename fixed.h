@@ -90,29 +90,14 @@ fixed shlfi(fixed t, int bits);
 // these work with normal + and -
 #ifdef MACRO_ADDSUBF
 #define addff(t, f) ((t)+(f))
-#define addpff(t, f) ((*(t))+=(f))
 #define subff(t, f) ((t)-(f))
-#define subpff(t, f) ((*(t))-=(f))
 #else
 fixed addff(fixed t, fixed f);
-void addpff(fixed *t, fixed f);
 fixed subff(fixed t, fixed f);
-void subpff(fixed *t, fixed f);
 #endif
 
 fixed addfi(fixed t, int i);
-void addpfi(fixed *t, int i);
-
 fixed subfi(fixed t, int i);
-void subpfi(fixed *t, int i);
-
-#pragma inline(mulpff)
-void mulpff(fixed *t, fixed f);
-void mulpfi(fixed *t, int i);
-
-#pragma inline(divpff)
-void divpff(fixed *t, fixed f);
-void divpfi(fixed *t, int i);
 
 // these clash with <math.h> without the underscores
 
@@ -132,10 +117,9 @@ fixed sqrt_f(fixed t);
 
 fixed cos_f(fixed t);
 fixed sin_f(fixed t);
-fixed tan_f(fixed t);
-fixed cot_f(fixed t);
 
 fixed clamp_f(fixed val, fixed min, fixed max);
-int clamp_i(int i, int min, int max);
+// as fixed_full_t is the same as int, this is possible
+#define clamp_i(val, min, max) (int)clamp_f(val, min, max)
 
 #endif
