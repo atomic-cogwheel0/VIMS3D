@@ -56,6 +56,7 @@ int16_t **g_getdepthbuf(void);
 // draw the horizon (returns number of pixels drawn OR error code)
 int g_draw_horizon(camera *cam);
 // rasterize all triangles currently in the buffer (returns number of triangles drawn OR error code)
+// zero_offset is the offset of tris[] from the world center, pos is the position they are transformed to
 int g_rasterize_triangles(trianglef *tris, texture_ptr_t *textures, int len, camera cam, position pos, vec3f zero_offset);
 
 // draw text at a position in 3D space (pos is the top left corner) (overwrite!) (NEEDS g_init())

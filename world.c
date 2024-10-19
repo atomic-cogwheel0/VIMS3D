@@ -134,7 +134,7 @@ static char buf[64]; // for sprintf()
 
 int w_render_world(bool debug_overlay, camera *cam) {
 	int m_cnt = 0, t_iter, dx, dy, i;
-	unsigned int time_s, time_e2, deltaticks, tr_cnt = 0;
+	unsigned int time_s, time_e, deltaticks, tr_cnt = 0;
 	mesh *curr;
 	int16_t **depthbuf; // the pixel depth buffer, reset before meshes are rendered
 	node *curr_ptr = wlist.head;
@@ -171,9 +171,9 @@ int w_render_world(bool debug_overlay, camera *cam) {
 	}
 
 	// time after rendering
-	time_e2 = RTC_GetTicks();
+	time_e = RTC_GetTicks();
 	// calculate correct deltatick value
-	deltaticks = time_e2-time_s;
+	deltaticks = time_e-time_s;
 	if (deltaticks < 1) deltaticks = 1; 
 	//if (deltaticks > 128) deltaticks -= 128; // the emulator sometimes skips a whole second :)
 

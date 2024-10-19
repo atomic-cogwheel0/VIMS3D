@@ -250,7 +250,7 @@ void tick(void) {
 	dtime = w_render_world(overlay.is_on, cam); // 1/128 s ticks
 	scale = (float)dtime/128.0f*5.0f; // convert deltatime to scaler; this makes movement speed unaffected by rendering speed
 
-	// TODO: 1/128 s is not enough resolution; noticeable movement speed changes
+	// TODO: 1/128 s is not enough resolution; this causes noticeable movement speed changes
 
 	// calculate scaled values
 	delta = float2f(gdelta * scale);
