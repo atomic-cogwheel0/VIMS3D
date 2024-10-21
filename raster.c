@@ -111,8 +111,9 @@ int g_rasterize_triangles(trianglef *tris, texture_ptr_t *textures, int len, cam
 	// iterate on every triangle in the buffer
 	for (curr_tidx = 0; curr_tidx < len; curr_tidx++) {
 		t = tris[curr_tidx];
-		t = transform_tri_from_zero(t, neg(zero_offset), 0, 0);
-		t = transform_tri_to_pos(t, pos);
+		t = transform_tri_from_zero(t, neg(zero_offset), 0, 0); // shift to center of rotation
+		t = transform_tri_to_pos(t, pos); // rotate and move to pos
+		t = transform_tri_from_zero(t, zero_offset, 0, 0); // shift back
 		t = transform_tri_to_camera(t, cam); // transform to camera
 
 #ifdef BENCHMARK_RASTER

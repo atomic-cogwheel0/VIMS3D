@@ -49,10 +49,10 @@ void dworld_obj(world_obj obj);
 // adds a new world object instance to the linked list (please don't register an object twice)
 // returns the pointer of the new node in the list
 // calls obj->add_obj()
-// sets *status to EALLOC if node alloc failed, else SUCCESS
+// sets *status to EALLOC if node alloc failed, otherwise the return value of obj->add_obj()
 // obj has to be a static object or on the heap!
 node *w_register(world_obj *obj, int *status);
-// remove an object (don't tick it anymore, run obj->data->del_obj()) by a pointer to its node
+// remove an object (won't be ticked anymore, runs obj->data->del_obj()) by a pointer to its node
 int w_deregister(node *obj);
 
 // run the given function on every object (currently processed object is passed as argument 1 (obj)

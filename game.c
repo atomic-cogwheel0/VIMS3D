@@ -29,8 +29,12 @@ texture_ptr_t tree_txarr[2];
 // objects (these are global because they are referenced by address)
 mesh tank_meshobj;
 world_obj tank_worldobj;
+collider tank_collider;
+node *tank_node;
 mesh person_meshobj;
 world_obj person_worldobj;
+collider person_collider;
+node *person_node;
 mesh tree_meshobj;
 world_obj tree_worldobjs[10];
 node *tree_nodes[10];
@@ -44,7 +48,7 @@ toggle_t overlay = {TRUE, FALSE, FALSE};
 
 void init(void) {
 	int i;
-	mesh m, m2;
+	int status;
 
 	// prepare globals
 	// set initial camera position
@@ -79,36 +83,36 @@ void init(void) {
 	tank_txarr[28] = tank_txarr[29] = &textures[TX_TANKTOP];
 
 	// preset vertices for easier triangle declaration
-	vertices[0] = ivec3f(int2f(1), int2f(1), int2f(0));
-	vertices[1] = ivec3f(int2f(0), int2f(2), int2f(0));
-	vertices[2] = ivec3f(int2f(-6), int2f(2), int2f(0));
-	vertices[3] = ivec3f(int2f(-7), int2f(1), int2f(0));
-	vertices[4] = ivec3f(int2f(-6), int2f(0), int2f(0));
-	vertices[5] = ivec3f(int2f(0), int2f(0), int2f(0));
+	vertices[0] = ivec3i(1, 1, 0);
+	vertices[1] = ivec3i(0, 2, 0);
+	vertices[2] = ivec3i(-6, 2, 0);
+	vertices[3] = ivec3i(-7, 1, 0);
+	vertices[4] = ivec3i(-6, 0, 0);
+	vertices[5] = ivec3i(0, 0, 0);
 
-	vertices[6] = ivec3f(int2f(1), int2f(1), int2f(5));
-	vertices[7] = ivec3f(int2f(0), int2f(2), int2f(5));
-	vertices[8] = ivec3f(int2f(-6), int2f(2), int2f(5));
-	vertices[9] = ivec3f(int2f(-7), int2f(1), int2f(5));
-	vertices[10] = ivec3f(int2f(-6), int2f(0), int2f(5));
-	vertices[11] = ivec3f(int2f(0), int2f(0), int2f(5));
+	vertices[6] = ivec3i(1, 1, 5);
+	vertices[7] = ivec3i(0, 2, 5);
+	vertices[8] = ivec3i(-6, 2, 5);
+	vertices[9] = ivec3i(-7, 1, 5);
+	vertices[10] = ivec3i(-6, 0, 5);
+	vertices[11] = ivec3i(0, 0, 5);
 
-	vertices[12] = ivec3f(float2f(-1.5), int2f(2), float2f(1));
-	vertices[13] = ivec3f(float2f(-1.5), float2f(3.5), float2f(1));
-	vertices[14] = ivec3f(float2f(-4.5), float2f(3.5), float2f(1));
-	vertices[15] = ivec3f(float2f(-4.5), int2f(2), float2f(1));
+	vertices[12] = ivec3float(-1.5f, 2.0f, 1.0f);
+	vertices[13] = ivec3float(-1.5f, 3.5f, 1.0f);
+	vertices[14] = ivec3float(-4.5f, 3.5f, 1.0f);
+	vertices[15] = ivec3float(-4.5f, 2.0f, 1.0f);
 
-	vertices[16] = ivec3f(float2f(-1.5), int2f(2), float2f(4));
-	vertices[17] = ivec3f(float2f(-1.5), float2f(3.5), float2f(4));
-	vertices[18] = ivec3f(float2f(-4.5), float2f(3.5), float2f(4));
-	vertices[19] = ivec3f(float2f(-4.5), int2f(2), float2f(4));
+	vertices[16] = ivec3float(-1.5f, 2.0f, 4.0f);
+	vertices[17] = ivec3float(-1.5f, 3.5f, 4.0f);
+	vertices[18] = ivec3float(-4.5f, 3.5f, 4.0f);
+	vertices[19] = ivec3float(-4.5f, 2.0f, 4.0f);
 
-	vertices[20] = ivec3f(int2f(4), float2f(2.8), float2f(2.25));
-	vertices[21] = ivec3f(int2f(4), float2f(3.2), float2f(2.5));
-	vertices[22] = ivec3f(int2f(4), float2f(2.8), float2f(2.75));
-	vertices[23] = ivec3f(int2f(-3), float2f(2.5), float2f(2.25));
-	vertices[24] = ivec3f(int2f(-3), float2f(2.9), float2f(2.5));
-	vertices[25] = ivec3f(int2f(-3), float2f(2.5), float2f(2.75));
+	vertices[20] = ivec3float(4.0f, 2.8f, 2.25f);
+	vertices[21] = ivec3float(4.0f, 3.2f, 2.5f);
+	vertices[22] = ivec3float(4.0f, 2.8f, 2.75f);
+	vertices[23] = ivec3float(-3.0f, 2.5f, 2.25f);
+	vertices[24] = ivec3float(-3.0f, 2.9f, 2.5f);
+	vertices[25] = ivec3float(-3.0f, 2.5f, 2.75f);
 
 	// create all triangles of the tank model
 	tank_mesh[0] = itrianglef(vertices[0], vertices[5], vertices[1], FALSE);
@@ -158,49 +162,62 @@ void init(void) {
 	tank_mesh[35] = itrianglef(vertices[22], vertices[21], vertices[25], FALSE);
 	tank_mesh[36] = itrianglef(vertices[24], vertices[25], vertices[21], FALSE);
 
-	tank_meshobj = imesh(tank_mesh, tank_txarr, TANK_MODEL_TRI_CNT, ivec3f(float2f(1.5), 0, float2f(12.0)), ivec3f(int2f(-3), 0, float2f(2.5f)));
+	// a spherical collider that has a radius so that it reaches the tip of the tank tracks
+	tank_collider = icoll_sphere(ivec3float(-3.0f, 0.0f, 2.5f), magnitude(vertices[3]));
+
+	tank_meshobj = imesh(tank_mesh, tank_txarr, TANK_MODEL_TRI_CNT, ivec3float(1.5f, 0.0f, 12.0f), ivec3float(-3.0f, 0.0f, 2.5f));
+	m_setcoll(&tank_meshobj, &tank_collider, 1);
 	tank_worldobj = iworld_obj(WORLDOBJ_TANK, &tank_meshobj, NULL, add_tank, NULL, tick_tank);
 
 	// a billboard has two symmetric halves
-	person_mesh[0] = itrianglef(ivec3f(0, int2f(4), 0), ivec3f(int2f(2), int2f(4), 0), ivec3f(0, 0, 0), FALSE);
-	person_mesh[1] = itrianglef(ivec3f(int2f(2), 0, 0), ivec3f(0, 0, 0), ivec3f(int2f(2), int2f(4), 0), TRUE);
+	person_mesh[0] = itrianglef(ivec3i(-1, 4, 0), ivec3i(1, 4, 0), ivec3i(-1, 0, 0), FALSE);
+	person_mesh[1] = itrianglef(ivec3i(1, 0, 0), ivec3i(-1, 0, 0), ivec3i(1, 4, 0), TRUE);
 
 	person_txarr[0] = &textures[TX_PERSON];
 	person_txarr[1] = &textures[TX_PERSON];
 
-	person_meshobj = ibill(person_mesh, person_txarr, ivec3f(int2f(rand()%40-20), 0, int2f(rand()%40-20)));
-	person_worldobj = iworld_obj_static_mesh(WORLDOBJ_PERSON, &person_meshobj);
+	// a simple rectangular prism that has an area of 2x2 units
+	person_collider = icoll_aabb(ivec3i(-1, 0, -1), ivec3i(1, 4, 1));
+
+	person_meshobj = ibill(person_mesh, person_txarr, ivec3i(rand()%40-20, 0, rand()%40-20));
+	m_setcoll(&person_meshobj, &person_collider, 1);
+	person_worldobj = iworld_obj(WORLDOBJ_PERSON, &person_meshobj, NULL, add_person, del_person, tick_person);
+
+	assert(c_do_colliders_collide(tank_collider, person_collider));
 
 	// also a billboard
-	tree_mesh[0] = itrianglef(ivec3f(0, int2f(12), 0), ivec3f(int2f(6), int2f(12), 0), ivec3f(0, 0, 0), FALSE);
-	tree_mesh[1] = itrianglef(ivec3f(int2f(6), 0, 0), ivec3f(0, 0, 0), ivec3f(int2f(6), int2f(12), 0), TRUE);
+	tree_mesh[0] = itrianglef(ivec3i(-3, 12, 0), ivec3i(3, 12, 0), ivec3i(-3, 0, 0), FALSE);
+	tree_mesh[1] = itrianglef(ivec3i(3, 0, 0), ivec3i(-3, 0, 0), ivec3i(3, 12, 0), TRUE);
 
 	tree_txarr[0] = &textures[TX_TREE];
 	tree_txarr[1] = &textures[TX_TREE];
 	
 	for (i = 0; i < 10; i++) {
 		// the mesh is memcpyed in iworld_obj, so we can reinit tree_meshobj every time, just don't modify tree_mesh or tree_txarr
-		tree_meshobj = ibill(tree_mesh, tree_txarr, ivec3f(int2f(rand()%40-20) * 4, 0, int2f(rand()%40-20) * 4));
+		tree_meshobj = ibill(tree_mesh, tree_txarr, ivec3i((rand()%40-20) * 4, 0, (rand()%40-20) * 4));
 		tree_worldobjs[i] = iworld_obj_static_mesh(WORLDOBJ_TREE, &tree_meshobj);
 	}
 
 	// register the finished worldobjects into the world
-	w_register(&tank_worldobj, NULL);
-	w_register(&person_worldobj, NULL);
+	tank_node = w_register(&tank_worldobj, &status);
+	assert(status == S_SUCCESS);
+	person_node = w_register(&person_worldobj, &status);
+	assert(status == S_SUCCESS);
 	for (i = 0; i < 10; i++) {
-		tree_nodes[i] = w_register(&tree_worldobjs[i], NULL);
+		tree_nodes[i] = w_register(&tree_worldobjs[i], &status);
+		assert(status == S_SUCCESS);
 	}
 
 	// some call might have modified it (called quit()/halt())
-	if (gamestate == GAMESTATE_PREINIT) {
+	if (gamestate != GAMESTATE_PREINIT) return;
+
 #ifndef BENCHMARK_RASTER
-		// schedule tick()
-		SetTimer(TICK_TIMER, TICK_MS, tick);
-		gamestate = GAMESTATE_RUNNING;
+	// schedule tick()
+	SetTimer(TICK_TIMER, TICK_MS, tick);
+	gamestate = GAMESTATE_RUNNING;
 #else
-		tick();
+	tick();
 #endif
-	}
 }
 
 // deallocate buffers, stop timers, set quit status
@@ -239,11 +256,13 @@ jmp_buf *get_jmpbuf_ptr(void) {
 void tick(void) {
 	vec3f t;
 	int dtime;
-	static float scale = 0.0f;
+	static float scale = 0.0f; // first tick runs with a scale of 0 -> no movement
 	fixed speed, delta;
 	camera *cam;
 
 	cam = w_getcam();
+
+	Bdisp_AllClr_VRAM();
 
 	w_tick(float2f(scale)); // tick world objects with scaled movements
 

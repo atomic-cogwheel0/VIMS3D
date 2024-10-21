@@ -32,7 +32,12 @@ typedef struct {
 
 #pragma inline(ivec3f)
 // initialize vec3f
-vec3f ivec3f(fixed _x, fixed _y, fixed _z);
+vec3f ivec3f(fixed x, fixed y, fixed z);
+// ease-of-use initers
+// initialize from 3 ints
+vec3f ivec3i(signed int x, signed int y, signed int z);
+// initialize from 3 floats
+vec3f ivec3float(float x, float y, float z);
 
 // transform pitch and yaw into a rotated normal vector
 vec3f py2vec3f(fixed pitch, fixed yaw);
@@ -62,6 +67,9 @@ vec3f mulvf(vec3f t, fixed f);
 vec3f mulvi(vec3f t, int f);
 vec3f divvf(vec3f t, fixed f);
 vec3f divvi(vec3f t, int f);
+
+// remove vertical component
+vec3f horiz(vec3f v);
 
 typedef struct {
 	vec3f pos;

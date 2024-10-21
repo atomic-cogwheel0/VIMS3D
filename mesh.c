@@ -22,6 +22,13 @@ mesh imesh(trianglef *arr, texture_ptr_t *tx_arr, uint8_t arrlen, vec3f pos, vec
 	return m;
 }
 
+int m_setcoll(mesh *m, collider *colls, int coll_cnt) {
+	if (m == NULL) return S_ENULLPTR;
+	m->coll_arr = colls;
+	m->coll_cnt = coll_cnt;
+	m->flag_has_collision = (colls == NULL) ? FALSE : TRUE;
+}
+
 mesh ibill(trianglef *arr, texture_ptr_t *tx_arr, vec3f pos) {
 	mesh m;
 	m.mesh_arr = arr;
@@ -32,8 +39,8 @@ mesh ibill(trianglef *arr, texture_ptr_t *tx_arr, vec3f pos) {
 	m.pos.pos = pos;
 	m.pos.pitch = 0;
 	m.pos.yaw = 0;
-	// center point is in the bottom middle of the mesh (find it by averaging the coords)
-	m.ctr = ivec3f((min(arr[0].a.x, min(arr[0].b.x, arr[0].c.x)) + max(arr[0].a.x, max(arr[0].b.x, arr[0].c.x)))/2, 0, (min(arr[0].a.z, min(arr[0].b.z, arr[0].c.z)) + max(arr[0].a.z, max(arr[0].b.z, arr[0].c.z)))/2);
+	// (0;0;0) is the center -> please make sure it's symmetric
+	m.ctr = ivec3f(0, 0, 0);
 	m.flag_renderable = TRUE;
 	m.flag_has_collision = FALSE;
 	m.flag_is_billboard = TRUE;
@@ -54,11 +61,12 @@ int m_collide(mesh *a, mesh *b) {
 
 	// check every collider in their arrays, offset by their coordinates
 	for (i = 0; i < a->coll_cnt; i++) {
-		tr_a = c_move_collider(a->coll_arr[i], subvv(a->pos.pos, a->ctr));
+		tr_a = c_move_collider(a->coll_arr[i], a->pos.pos);
 		for (j = 0; j < b->coll_cnt; j++) {
-			tr_b = c_move_collider(b->coll_arr[i], subvv(b->pos.pos, b->ctr));
-			if (c_do_colliders_collide(tr_a, tr_b))
+			tr_b = c_move_collider(b->coll_arr[j], b->pos.pos);
+			if (c_do_colliders_collide(tr_a, tr_b)) {
 				return TRUE;
+			}
 		}
 	}
 	return FALSE;
@@ -132,7 +140,7 @@ bool _c_collide_sphere_aabb(collider sphere, collider aabb) {
 	// is the sphere inside the AABB?
 	if (c_pt_within_collider(sphere.shape.sphere.ctr, aabb)) return TRUE;
 
-	// find closest point of the AABB to the sphere by clamping coords of the center onto the surface of the AABB
+	// find closest point of the AABB to the sphere by clamping the coords of the center onto the surface of the AABB
 	closest_pt.x = clamp_f(sphere.shape.sphere.ctr.x, min(aabb.shape.aabb.pt.x, aabb.shape.aabb.opp.x), max(aabb.shape.aabb.pt.x, aabb.shape.aabb.opp.x));
 	closest_pt.y = clamp_f(sphere.shape.sphere.ctr.y, min(aabb.shape.aabb.pt.y, aabb.shape.aabb.opp.y), max(aabb.shape.aabb.pt.y, aabb.shape.aabb.opp.y));
 	closest_pt.z = clamp_f(sphere.shape.sphere.ctr.z, min(aabb.shape.aabb.pt.z, aabb.shape.aabb.opp.z), max(aabb.shape.aabb.pt.z, aabb.shape.aabb.opp.z));

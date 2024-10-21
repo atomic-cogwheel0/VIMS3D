@@ -6,9 +6,19 @@
 	they are most likely correct
 */
 
-vec3f ivec3f(fixed _x, fixed _y, fixed _z) {
+vec3f ivec3f(fixed x, fixed y, fixed z) {
 	vec3f r;
-	r.x = _x; r.y = _y; r.z = _z;
+	r.x = x; r.y = y; r.z = z;
+	return r;
+}
+vec3f ivec3i(signed int x, signed int y, signed int z) {
+	vec3f r;
+	r.x = int2f(x); r.y = int2f(y); r.z = int2f(z);
+	return r;
+}
+vec3f ivec3float(float x, float y, float z) {
+	vec3f r;
+	r.x = float2f(x); r.y = float2f(y); r.z = float2f(z);
 	return r;
 }
 
@@ -98,6 +108,10 @@ vec3f rot(vec3f t, fixed pitch, fixed yaw) {
 	resp.z = mulff(resy.y, sp) + mulff(resy.z, cp);
 
 	return resp;
+}
+
+vec3f horiz(vec3f v) {
+	return ivec3f(v.x, 0, v.z);
 }
 
 trianglef itrianglef(vec3f _a, vec3f _b, vec3f _c, bool _flip) {

@@ -28,39 +28,44 @@ void dworld_obj(world_obj w) {
 }
 
 node *w_register(world_obj *obj, int *status) {
+	int ret;
 	// allocate new node for the object
 	node *to_add = alloc_node(obj);
 
-	if (to_add == NULL)
-		if (status != NULL)
-			*status = S_EALLOC;
-
-	// add it to the world
-	l_append(wlist, to_add);
-
-	// call the object's add function
-	if (obj->add_obj != NULL) {
-		obj->add_obj(to_add->data, wlist);
+	if (to_add == NULL) {
+		ret = S_EALLOC;
 	}
+	else {
+		// add it to the world
+		l_append(wlist, to_add);
 
-	if (status != NULL)
-		*status = S_SUCCESS;
+		// call the object's add function
+		if (obj->add_obj != NULL) {
+			ret = obj->add_obj(to_add->data, wlist);
+		}
+		else {
+			ret = S_SUCCESS; // nothing bad happened
+		}
+	}
+	if (status != NULL) *status = ret;
 	return to_add;
 }
 
 int w_deregister(node *n) {
+	int del_ret = S_SUCCESS; // return S_SUCCESS when del_obj == NULL, otherwise the return value of del_obj()
+
 	if (n == NULL)
 		return S_ENULLPTR;
 
 	// call the object's delete function
 	if (n->data->del_obj != NULL) {
-		n->data->del_obj(n->data, wlist);
+		del_ret = n->data->del_obj(n->data, wlist);
 	}
 
 	// remove every trace of existence
 	l_rmnode(wlist, n);
 	free_node(n);
-	return S_SUCCESS;
+	return del_ret;
 }
 
 int w_setcam(camera *newcam) {
@@ -78,14 +83,15 @@ world_obj *w_getplayer(void) {
 	return &player;
 }
 
-int _tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timescale);
+int tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timescale);
 
 int w_init(void) {
+	int status;
 	// create a player obj without a mesh
-	player = iworld_obj(WORLDOBJ_PLAYER, NULL, &global_cam, NULL, NULL, _tick_player);
-	player_node = w_register(&player, NULL);
-	if (player_node == NULL)
-		return S_EALLOC;
+	player = iworld_obj(WORLDOBJ_PLAYER, NULL, &global_cam, NULL, NULL, tick_player);
+	player_node = w_register(&player, &status);
+	if (status != S_SUCCESS)
+		return status;
 
 	wlist.head = player_node;
 	wlist.tail = player_node;
@@ -126,7 +132,7 @@ int w_run_on_every_obj(int (*func)(world_obj *obj, llist l, world_obj *pl, void 
 	}
 }
 
-int _tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timescale) {
+int tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timescale) {
 	return S_SUCCESS;
 }
 
@@ -147,8 +153,7 @@ int w_render_world(bool debug_overlay, camera *cam) {
 	time_s = RTC_GetTicks();
 
 	curr_ptr = wlist.head;
-	// clear pixels and depth values
-	Bdisp_AllClr_VRAM();
+	// clear depth values
 	for (dx = 0; dx < 128; dx++) {
 		for (dy = 0; dy < 64; dy++) {
 			depthbuf[dy][dx] = 0x7FFF; // FIXED16_MAX
@@ -174,7 +179,7 @@ int w_render_world(bool debug_overlay, camera *cam) {
 	time_e = RTC_GetTicks();
 	// calculate correct deltatick value
 	deltaticks = time_e-time_s;
-	if (deltaticks < 1) deltaticks = 1; 
+	if (deltaticks < 1) deltaticks = 1; // delta is used as a divisor later
 	//if (deltaticks > 128) deltaticks -= 128; // the emulator sometimes skips a whole second :)
 
 	// print debug data
@@ -182,7 +187,7 @@ int w_render_world(bool debug_overlay, camera *cam) {
 	if (debug_overlay)
 #endif
 	{
-		sprintf(buf, "%4.1fms (%2.1ffps) %dt/%dm", (deltaticks)*(1000.0/128.0), 1000.0/((deltaticks)*(1000.0/128.0)), tr_cnt, m_cnt);
+		sprintf(buf, "%4.1fms (%2.1ffps) %dt/%dm", deltaticks*(1000.0/128.0), 128.0/deltaticks, tr_cnt, m_cnt);
 		PrintMini(0, 0, (unsigned char *)buf, 0);
 
 		sprintf(buf, "%4.1f %4.1f %4.1f %4.1fp %4.1fy",	f2float(cam->pos.x),
