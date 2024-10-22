@@ -137,10 +137,12 @@ int tick_person(world_obj *person, llist l, world_obj *player, fixed timescale) 
 		// find distance to pathfinding target
 		target_dist = magnitude(subvv(pdata->pathfind_target, person->mesh->pos.pos));
 		if (target_dist < min_dist) {
-			// find next target by looking away from the tank then rotating a bit (at most 100 degrees in a direction) and finding a point in that direction (at least 5, at most 20 units away)
-			pdata->pathfind_target = addvv(pdata->pathfind_target, mulvi(py2vec3f(0, person->mesh->pos.yaw + float2f((rand()%200-100)*DEG2RAD_MULT)), rand()%15+5));
-			// stop here if tank is outside unsafe area
+			// stop here if tank is outside unsafe area; if tank comes near, find new target
 			pdata->should_move = (tank_dist < tank_safe_dist);
+			if (pdata->should_move) {
+				// find next target by looking away from the tank then rotating a bit (at most 100 degrees in a direction) and finding a point in that direction (at least 5, at most 20 units away)
+				pdata->pathfind_target = addvv(pdata->pathfind_target, mulvi(py2vec3f(0, person->mesh->pos.yaw + float2f((rand()%200-100)*DEG2RAD_MULT)), rand()%15+5));
+			}
 		}
 		// if tank comes within notice distance, start moving until it is out of the unsafe distance
 		if (tank_dist < tank_notice_dist) {

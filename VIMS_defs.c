@@ -23,11 +23,13 @@ void toggle_falling(toggle_t *t, bool state) {
 void uitoa(char *to, unsigned int val, int maxlen) {
 	int i = 0, j;
 	char c;
+	// convert in reverse order
 	do {
 		to[i++] = val % 10 + '0';
 		val /= 10;
 	} while (val > 0 && i < maxlen);
 	to[i] = '\0';
+	// reverse the string
 	for (j = 0, i = i-1; j < i; j++, i--) {
 		c = to[j];
 		to[j] = to[i];

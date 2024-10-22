@@ -15,9 +15,7 @@ precision: fixed-point
 
 TRIANGLEF:
  struct of 3 vec3f (coplanar vertices [later note: duh])
- id is considered "private"
- tx is the texture (see texturemap.c and graphic.h)
- flip_texture is for billboarding
+ flip_texture is for billboarding (and potentially other stuff)
 */
 
 typedef struct {
@@ -57,9 +55,6 @@ fixed dotp(vec3f t, vec3f v);
 fixed dotp2(vec3f t, vec3f v);
 #endif
 vec3f crossp(vec3f t, vec3f v);
-
-// for some reason inlining subvv makes rendering fail
-//#pragma inline(subvv)
 
 vec3f addvv(vec3f t, vec3f v);
 vec3f subvv(vec3f t, vec3f v);

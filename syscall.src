@@ -11,15 +11,15 @@
 
 ; returns 1/128 second ticks since midnight according to the CPU's RTC
 _RTC_GetTicks:
-	mov.l #H'80010070,r1
-	mov.w #H'003b, r0
-	jmp @r1
-	nop
+	mov.l #H'80010070, r1 ; load syscall jumptable function
+	mov.w #H'003b, r0     ; syscall 03Bh: uint32_t RTC_GetTicks(void)
+	jmp @r1               ; do the jump
+	nop                   ; delayed jump instruction slot
 
 ; draws a line to VRAM, faster than the library one
 _Bdisp_SYS_FastDrawLineVRAM:
-	mov.l #H'80010070,r1
-	mov.w #H'0764, r0
+	mov.l #H'80010070, r1
+	mov.w #H'0764, r0     ; syscall 764h: void Bdisp_FastDrawLineVRAM(int x1, int y1, int x2, int y2)
 	jmp @r1
 	nop
 

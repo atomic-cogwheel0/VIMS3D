@@ -215,7 +215,7 @@ int g_rasterize_triangles(trianglef *tris, texture_ptr_t *textures, int len, cam
 
 		// 1. PRECALCULATE everything that can be precalculated!
 		// 2. If needed, split vectors into coordinates and use them separately!
-		// 3. Remember what dot products are, avoid recalculating 'em if only a single coordinate has changed!
+		// 3. Remember what dot products are, avoid recalculating them if only a single coordinate has changed!
 		// 4. INTERPOLATE everything that can be interpolated!
 		//		- Sun Tzu, The Art of War
 
