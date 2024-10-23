@@ -104,13 +104,29 @@ int w_free_world(void) {
 	node *curr_ptr = wlist.head;
 	node *prev_ptr = NULL;
 	while (curr_ptr != NULL) {
+		// save the pointer before incrementing, as curr_ptr->next won't be available after free_node
 		prev_ptr = curr_ptr;
 		curr_ptr = curr_ptr->next;
+		// free them
 		free_node(prev_ptr);
 	}
 	wlist.head = NULL;
 	wlist.tail = NULL;
 	return S_SUCCESS;
+}
+
+int w_dall_world_objs(void) {
+	int del_ret = S_SUCCESS; // return S_SUCCESS when del_obj == NULL, otherwise the return value of del_obj()
+	node *curr_ptr = wlist.head;
+	while (curr_ptr != NULL) {
+		// call the deleter to free everything gracefully
+		if (curr_ptr->data->del_obj != NULL) {
+			del_ret = curr_ptr->data->del_obj(curr_ptr->data, wlist);
+		}
+		dworld_obj(*(curr_ptr->data));
+		curr_ptr = curr_ptr->next;
+	}
+	return del_ret;
 }
 
 void w_tick(fixed timescale) {

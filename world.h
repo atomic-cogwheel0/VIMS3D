@@ -43,7 +43,8 @@ typedef struct _wobj {
 
 // returns a new world object, m is memcpyed, so feel free to modify it afterwards (BUT DO NOT EDIT THE ARRS)
 world_obj iworld_obj(uint8_t t, mesh *m, void *dataptr, int (*a)(world_obj *, llist), int (*d)(world_obj *, llist), int (*tk)(world_obj *, llist, world_obj *, fixed));
-// delete a world object (frees malloced memory)
+// delete a world object 
+// UNSAFE if add_obj() allocated any memory! (call del_obj() beforehand)
 void dworld_obj(world_obj obj);
 
 // adds a new world object instance to the linked list (please don't register an object twice)
@@ -64,8 +65,10 @@ world_obj *w_getplayer(void);
 // initialize list, player, bufs
 int w_init(void);
 
-// free every node of the world list
+// free every node of the world list (does NOT dealloc world objects!!!)
 int w_free_world(void);
+// call dworld_obj() on every instance in the list (dangerous!)
+int w_dall_world_objs(void);
 
 // sets the world's camera object to be newcam
 int w_setcam(camera *newcam);

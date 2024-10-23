@@ -213,8 +213,8 @@ void init(void) {
 
 #ifndef BENCHMARK_RASTER
 	// schedule tick()
-	SetTimer(TICK_TIMER, TICK_MS, tick);
 	gamestate = GAMESTATE_RUNNING;
+	SetTimer(TICK_TIMER, TICK_MS, tick);
 #else
 	tick();
 #endif
@@ -227,6 +227,7 @@ void quit(void) {
 	KillTimer(TICK_TIMER);
 	// deinit every subsystem
 	g_dealloc();
+	w_dall_world_objs();
 	w_free_world();
 	gamestate = GAMESTATE_QUIT_DONE; // finished everything
 }
@@ -238,6 +239,7 @@ void halt(void) {
 	KillTimer(TICK_TIMER);
 	// deinit every subsystem
 	g_dealloc();
+	w_dall_world_objs();
 	w_free_world();
 	longjmp(jmpbuf, 1); // jump back to main (displays error screen)
 }
