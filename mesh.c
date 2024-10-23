@@ -27,6 +27,7 @@ int m_setcoll(mesh *m, collider *colls, int coll_cnt) {
 	m->coll_arr = colls;
 	m->coll_cnt = coll_cnt;
 	m->flag_has_collision = (colls == NULL) ? FALSE : TRUE;
+	return S_SUCCESS;
 }
 
 mesh ibill(trianglef *arr, texture_ptr_t *tx_arr, vec3f pos) {

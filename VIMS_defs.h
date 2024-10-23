@@ -63,12 +63,12 @@ void uitoa(char *to, unsigned int val, int maxlen);
 							void halt(void); \
 							char buf_inner_assert[17]; \
 							locate(1,2); Print((unsigned char *)"assertion failed!"); \
-							PrintMini(0,17,(unsigned char *)" " ## #a,MINI_OVER); \
+							PrintMini(0,17,(unsigned char *)" " #a,MINI_OVER); \
 							uitoa(buf_inner_assert, __LINE__, 16); \
 							locate(1,4); \
 							Print((unsigned char *)"l:"); Print((unsigned char *)buf_inner_assert); \
 							locate(1,5); \
-							Print((unsigned char *)"f:"); Print((unsigned char *)strrchr("\\" ## __FILE__ ## "\0", '\\') + 1); \
+							Print((unsigned char *)"f:"); Print((unsigned char *)strrchr("\\" __FILE__ "\0", '\\') + 1); \
 							halt(); \
 						} \
 					} while(0)

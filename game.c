@@ -324,6 +324,6 @@ void tick(void) {
 	}
 }
 
-int *get_gamestate_ptr(void) {
+volatile int *get_gamestate_ptr(void) {
 	return &gamestate;
 }

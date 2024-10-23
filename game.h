@@ -28,7 +28,7 @@ void halt(void);
 void halt_msg(char *msg);
 
 // subsys interop
-int *get_gamestate_ptr(void);
+volatile int *get_gamestate_ptr(void);
 jmp_buf *get_jmpbuf_ptr(void);
 
 // possible game states

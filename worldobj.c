@@ -122,9 +122,9 @@ int del_person(world_obj *person, llist l) {
 
 int tick_person(world_obj *person, llist l, world_obj *player, fixed timescale) {
 	person_data_t *pdata = (person_data_t *)person->data; // interpret data as pathfinding
-	static const min_dist = int2f(1); // the distance that counts as reaching a target point
-	static const tank_notice_dist = int2f(15); // start fleeing at this distance
-	static const tank_safe_dist = int2f(30); // stop fleeing at this distance
+	static const fixed min_dist = int2f(1); // the distance that counts as reaching a target point
+	static const fixed tank_notice_dist = int2f(15); // start fleeing at this distance
+	static const fixed tank_safe_dist = int2f(30); // stop fleeing at this distance
 	fixed target_dist;
 	world_obj *nearest_tank;
 	fixed tank_dist;
@@ -154,4 +154,5 @@ int tick_person(world_obj *person, llist l, world_obj *player, fixed timescale) 
 			person->mesh->pos.pos = addvv(person->mesh->pos.pos, mulvf(normalize(subvv(pdata->pathfind_target, person->mesh->pos.pos)), timescale/2));
 		}
 	}
+	return S_SUCCESS;
 }

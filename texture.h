@@ -11,11 +11,11 @@
 
 // data for a single texture
 typedef struct {
-	const uint8_t w; // width
-	const uint8_t h; // height
-	const unsigned int u_tile_size : 4; // number of repeats on the X axis
-	const unsigned int v_tile_size : 4; // number of repeats on the Y axis
-	const byte *tx_data; // array of bytes; each byte is 4 pixels; iterated horizontally
+	uint8_t w; // width
+	uint8_t h; // height
+	unsigned int u_tile_size : 4; // number of repeats on the X axis
+	unsigned int v_tile_size : 4; // number of repeats on the Y axis
+	byte *tx_data; // array of bytes; each byte is 4 pixels; iterated horizontally
 } texture_t;
 
 typedef texture_t *texture_ptr_t;

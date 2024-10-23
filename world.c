@@ -130,6 +130,7 @@ int w_run_on_every_obj(int (*func)(world_obj *obj, llist l, world_obj *pl, void 
 		func(curr_ptr->data, wlist, &player, arg);
 		curr_ptr = curr_ptr->next;
 	}
+	return S_SUCCESS;
 }
 
 int tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timescale) {

@@ -403,7 +403,7 @@ int g_texture2d(texture_ptr_t tx, unsigned int x, unsigned int y) {
 				// calculate pixel offset into the array (row by row)
 				px_offset = ((yiter % tx->h) * tx->w) + xiter % tx->w;
 				// extract pixel at given offset (2 bit pixel extracted from byte arr)
-				px = (tx->tx_data[px_offset>>2] & (3<<(2*(3-px_offset&3)))) >> (2*(3-(px_offset&3)));
+				px = (tx->tx_data[px_offset>>2] & (3 << ((3 - (px_offset & 3)) * 2))) >> ((3 - (px_offset & 3)) * 2);
 				// is transparency bit set?
 				if (!(px & 2)) {
 					Bdisp_SetPoint_VRAM(xiter+x, yiter+y, px & 1);
