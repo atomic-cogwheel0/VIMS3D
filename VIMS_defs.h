@@ -54,8 +54,13 @@ void toggle_falling(toggle_t *t, bool state);
 #define S_EDOWN -7			// subsystem is down
 #define S_EIMPLEMENT -8		// requested feature not implemented
 
+// if defined, uitoax will return uppercase
+//#define UITOAX_UPPERCASE
+
 // unsigned int to str, `to` must be able to store maxlen+1 bytes
 void uitoa(char *to, unsigned int val, int maxlen);
+// unsigned int to str in base, otherwise behaves as uitoa()
+void uitoax(char *to, unsigned int val, int maxlen, int base);
 
 // if given expression is true, continues exec; if it is false, prints error and expression and halt()s program
 #define assert(a)	do { \

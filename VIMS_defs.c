@@ -21,12 +21,27 @@ void toggle_falling(toggle_t *t, bool state) {
 }
 
 void uitoa(char *to, unsigned int val, int maxlen) {
+	uitoax(to, val, maxlen, 10);
+}
+
+void uitoax(char *to, unsigned int val, int maxlen, int base) {
 	int i = 0, j;
 	char c;
+	int modulo;
 	// convert in reverse order
 	do {
-		to[i++] = val % 10 + '0';
-		val /= 10;
+		modulo = val % base;
+		if (modulo < 10) {
+			to[i++] = modulo + '0';
+		}
+		else {
+#ifdef UITOAX_UPPERCASE
+			to[i++] = modulo - 10 + 'A';
+#else
+			to[i++] = modulo - 10 + 'a';
+#endif
+		}
+		val /= base;
 	} while (val > 0 && i < maxlen);
 	to[i] = '\0';
 	// reverse the string
