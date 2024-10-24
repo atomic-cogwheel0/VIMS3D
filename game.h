@@ -19,12 +19,13 @@ int RTC_GetTicks(void);
 void tick(void);
 // prepares game & objects
 void init(void);
-// exit to main menu
-void quit(void);
 
-// exit to ERROR screen
+// exit to main menu after freeing all memory
+void quit(void);
+// immediately stop everything and exit to ERROR screen
+// unsafe quit: does not call destructors and does not free (but stops timer)
 void halt(void);
-// print a message then halt the program
+// print a message then halt() the program
 void halt_msg(char *msg);
 
 // subsys interop

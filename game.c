@@ -237,10 +237,6 @@ jmp_buf jmpbuf; // for halt handling
 void halt(void) {
 	gamestate = GAMESTATE_ERR;
 	KillTimer(TICK_TIMER);
-	// deinit every subsystem
-	g_dealloc();
-	w_dall_world_objs();
-	w_free_world();
 	longjmp(jmpbuf, 1); // jump back to main (displays error screen)
 }
 
