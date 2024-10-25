@@ -11,8 +11,9 @@
 
 int RTC_GetTicks(void);
 
-// timer config
+// timer id
 #define TICK_TIMER ID_USER_TIMER1
+// minimum length of a single gametick in milliseconds
 #define TICK_MS 25
 
 // handles input, initiates rendering and object ticking

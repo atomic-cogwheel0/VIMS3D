@@ -3,6 +3,8 @@
 
 #include "fxlib.h"
 
+#include <string.h>
+
 /*
 VIMS_defs:
  defines miscellaneous utility functions
@@ -62,18 +64,18 @@ void uitoa(char *to, unsigned int val, int maxlen);
 // unsigned int to str in base, otherwise behaves as uitoa()
 void uitoax(char *to, unsigned int val, int maxlen, int base);
 
+#define STRINGIZE(n) STRINGIZE_INNER(n)
+#define STRINGIZE_INNER(x) #x
+
 // if given expression is true, continues exec; if it is false, prints error and expression and halt()s program
 #define assert(a)	do { \
 						if (!(a)) { \
 							void halt(void); \
-							char buf_inner_assert[17]; \
-							locate(1,2); Print((unsigned char *)"assertion failed!"); \
-							PrintMini(0,17,(unsigned char *)" " #a,MINI_OVER); \
-							uitoa(buf_inner_assert, __LINE__, 16); \
-							locate(1,4); \
-							Print((unsigned char *)"l:"); Print((unsigned char *)buf_inner_assert); \
-							locate(1,5); \
-							Print((unsigned char *)"f:"); Print((unsigned char *)strrchr("\\" __FILE__ "\0", '\\') + 1); \
+							Bdisp_AllClr_DDVRAM(); \
+							PrintXY(0, 8, (unsigned char *)"assertion failed!", 0); \
+							PrintMini(0, 17, (unsigned char *)" " #a, MINI_OVER); \
+							PrintXY(0, 24, (unsigned char *)"l:" STRINGIZE(__LINE__), 0); \
+							PrintXY(0, 32, (unsigned char *)"f:", 0); PrintXY(12, 32, (unsigned char *)strrchr("\\" __FILE__ "\0", '\\') + 1, 0); \
 							halt(); \
 						} \
 					} while(0)

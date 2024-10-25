@@ -241,9 +241,9 @@ void halt(void) {
 }
 
 void halt_msg(char *msg) {
-	// print the message then halt
-	locate(1,2);
-	Print((unsigned char *)msg);
+	// clear screen, print the message then halt
+	Bdisp_AllClr_DDVRAM();
+	PrintXY(0, 8, (unsigned char *)msg, 0);
 	halt();
 }
 
