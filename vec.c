@@ -87,7 +87,7 @@ vec3f divvi(vec3f t, int f) {
     |0   sin ?     cos ?| |z|   |y sin ? + z cos ?|   |z'| */
 
 vec3f py2vec3f(fixed pitch, fixed yaw) {
-	vec3f v = ivec3f(0, 0, int2f(1));
+	static const vec3f v = {0, 0, int2f(1)};
 	
 	return rot(v, pitch, yaw);
 }
@@ -114,12 +114,12 @@ vec3f horiz(vec3f v) {
 	return ivec3f(v.x, 0, v.z);
 }
 
-trianglef itrianglef(vec3f _a, vec3f _b, vec3f _c, bool _flip) {
+trianglef itrianglef(vec3f a, vec3f b, vec3f c, bool flip) {
 	trianglef r;
-	r.a = _a;
-	r.b = _b;
-	r.c = _c;
-	r.flip_texture = _flip;
+	r.a = a;
+	r.b = b;
+	r.c = c;
+	r.flip_texture = flip;
 	return r;
 }
 

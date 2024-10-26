@@ -1,5 +1,5 @@
-#ifndef _MESH_H
-#define _MESH_H
+#ifndef MESH_H
+#define MESH_H
 
 #include <stdlib.h>
 
@@ -61,7 +61,7 @@ mesh imesh(trianglef *arr, texture_ptr_t *tx_arr, uint8_t arrlen, vec3f pos, vec
 mesh ibill(trianglef *arr, texture_ptr_t *tx_arr, vec3f pos);
 
 // set a given mesh's hitbox arr to colls, also sets flag_has_collision based on whether colls is NULL
-int m_setcoll(mesh *m, collider *colls, int coll_cnt);
+int m_setcoll(mesh *m, collider *colls, uint8_t coll_cnt);
 
 // do the given meshes collide?
 int m_collide(mesh *a, mesh *b);

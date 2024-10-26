@@ -1,5 +1,5 @@
-#ifndef _VIMS_DEFS_H
-#define _VIMS_DEFS_H
+#ifndef VIMS_DEFS_H
+#define VIMS_DEFS_H
 
 #include "fxlib.h"
 

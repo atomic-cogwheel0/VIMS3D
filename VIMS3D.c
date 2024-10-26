@@ -13,6 +13,7 @@
 */ 
 
 void display_error_screen(void);
+int Bkey_GetKeyWait(int *code1, int *code2, int wait_type, int time, int menu, short *unused);
 
 int main(void) {
 	unsigned int key;
@@ -24,6 +25,7 @@ int main(void) {
 	if (setjmp(*envptr)) {
 		// longjmp() was called in halt()
 		display_error_screen();
+		return 1;
 	}
 
 	init();
@@ -32,6 +34,7 @@ int main(void) {
 	while (*gamestate_ptr != GAMESTATE_QUIT_DONE) {
 		GetKey(&key);
 	}
+	return 0;
 }
 
 void display_error_screen(void) {

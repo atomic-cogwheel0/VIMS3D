@@ -1,5 +1,5 @@
-#ifndef _FIXED_H
-#define _FIXED_H
+#ifndef FIXED_H
+#define FIXED_H
 
 #include <math.h>
 
@@ -120,6 +120,6 @@ fixed sin_f(fixed t);
 
 fixed clamp_f(fixed val, fixed min, fixed max);
 // as fixed_full_t is the same as int, this is possible
-#define clamp_i(val, min, max) (int)clamp_f(val, min, max)
+#define clamp_i(val, min, max) (int)clamp_f((fixed)(val), (fixed)(min), (fixed)(max))
 
 #endif

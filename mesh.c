@@ -22,7 +22,7 @@ mesh imesh(trianglef *arr, texture_ptr_t *tx_arr, uint8_t arrlen, vec3f pos, vec
 	return m;
 }
 
-int m_setcoll(mesh *m, collider *colls, int coll_cnt) {
+int m_setcoll(mesh *m, collider *colls, uint8_t coll_cnt) {
 	if (m == NULL) return S_ENULLPTR;
 	m->coll_arr = colls;
 	m->coll_cnt = coll_cnt;
@@ -76,7 +76,7 @@ int m_collide(mesh *a, mesh *b) {
 // --- collision code ---
 
 // simplifies internal calculation
-bool _c_collide_sphere_aabb(collider sphere, collider aabb);
+bool inner_c_collide_sphere_aabb(collider sphere, collider aabb);
 
 collider icoll_sphere(vec3f ctr, fixed r) {
 	collider coll;
@@ -104,10 +104,10 @@ bool c_do_colliders_collide(collider a, collider b) {
 			(max(a.shape.aabb.pt.z, a.shape.aabb.opp.z) >= min(b.shape.aabb.pt.z, b.shape.aabb.opp.z)) && (min(a.shape.aabb.pt.z, a.shape.aabb.opp.z) <= max(b.shape.aabb.pt.z, b.shape.aabb.opp.z))) return TRUE;
 	}
 	if (a.type == COLLIDER_SPHERE && b.type == COLLIDER_AABB) {
-		return _c_collide_sphere_aabb(a, b);
+		return inner_c_collide_sphere_aabb(a, b);
 	}
 	if (a.type == COLLIDER_AABB && b.type == COLLIDER_SPHERE) {
-		return _c_collide_sphere_aabb(b, a);
+		return inner_c_collide_sphere_aabb(b, a);
 	}
 	return FALSE;
 }
@@ -135,7 +135,7 @@ collider c_move_collider(collider c, vec3f v) {
 	return c;
 }
 
-bool _c_collide_sphere_aabb(collider sphere, collider aabb) {
+bool inner_c_collide_sphere_aabb(collider sphere, collider aabb) {
 	vec3f closest_pt;
 
 	// is the sphere inside the AABB?

@@ -11,7 +11,7 @@
 // depth buffer: a 128*64 array, every pixel has a 11+5 bit fixed-point depth value
 int16_t *depthbuf[64];
 
-unsigned int g_status = SUBSYS_DOWN;
+int g_status = SUBSYS_DOWN;
 
 // initialize all buffers (static alloc for buffers isn't possible)
 int g_init(void) {
@@ -95,7 +95,7 @@ int g_rasterize_triangles(trianglef *tris, texture_ptr_t *textures, int len, cam
 	uint8_t px, px_offset;
 	uint16_t u_mult, v_mult;
 
-	signed short depthval;
+	int16_t depthval;
 
 	if (g_status != SUBSYS_UP) return S_EDOWN;
 

@@ -315,7 +315,7 @@ void tick(void) {
 	}
 	cam->pos = addvv(cam->pos, t);
 
-	toggle_rising(&overlay, IsKeyDown(KEY_CTRL_F3));
+	toggle_rising(&overlay, (bool)IsKeyDown(KEY_CTRL_F3));
 
 	if (IsKeyDown(KEY_CTRL_EXIT)) {
 		quit();

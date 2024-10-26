@@ -1,5 +1,5 @@
-#ifndef _TEXTURE_H
-#define _TEXTURE_H
+#ifndef TEXTURE_H
+#define TEXTURE_H
 
 #include "VIMS_defs.h"
 

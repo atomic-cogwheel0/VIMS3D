@@ -1,5 +1,5 @@
-#ifndef _RASTER_H
-#define _RASTER_H
+#ifndef RASTER_H
+#define RASTER_H
 
 #include <stdlib.h>
 #include "fxlib.h"
@@ -8,7 +8,7 @@
 #include "texture.h"
 
 // syscalls
-int RTC_GetTicks(void);
+unsigned int RTC_GetTicks(void);
 int Bdisp_SYS_FastDrawLineVRAM(int x1, int y1, int x2, int y2);
 
 // number of triangles the subsys can handle at once

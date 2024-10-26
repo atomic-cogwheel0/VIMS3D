@@ -1,5 +1,5 @@
-#ifndef _WORLDOBJ_H
-#define _WORLDOBJ_H
+#ifndef WORLDOBJ_H
+#define WORLDOBJ_H
 
 #include "world.h"
 

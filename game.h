@@ -1,5 +1,5 @@
-#ifndef _GAME_H
-#define _GAME_H
+#ifndef GAME_H
+#define GAME_H
 
 #include <stdlib.h>
 #include <setjmp.h>
@@ -8,8 +8,6 @@
 
 #include "worldobj.h"
 #include "VIMS_defs.h"
-
-int RTC_GetTicks(void);
 
 // timer id
 #define TICK_TIMER ID_USER_TIMER1

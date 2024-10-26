@@ -23,7 +23,7 @@ fixed sqrt_f(fixed f) {
 	}
 	q >>= 8;
 	q >>= 2;
-	return q;
+	return (fixed)q;
 }
 
 #ifndef MACRO_VAL2F
