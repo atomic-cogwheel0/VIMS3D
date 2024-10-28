@@ -39,6 +39,11 @@ mesh tree_meshobj;
 world_obj tree_worldobjs[10];
 node *tree_nodes[10];
 
+mesh ground_meshobj;
+world_obj ground_worldobj;
+collider ground_collider;
+node *ground_node;
+
 // if debugging, set overlay to ON by default
 #ifndef DEBUG_BUILD
 toggle_t overlay = {FALSE, FALSE, FALSE};
@@ -165,7 +170,7 @@ void init(void) {
 	// a spherical collider that has a radius so that it reaches the tip of the tank tracks
 	tank_collider = icoll_sphere(ivec3float(-3.0f, 0.0f, 2.5f), magnitude(vertices[3]));
 
-	tank_meshobj = imesh(tank_mesh, tank_txarr, TANK_MODEL_TRI_CNT, ivec3float(1.5f, 0.0f, 12.0f), ivec3float(-3.0f, 0.0f, 2.5f));
+	tank_meshobj = imesh(tank_mesh, tank_txarr, TANK_MODEL_TRI_CNT, ivec3float(1.5f, 20.0f, 12.0f), ivec3float(-3.0f, 0.0f, 2.5f));
 	m_setcoll(&tank_meshobj, &tank_collider, 1);
 	tank_worldobj = iworld_obj(WORLDOBJ_TANK, &tank_meshobj, NULL, add_tank, NULL, tick_tank);
 
@@ -183,8 +188,6 @@ void init(void) {
 	m_setcoll(&person_meshobj, &person_collider, 1);
 	person_worldobj = iworld_obj(WORLDOBJ_PERSON, &person_meshobj, NULL, add_person, del_person, tick_person);
 
-	assert(c_do_colliders_collide(tank_collider, person_collider));
-
 	// also a billboard
 	tree_mesh[0] = itrianglef(ivec3i(-3, 12, 0), ivec3i(3, 12, 0), ivec3i(-3, 0, 0), FALSE);
 	tree_mesh[1] = itrianglef(ivec3i(3, 0, 0), ivec3i(-3, 0, 0), ivec3i(3, 12, 0), TRUE);
@@ -197,6 +200,14 @@ void init(void) {
 		tree_meshobj = ibill(tree_mesh, tree_txarr, ivec3i((rand()%40-20) * 4, 0, (rand()%40-20) * 4));
 		tree_worldobjs[i] = iworld_obj_static_mesh(WORLDOBJ_TREE, &tree_meshobj);
 	}
+	
+	// a pretty large piece of ground if you ask me
+	ground_collider = icoll_aabb(ivec3i(-100, -100, -100), ivec3i(100, 0, 100)); 
+	// generic init values for something with no triangles
+	ground_meshobj = imesh(NULL, NULL, 0, ivec3i(0, 0, 0), ivec3i(0, 0, 0));
+	m_setcoll(&ground_meshobj, &ground_collider, 1);
+
+	ground_worldobj = iworld_obj_static_mesh(WORLDOBJ_GROUND, &ground_meshobj);
 
 	// register the finished worldobjects into the world
 	tank_node = w_register(&tank_worldobj, &status);
@@ -207,6 +218,8 @@ void init(void) {
 		tree_nodes[i] = w_register(&tree_worldobjs[i], &status);
 		assert(status == S_SUCCESS);
 	}
+	ground_node = w_register(&ground_worldobj, &status);
+	assert(status == S_SUCCESS);
 
 	// some call might have modified it (called quit()/halt())
 	if (gamestate != GAMESTATE_PREINIT) return;

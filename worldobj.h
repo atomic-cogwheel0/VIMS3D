@@ -15,6 +15,9 @@ world_obj *find_closest_object(world_obj *obj, llist l, int type_to_find, fixed 
 // move and rotate obj towards dir with speed (0 means no movement, negatives mean away from dir); with check_collision set, no movement if collision occurs
 int move_rot_towards(world_obj *obj, world_obj *dir, fixed speed, bool check_collision);
 
+// handle gravity of a given object in the given tick, returns whether obj has hit the ground; sets status (NULLable) to S_SUCCESS normally
+bool fall_tick(world_obj *obj, llist l, fixed timescale, int *status);
+
 // ---- specific handlers ----
 
 // a TANK object's handlers

@@ -16,6 +16,7 @@ world_obj iworld_obj(uint8_t t, mesh *m, void *dataptr, int (*a)(world_obj *, ll
 		w.mesh = malloc(sizeof(mesh));
 		memcpy(w.mesh, m, sizeof(mesh));
 	}
+	w.g_speed = int2f(0);
 	w.data = dataptr;
 	w.add_obj = a;
 	w.del_obj = d;

@@ -15,12 +15,7 @@ world_obj iworld_obj_static_mesh(uint8_t t, mesh *m) {
 	return iworld_obj(t, m, NULL, NULL, NULL, NULL);
 }
 
-//--------------------------
-
-int add_tank(world_obj *tank, llist l) {
-	tank->mesh->pos.yaw = float2f(90*DEG2RAD_MULT); // the model is oriented on the wrong axis
-	return S_SUCCESS;
-}
+// --- generic world object code ---
 
 fixed angle_horizontal_plane(vec3f u, vec3f v) {
 	fixed dot = mulff(u.x, v.x) + mulff(u.z, v.z); // dot product
@@ -84,6 +79,55 @@ int move_rot_towards(world_obj *obj, world_obj *dir, fixed speed, bool check_col
 		obj->mesh->pos.pos = prev_pos;
 	}
 
+	return S_SUCCESS;
+}
+
+// max "sane" iterator value for the collision backtrack loop if something goes wrong
+#define ITER_SANE_BACKTRACK 200
+
+// fall downwards until the ground is reached
+bool fall_tick(world_obj *obj, llist l, fixed timescale, int *status) {
+	static const fixed g_accel = float2f(-0.2f);
+	static const fixed backstep = float2f(0.1f); // the resolution of stepping back when the ground is hit
+	bool has_collided = FALSE;
+	node *ptr;
+	int iter;
+
+	// accelerate and move object downwards
+	obj->g_speed += mulff(g_accel, timescale);
+	obj->mesh->pos.pos.y += obj->g_speed;
+
+	// check every GROUND object for collision
+	ptr = l.head;
+	while (ptr != NULL) {
+		if (ptr->data->type == WORLDOBJ_GROUND) {
+			// if a collision occurs
+			if (m_collide(ptr->data->mesh, obj->mesh)) {
+				has_collided = TRUE;
+				iter = 0;
+				do {
+					obj->mesh->pos.pos.y += backstep;
+					iter++;
+				} while (m_collide(ptr->data->mesh, obj->mesh) && iter < ITER_SANE_BACKTRACK);
+			}
+		}
+		ptr = ptr->next;
+	}
+
+	// bounce lol
+	if (has_collided) {
+		obj->g_speed = 0;
+	}
+
+	if (status != NULL)
+		status = S_SUCCESS;
+	return has_collided;
+}
+
+// --- object specific functions ---
+
+int add_tank(world_obj *tank, llist l) {
+	tank->mesh->pos.yaw = float2f(90*DEG2RAD_MULT); // the model is oriented on the wrong axis
 	return S_SUCCESS;
 }
 
@@ -151,7 +195,7 @@ int tick_person(world_obj *person, llist l, world_obj *player, fixed timescale) 
 
 		// move towards pathfinding target
 		if (pdata->should_move) {
-			person->mesh->pos.pos = addvv(person->mesh->pos.pos, mulvf(normalize(subvv(pdata->pathfind_target, person->mesh->pos.pos)), timescale/2));
+			person->mesh->pos.pos = addvv(person->mesh->pos.pos, mulvf(normalize(horiz(subvv(pdata->pathfind_target, person->mesh->pos.pos))), timescale/2));
 		}
 	}
 	return S_SUCCESS;

@@ -26,12 +26,14 @@ typedef struct {
 #define WORLDOBJ_TANK 2
 #define WORLDOBJ_PERSON 3
 #define WORLDOBJ_TREE 4
+#define WORLDOBJ_GROUND 5
 
 // instance of a world object, handled based on its type and function pointers
 typedef struct _wobj {
 	uint8_t type;
 
 	mesh *mesh; // may be NULL
+	fixed g_speed; // the speed at which this mesh moves vertically per time unit (negative is downwards)
 
 	void *data; // pointer to basically any data needed for this object
 
