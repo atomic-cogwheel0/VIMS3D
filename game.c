@@ -31,10 +31,12 @@ mesh tank_meshobj;
 world_obj tank_worldobj;
 collider tank_collider;
 node *tank_node;
+
 mesh person_meshobj;
 world_obj person_worldobj;
 collider person_collider;
 node *person_node;
+
 mesh tree_meshobj;
 world_obj tree_worldobjs[10];
 node *tree_nodes[10];
@@ -170,7 +172,7 @@ void init(void) {
 	// a spherical collider that has a radius so that it reaches the tip of the tank tracks
 	tank_collider = icoll_sphere(ivec3float(-3.0f, 0.0f, 2.5f), magnitude(vertices[3]));
 
-	tank_meshobj = imesh(tank_mesh, tank_txarr, TANK_MODEL_TRI_CNT, ivec3float(1.5f, 20.0f, 12.0f), ivec3float(-3.0f, 0.0f, 2.5f));
+	tank_meshobj = imesh(tank_mesh, tank_txarr, TANK_MODEL_TRI_CNT, ivec3float(1.5f, 0.0f, 12.0f), ivec3float(-3.0f, 0.0f, 2.5f));
 	m_setcoll(&tank_meshobj, &tank_collider, 1);
 	tank_worldobj = iworld_obj(WORLDOBJ_TANK, &tank_meshobj, NULL, add_tank, NULL, tick_tank);
 
