@@ -132,11 +132,9 @@ int snprintf_light(char *dest, size_t len, const char *fmt, ...) {
 						d++;
 					}
 				}
-				i = 0;
-				while (i < w) {
+				for (i = 0; i < w; i++) {
 					if (d < len) dest[d] = itoa_buf[i];
 					d++;
-					i++;
 				}
 				break;
 			case 's':
