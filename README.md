@@ -7,8 +7,7 @@ Build this program/game engine using the official fx-9860G SDK (gint port is in 
 # Usage
 The software contains a small demo, some assets (a tank mesh, sample textures, sample code).
 Debug info available by pressing `F3`.
-Interlacing available by pressing `F4` (kinda useless).
-Look around with the arrow keys, move with 8, 4, 6, and 2, float up/down with 1 and 7.
+Look around with the arrow keys, move with 8, 4, 6, and 2, float up/down with 3 and 9.
 
 ![tank_in_forest_demo](https://github.com/user-attachments/assets/35169bff-45cb-464e-b886-e05219bbd029)
 
@@ -19,7 +18,7 @@ Some code is self-documenting, I think.
 
 Main things to know:
 Define and add world objects in `init()` in `game.c`.
-Manipulate them in their respective tick functions in `game.c`.
+Manipulate them in their respective tick functions in `worldobj.c`.
 Define textures in `texturemap.c`.
 All of these files have some example code.
 
