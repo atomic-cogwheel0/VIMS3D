@@ -36,6 +36,7 @@ typedef unsigned char bool;
 
 #define INT_MIN 0x80000000
 #define INT_MAX 0x7FFFFFFF
+#define UINT_MAX 0xFFFFFFFFU
 
 // stores all data needed for a toggle in a tick function
 typedef struct {
@@ -78,7 +79,8 @@ int itoa(char *to, signed int val, int maxlen);
 //         X and Y are single-digit numbers!
 // %d    : int32_t
 // %u    : uint32_t
-// %Xx   : uint32_t as hex (with X digits)
+// %Xx   : uint32_t as hex (with X (single-digit) digits)
+// %s    : string
 // %%    : the char %
 
 int snprintf_light(char *dest, size_t len, const char *fmt, ...);
