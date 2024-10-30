@@ -205,12 +205,12 @@ int w_render_world(bool debug_overlay, camera *cam) {
 	if (debug_overlay)
 #endif
 	{
-		sprintf(buf, "%4.1fms (%2.1ffps) %dt/%dm", deltaticks*(1000.0/128.0), 128.0/deltaticks, tr_cnt, m_cnt);
+		snprintf_light(buf, 63, "%1fms (%1ffps) %dt/%dm", int2f(deltaticks)*1000/128, int2f(128)/deltaticks, tr_cnt, m_cnt);
 		PrintMini(0, 0, (unsigned char *)buf, 0);
 
-		sprintf(buf, "%4.1f %4.1f %4.1f %4.1fp %4.1fy",	f2float(cam->pos.x),
-														f2float(cam->pos.y),
-														f2float(cam->pos.z), f2float(cam->pitch)*RAD2DEG_MULT, f2float(cam->yaw)*RAD2DEG_MULT);
+		snprintf_light(buf, 63, "%1f %1f %1f %1fp %1fy", cam->pos.x,
+		                                                 cam->pos.y,
+		                                                 cam->pos.z, rad2deg(cam->pitch), rad2deg(cam->yaw));
 		PrintMini(0, 6, (unsigned char *)buf, 0);
 	}
 

@@ -133,3 +133,14 @@ fixed clamp_f(fixed val, fixed min, fixed max) {
 	if (val > max) return max;
 	return val;
 }
+
+static const fixed pi = float2f(3.141593);
+static const fixed one_eighty = int2f(180);
+
+fixed rad2deg(fixed rad) {
+	return divff(mulff(rad, one_eighty), pi);
+}
+
+fixed deg2rad(fixed deg) {
+	return divff(mulff(deg, pi), one_eighty);
+}

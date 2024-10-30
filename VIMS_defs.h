@@ -4,6 +4,7 @@
 #include "fxlib.h"
 
 #include <string.h>
+#include <stdarg.h>
 
 /*
 VIMS_defs:
@@ -33,6 +34,9 @@ typedef unsigned char bool;
 #define max(a, b) (((a)>(b))?(a):(b))
 #define min(a, b) (((a)<(b))?(a):(b))
 
+#define INT_MIN 0x80000000
+#define INT_MAX 0x7FFFFFFF
+
 // stores all data needed for a toggle in a tick function
 typedef struct {
 	bool is_on;
@@ -59,10 +63,25 @@ void toggle_falling(toggle_t *t, bool state);
 // if defined, uitoax will return uppercase
 //#define UITOAX_UPPERCASE
 
-// unsigned int to str, `to` must be able to store maxlen+1 bytes
-void uitoa(char *to, unsigned int val, int maxlen);
-// unsigned int to str in base, otherwise behaves as uitoa()
-void uitoax(char *to, unsigned int val, int maxlen, int base);
+// these return number of bytes written, excluding '\0'
+// unsigned int to str in given base, `to` must be able to store maxlen+1 bytes
+int uitoax(char *to, unsigned int val, int maxlen, int base);
+// uitoax() wrapper in base 10
+int uitoa(char *to, unsigned int val, int maxlen);
+// like uitoax, prepends a '-' if negative, handles INT_MIN correctly
+int itoax(char *to, signed int val, int maxlen, int base);
+// itoax() wrapper in base 10
+int itoa(char *to, signed int val, int maxlen);
+
+// own snprintf() implementation, supports following formats:
+// %X.Yf : signed fixed point number with x digits before and y digits after decimal point (x.y is optional)
+//         X and Y are single-digit numbers!
+// %d    : int32_t
+// %u    : uint32_t
+// %Xx   : uint32_t as hex (with X digits)
+// %%    : the char %
+
+int snprintf_light(char *dest, size_t len, const char *fmt, ...);
 
 #define STRINGIZE(n) STRINGIZE_INNER(n)
 #define STRINGIZE_INNER(x) #x
