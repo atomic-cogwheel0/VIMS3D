@@ -332,7 +332,7 @@ int g_rasterize_triangles(trianglef *tris, texture_ptr_t *textures, int len, cam
 						px_offset = (f2int(ui)%tx.h)*tx.w + (f2int(vi)%tx.w);
 					}
 					// extract pixel at given offset (2 bit pixel extracted from byte arr)
-					px = (tx.tx_data[px_offset>>2] & (3 << ((3 - (px_offset & 3)) * 2))) >> ((3 - (px_offset & 3)) * 2);
+					px = (tx.tx_data[px_offset/4] & (3 << ((3 - (px_offset%4)) * 2))) >> ((3 - (px_offset%4)) * 2);
 					// is transparency bit set?
 					if (!(px & 2)) {
 						Bdisp_SetPoint_VRAM(xiter, yiter, px & 1);
@@ -401,9 +401,9 @@ int g_texture2d(texture_ptr_t tx, unsigned int x, unsigned int y) {
 			// add top left coords; is still onscreen?
 			if (xiter+x >= 0 && xiter+x < 128 && yiter+y >= 0 && yiter+y < 64) {
 				// calculate pixel offset into the array (row by row)
-				px_offset = ((yiter % tx->h) * tx->w) + xiter % tx->w;
+				px_offset = (yiter % tx->h) * tx->w + xiter % tx->w;
 				// extract pixel at given offset (2 bit pixel extracted from byte arr)
-				px = (tx->tx_data[px_offset>>2] & (3 << ((3 - (px_offset & 3)) * 2))) >> ((3 - (px_offset & 3)) * 2);
+				px = (tx->tx_data[px_offset/4] & (3 << ((3 - (px_offset%4)) * 2))) >> ((3 - (px_offset%4)) * 2);
 				// is transparency bit set?
 				if (!(px & 2)) {
 					Bdisp_SetPoint_VRAM(xiter+x, yiter+y, px & 1);

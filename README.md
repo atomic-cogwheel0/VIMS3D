@@ -18,11 +18,11 @@ Tank in forest demo
 Some code is self-documenting, I think.
 
 Main things to know:
-Define and add meshes in `init()` in `game.c`.
-Manipulate them in `tick()` in `game.c`.
+Define and add world objects in `init()` in `game.c`.
+Manipulate them in their respective tick functions in `game.c`.
 Define textures in `texturemap.c`.
 All of these files have some example code.
 
-The engine is very limited, mostly due to memory constraints.
-A mesh can have up to 72 triangles and the game can have up to 12 meshes at the same time.
+The engine is kind of limited, mostly due to memory constraints.
+The number of objects at once is limited by the size of the heap (48kbytes, of which 16kbytes are for the depth buffer)
 Also the engine is kinda buggy, there are some rendering errors, this is still in alpha :)
