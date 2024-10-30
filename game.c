@@ -77,7 +77,7 @@ void init(void) {
 #ifndef BENCHMARK_RASTER
 	srand(RTC_GetTicks());
 #else
-	srand(42);
+	srand(42); // magic number: show same scene for benchmarks
 #endif
 
 	// initialize every texture of every triangle of the tank mesh

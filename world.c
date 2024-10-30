@@ -205,7 +205,7 @@ int w_render_world(bool debug_overlay, camera *cam) {
 	if (debug_overlay)
 #endif
 	{
-		snprintf_light(buf, 64, "%1fms (%1ffps) %dt/%dm", int2f(deltaticks)*1000/128, int2f(128)/deltaticks, tr_cnt, m_cnt);
+		snprintf_light(buf, 64, "%1fms (%1ffps) %dt/%dm", float2f(1000.0f/128.0f)*deltaticks, int2f(128)/deltaticks, tr_cnt, m_cnt);
 		PrintMini(0, 0, (unsigned char *)buf, 0);
 
 		snprintf_light(buf, 64, "%1f %1f %1f %1fp %1fy", cam->pos.x,

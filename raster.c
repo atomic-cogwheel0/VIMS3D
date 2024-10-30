@@ -119,7 +119,7 @@ int g_rasterize_triangles(trianglef *tris, texture_ptr_t *textures, int len, cam
 #ifdef BENCHMARK_RASTER
 		{
 		int i;
-		for (i = 0; i < 40; i++) {
+		for (i = 0; i < BENCHMARK_RASTER; i++) {
 #endif
 
 		nrm = normal(t);

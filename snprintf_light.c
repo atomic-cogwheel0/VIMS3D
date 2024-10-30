@@ -166,7 +166,7 @@ int snprintf_light(char *dest, size_t len, const char *fmt, ...) {
 		else break;
 	}
 
-	// terminate string always
+	// terminate string if it has length (practically always)
 	if (d < len) {
 		dest[d] = '\0';
 	}
