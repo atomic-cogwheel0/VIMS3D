@@ -15,23 +15,23 @@ int Bdisp_SYS_FastDrawLineVRAM(int x1, int y1, int x2, int y2);
 #define MAX_TRIANGLES 72
 
 // texture ids
-#define TX_WHITE 0
-#define TX_BLACK 1
-#define TX_CHECKERBOARD_8 2
-#define TX_CHECKERBOARD_4 3
-#define TX_STRIPES_A 4
-#define TX_STRIPES_B 5
-#define TX_TOPFILLED 6
-#define TX_TANKTRACK 7
-#define TX_TANKFRONT 8
-#define TX_TANKTOP 9
-
-#define TX_TRANSPARENT_SQUARE 10
-#define TX_PERSON 11
-#define TX_TREE 12
-
+enum {
+	TX_WHITE = 0,
+	TX_BLACK,
+	TX_CHECKERBOARD_8,
+	TX_CHECKERBOARD_4,
+	TX_STRIPES_A,
+	TX_STRIPES_B,
+	TX_TOPFILLED,
+	TX_TANKTRACK,
+	TX_TANKFRONT,
+	TX_TANKTOP,
+	TX_TRANSPARENT_SQUARE,
+	TX_PERSON,
+	TX_TREE,
 // number of textures
-#define TX_CNT 13
+	TX_CNT,
+};
 
 // text rendering function flags
 #define TEXT_SMALL 0x1

@@ -32,9 +32,9 @@ world_obj *find_closest_object(world_obj *obj, llist l, int type_to_find, fixed 
 	node *ptr = l.head;
 	while (ptr != NULL) {
 		// find matching type object that is not this one
-		if (ptr->data->type == type_to_find && ptr->data != obj) {
+		if (ptr->obj->type == type_to_find && ptr->obj != obj) {
 			// find vector between centers
-			to_obj = subvv(addvv(ptr->data->mesh->pos.pos, ptr->data->mesh->ctr), addvv(obj->mesh->pos.pos, obj->mesh->ctr));
+			to_obj = subvv(addvv(ptr->obj->mesh->pos.pos, ptr->obj->mesh->ctr), addvv(obj->mesh->pos.pos, obj->mesh->ctr));
 
 			// get distance, then check if it is nearest object
 			dist = magnitude(to_obj);
@@ -50,7 +50,7 @@ world_obj *find_closest_object(world_obj *obj, llist l, int type_to_find, fixed 
 		if (dist_found != NULL) {
 			*dist_found = dist_min;
 		}
-		return found->data;
+		return found->obj;
 	}
 	return NULL;
 }
@@ -100,15 +100,15 @@ bool fall_tick(world_obj *obj, llist l, fixed timescale, int *status) {
 	// check every GROUND object for collision
 	ptr = l.head;
 	while (ptr != NULL) {
-		if (ptr->data->type == WORLDOBJ_GROUND) {
+		if (ptr->obj->type == WORLDOBJ_GROUND) {
 			// if a collision occurs
-			if (m_collide(ptr->data->mesh, obj->mesh)) {
+			if (m_collide(ptr->obj->mesh, obj->mesh)) {
 				has_collided = TRUE;
 				iter = 0;
 				do {
 					obj->mesh->pos.pos.y += backstep;
 					iter++;
-				} while (m_collide(ptr->data->mesh, obj->mesh) && iter < ITER_SANE_BACKTRACK);
+				} while (m_collide(ptr->obj->mesh, obj->mesh) && iter < ITER_SANE_BACKTRACK);
 			}
 		}
 		ptr = ptr->next;

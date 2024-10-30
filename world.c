@@ -7,9 +7,9 @@ camera *global_cam = NULL;
 world_obj player;
 node *player_node;
 
-world_obj iworld_obj(uint8_t t, mesh *m, void *dataptr, int (*a)(world_obj *, llist), int (*d)(world_obj *, llist), int (*tk)(world_obj *, llist, world_obj *, fixed)) {
+world_obj iworld_obj(uint8_t type, mesh *m, void *dataptr, int (*add)(world_obj *, llist), int (*del)(world_obj *, llist), int (*tck)(world_obj *, llist, world_obj *, fixed)) {
 	world_obj w;
-	w.type = t;
+	w.type = type;
 	w.mesh = NULL;
 	if (m != NULL) {
 		// copy mesh to a new separate location
@@ -18,9 +18,9 @@ world_obj iworld_obj(uint8_t t, mesh *m, void *dataptr, int (*a)(world_obj *, ll
 	}
 	w.g_speed = int2f(0);
 	w.data = dataptr;
-	w.add_obj = a;
-	w.del_obj = d;
-	w.tick_obj = tk;
+	w.add_obj = add;
+	w.del_obj = del;
+	w.tick_obj = tck;
 	return w;
 }
 
@@ -42,7 +42,7 @@ node *w_register(world_obj *obj, int *status) {
 
 		// call the object's add function
 		if (obj->add_obj != NULL) {
-			ret = obj->add_obj(to_add->data, wlist);
+			ret = obj->add_obj(to_add->obj, wlist);
 		}
 		else {
 			ret = S_SUCCESS; // nothing bad happened
@@ -59,8 +59,8 @@ int w_deregister(node *n) {
 		return S_ENULLPTR;
 
 	// call the object's delete function
-	if (n->data->del_obj != NULL) {
-		del_ret = n->data->del_obj(n->data, wlist);
+	if (n->obj->del_obj != NULL) {
+		del_ret = n->obj->del_obj(n->obj, wlist);
 	}
 
 	// remove every trace of existence
@@ -121,10 +121,10 @@ int w_dall_world_objs(void) {
 	node *curr_ptr = wlist.head;
 	while (curr_ptr != NULL) {
 		// call the deleter to free everything gracefully
-		if (curr_ptr->data->del_obj != NULL) {
-			del_ret = curr_ptr->data->del_obj(curr_ptr->data, wlist);
+		if (curr_ptr->obj->del_obj != NULL) {
+			del_ret = curr_ptr->obj->del_obj(curr_ptr->obj, wlist);
 		}
-		dworld_obj(*(curr_ptr->data));
+		dworld_obj(*(curr_ptr->obj));
 		curr_ptr = curr_ptr->next;
 	}
 	return del_ret;
@@ -134,8 +134,8 @@ void w_tick(fixed timescale) {
 	node *curr_ptr = wlist.head;
 	while (curr_ptr != NULL) {
 		// call the object's tick function
-		if (curr_ptr->data->tick_obj != NULL)
-			curr_ptr->data->tick_obj(curr_ptr->data, wlist, &player, timescale);
+		if (curr_ptr->obj->tick_obj != NULL)
+			curr_ptr->obj->tick_obj(curr_ptr->obj, wlist, &player, timescale);
 		curr_ptr = curr_ptr->next;
 	}
 }
@@ -144,7 +144,7 @@ int w_run_on_every_obj(int (*func)(world_obj *obj, llist l, world_obj *pl, void 
 	// iterate over every registered object and run func() on them; the currently processed object is passed as obj
 	node *curr_ptr = wlist.head;
 	while (curr_ptr != NULL) {
-		func(curr_ptr->data, wlist, &player, arg);
+		func(curr_ptr->obj, wlist, &player, arg);
 		curr_ptr = curr_ptr->next;
 	}
 	return S_SUCCESS;
@@ -180,8 +180,8 @@ int w_render_world(bool debug_overlay, camera *cam) {
 	g_draw_horizon(cam);
 	// iterate over the world object list
 	while (curr_ptr != NULL) {
-		if (curr_ptr->data->mesh != NULL) {
-			curr = curr_ptr->data->mesh;
+		if (curr_ptr->obj->mesh != NULL) {
+			curr = curr_ptr->obj->mesh;
 			if (curr->flag_is_billboard) {
 				curr->pos.yaw = cam->yaw; // rotate billboard towards camera
 			}
@@ -225,7 +225,7 @@ node *alloc_node(world_obj *data) {
 	if (n != NULL) {
 		n->next = NULL;
 		n->prev = NULL;
-		n->data = data;
+		n->obj = data;
 	}
 	return n;
 }

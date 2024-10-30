@@ -11,7 +11,7 @@ typedef struct _node {
 	struct _node *prev;
 	struct _node *next;
 
-	struct _wobj *data;
+	struct _wobj *obj;
 } node;
 
 // linked list (has a single instance in world.c, world objects are added to it)
@@ -21,12 +21,14 @@ typedef struct {
 } llist;
 
 // world_obj types
-#define WORLDOBJ_NULL 0
-#define WORLDOBJ_PLAYER 1
-#define WORLDOBJ_TANK 2
-#define WORLDOBJ_PERSON 3
-#define WORLDOBJ_TREE 4
-#define WORLDOBJ_GROUND 5
+enum {
+	WORLDOBJ_NULL = 0,
+	WORLDOBJ_PLAYER,
+	WORLDOBJ_TANK,
+	WORLDOBJ_PERSON,
+	WORLDOBJ_TREE,
+	WORLDOBJ_GROUND,
+};
 
 // instance of a world object, handled based on its type and function pointers
 typedef struct _wobj {
@@ -44,7 +46,7 @@ typedef struct _wobj {
 } world_obj;
 
 // returns a new world object, m is memcpyed, so feel free to modify it afterwards (BUT DO NOT EDIT THE ARRS)
-world_obj iworld_obj(uint8_t t, mesh *m, void *dataptr, int (*a)(world_obj *, llist), int (*d)(world_obj *, llist), int (*tk)(world_obj *, llist, world_obj *, fixed));
+world_obj iworld_obj(uint8_t type, mesh *m, void *dataptr, int (*add)(world_obj *, llist), int (*del)(world_obj *, llist), int (*tck)(world_obj *, llist, world_obj *, fixed));
 // delete a world object 
 // UNSAFE if add_obj() allocated any memory! (call del_obj() beforehand)
 void dworld_obj(world_obj obj);

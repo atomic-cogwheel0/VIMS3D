@@ -20,8 +20,6 @@ int snprintf_light(char *dest, size_t len, const char *fmt, ...) {
 	int w; // number of bytes written by itoa
 	int i; // generic iterator
 
-	uint64_t pow; // stores a power of 10 for multiplying farg_frac
-
 	va_start(ap, fmt);
 	while (f < flen) {
 		curr = fmt[f++];
