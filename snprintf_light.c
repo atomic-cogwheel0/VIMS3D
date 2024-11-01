@@ -163,7 +163,6 @@ int snprintf_light(char *dest, size_t len, const char *fmt, ...) {
 				break;
 			}
 		}
-		else break;
 	}
 
 	// terminate string if it has length (practically always)
