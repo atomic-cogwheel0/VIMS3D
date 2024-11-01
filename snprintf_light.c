@@ -56,7 +56,7 @@ int snprintf_light(char *dest, size_t len, const char *fmt, ...) {
 				farg_whole = f2int(farg);
 				farg_frac = farg & FIXED_FRAC_MASK;
 				// convert whole part first
-				w = itoax(itoa_buf, (int)farg_whole, 11, 10);
+				w = itoax(itoa_buf, (int)farg_whole, 12, 10);
 				for (i = 0; i < w; i++) {
 					if (d < len) dest[d] = itoa_buf[i];
 					d++;
@@ -94,7 +94,7 @@ int snprintf_light(char *dest, size_t len, const char *fmt, ...) {
 				break;
 			case 'd':
 				iarg = va_arg(ap, signed int);
-				w = itoax(itoa_buf, iarg, 11, 10);
+				w = itoax(itoa_buf, iarg, 12, 10);
 				// copy itoa output to dest
 				for (i = 0; i < w; i++) {
 					// checking if it still fits within buf
@@ -104,7 +104,7 @@ int snprintf_light(char *dest, size_t len, const char *fmt, ...) {
 				break;
 			case 'u':
 				uarg = va_arg(ap, unsigned int);
-				w = uitoax(itoa_buf, uarg, 11, 10);
+				w = uitoax(itoa_buf, uarg, 12, 10);
 				// copy uitoa output to dest
 				for (i = 0; i < w; i++) {
 					if (d < len) dest[d] = itoa_buf[i];
@@ -113,7 +113,7 @@ int snprintf_light(char *dest, size_t len, const char *fmt, ...) {
 				break;
 			case 'x':
 				uarg = va_arg(ap, unsigned int);
-				w = uitoax(itoa_buf, uarg, 11, 16);
+				w = uitoax(itoa_buf, uarg, 12, 16);
 				// length specified
 				if (has_prec) {
 					// number too long

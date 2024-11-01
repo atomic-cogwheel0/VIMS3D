@@ -52,38 +52,42 @@ void toggle_rising(toggle_t *t, bool state);
 void toggle_falling(toggle_t *t, bool state);
 
 // status codes
-#define S_SUCCESS 0			// function did everything successfully/error-free
-#define S_EALLOC -1			// function could not allocate needed RAM
-#define S_EEMPTY -2			// function was run with an empty buffer
-#define S_EBUFFULL -3		// the subsystem's array is full
-#define S_ENEXIST -4		// argument was not in the subsystem's array
-#define S_ENULLPTR -5		// function was passed a NULL pointer
-#define S_EALREADYINITED -6	// subsystem was already initialized [init() called twice]
-#define S_EDOWN -7			// subsystem is down
-#define S_EIMPLEMENT -8		// requested feature not implemented
+#define S_SUCCESS 0         // function did everything successfully/error-free
+#define S_EALLOC -1         // function could not allocate needed RAM
+#define S_EEMPTY -2         // function was run with an empty buffer
+#define S_EBUFFULL -3       // the subsystem's array is full
+#define S_ENEXIST -4        // argument was not in the subsystem's array
+#define S_ENULLPTR -5       // function was passed a NULL pointer
+#define S_EALREADYINITED -6 // subsystem was already initialized [init() called twice]
+#define S_EDOWN -7          // subsystem is down
+#define S_EIMPLEMENT -8     // requested feature not implemented
 
-// if defined, uitoax will return uppercase
+// if defined, uitoax and itoax will write alphabetical digits (base 11 or more) uppercase, else lowercase
 //#define UITOAX_UPPERCASE
 
+// number to str conversion functions
 // these return number of bytes written, excluding '\0'
-// unsigned int to str in given base, `to` must be able to store maxlen+1 bytes
-int uitoax(char *to, unsigned int val, int maxlen, int base);
+// `to` must hold at least len bytes
+// if `to` was too small, bytes written will be 0 and `to` will become "\0"
+
+// unsigned int to str in given base
+int uitoax(char *to, unsigned int val, size_t len, int base);
 // uitoax() wrapper in base 10
-int uitoa(char *to, unsigned int val, int maxlen);
-// like uitoax, prepends a '-' if negative, handles INT_MIN correctly
-int itoax(char *to, signed int val, int maxlen, int base);
-// itoax() wrapper in base 10
-int itoa(char *to, signed int val, int maxlen);
+int uitoa(char *to, unsigned int val, size_t len);
+// like uitoax, prepends a '-' if negative, handles INT_MIN correctly; len should be at least 2
+int itoax(char *to, signed int val, size_t len, int base);
+// itoax() wrapper in base 10; len should be at least 2
+int itoa(char *to, signed int val, size_t len);
 
 // own snprintf() implementation, supports following formats:
-// %X.Yf : signed fixed point number with x digits before and y digits after decimal point (x.y is optional)
-//         X and Y are single-digit numbers!
-// %d    : int32_t
-// %u    : uint32_t
-// %Xx   : uint32_t as hex (with X (single-digit) digits)
-// %s    : string
-// %%    : the char %
-
+// ------ X is a single digit number (optional)
+// %Xf	: fixed according to fixed.h (X digits after decimal point if specified, otherwise trailing zeroes are cut off)
+// %d	: int32_t
+// %u	: uint32_t
+// %Xx	: uint32_t as hex (writes X digits if specified, uses '0' as padding if too short; writes '*' X times if too long)
+// %s	: string ('*' if NULL)
+// %%	: the character %
+// returns the number of bytes excluding the closing '\0', that were written or would have been written to dest if dest was large enough
 int snprintf_light(char *dest, size_t len, const char *fmt, ...);
 
 #define STRINGIZE(n) STRINGIZE_INNER(n)
