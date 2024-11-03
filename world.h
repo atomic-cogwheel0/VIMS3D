@@ -82,6 +82,10 @@ camera *w_getcam(void);
 // tick every object, passes timescale as arg to tick_obj()
 void w_tick(fixed timescale);
 
+// minimum length of a single gametick in milliseconds
+#define TICK_MS 25
+#define TICK_DELTAS (TICK_MS*128/1000)
+
 // renders every renderable object in the world
 int w_render_world(bool debug_overlay, camera *cam);
 

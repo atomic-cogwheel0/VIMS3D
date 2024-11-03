@@ -85,10 +85,9 @@ int snprintf_light(char *dest, size_t len, const char *fmt, ...) {
 						d++;
 					}
 					// cut off trailing zeros if not precise by decrementing `d` so the next write will overwrite the first zero
-					if (!has_prec) {
-						while (dest[--d] == '0')
-							;
-						d++;
+					if (d > 0 && dest[d-1] == '0' && !has_prec) {
+						while (dest[--d-1] == '0' && d > 0)
+							; // empty loop
 					}
 				}
 				break;

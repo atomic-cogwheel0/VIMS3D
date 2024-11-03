@@ -25,6 +25,7 @@ int main(void) {
 	if (setjmp(*envptr)) {
 		// longjmp() was called in halt()
 		display_error_screen();
+		// display_error_screen() does not return (for now at least), but make sure we don't accidentally call init() again anyway
 		return 1;
 	}
 
@@ -37,6 +38,7 @@ int main(void) {
 	return 0;
 }
 
+// draw an ERROR message, does not clear content
 void display_error_screen(void) {
 	int ka, kb; short uu; // for GetKeyWait
 	// print top row

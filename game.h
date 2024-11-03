@@ -11,13 +11,11 @@
 
 // timer id
 #define TICK_TIMER ID_USER_TIMER1
-// minimum length of a single gametick in milliseconds
-#define TICK_MS 25
 
+// prepares game & objects, sets tick() to run on a timer
+void init(void);
 // handles input, initiates rendering and object ticking
 void tick(void);
-// prepares game & objects
-void init(void);
 
 // exit to main menu after freeing all memory
 void quit(void);
@@ -27,7 +25,7 @@ void halt(void);
 // print a message then halt() the program
 void halt_msg(char *msg);
 
-// subsys interop
+// subsys interop without externs
 volatile int *get_gamestate_ptr(void);
 jmp_buf *get_jmpbuf_ptr(void);
 

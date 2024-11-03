@@ -158,7 +158,7 @@ static char buf[64]; // for sprintf()
 
 int w_render_world(bool debug_overlay, camera *cam) {
 	int m_cnt = 0, t_iter, dx, dy, i;
-	unsigned int time_s, time_e, deltaticks, tr_cnt = 0;
+	unsigned int time_s, time_e, deltaticks, deltaticks_true, tr_cnt = 0;
 	mesh *curr;
 	int16_t **depthbuf; // the pixel depth buffer, reset before meshes are rendered
 	node *curr_ptr = wlist.head;
@@ -195,17 +195,25 @@ int w_render_world(bool debug_overlay, camera *cam) {
 
 	// time after rendering
 	time_e = RTC_GetTicks();
-	// calculate correct deltatick value
-	deltaticks = time_e-time_s;
-	if (deltaticks < 1) deltaticks = 1; // delta is used as a divisor later
+	// calculate deltatick value
+	deltaticks_true = time_e-time_s;
+	if (deltaticks_true < 1) deltaticks_true = 1; // delta is used as a divisor later
 	//if (deltaticks > 128) deltaticks -= 128; // the emulator sometimes skips a whole second :)
+
+	// correct for TICK_MS existing if the tick finished faster than that
+	if (deltaticks_true < TICK_DELTAS) {
+		deltaticks = TICK_DELTAS;
+	}
+	else {
+		deltaticks = deltaticks_true;
+	}
 
 	// print debug data
 #ifndef BENCHMARK_RASTER
 	if (debug_overlay)
 #endif
 	{
-		snprintf_light(buf, 64, "%1fms (%1ffps) %dt/%dm", float2f(1000.0f/128.0f)*deltaticks, int2f(128)/deltaticks, tr_cnt, m_cnt);
+		snprintf_light(buf, 64, "%1fms (%1ffps) %dt/%dm", float2f(1000.0f/128.0f)*deltaticks_true, int2f(128)/deltaticks, tr_cnt, m_cnt);
 		PrintMini(0, 0, (unsigned char *)buf, 0);
 
 		snprintf_light(buf, 64, "%1f %1f %1f %1fp %1fy", cam->pos.x,
