@@ -80,14 +80,23 @@ int w_setcam(camera *newcam);
 camera *w_getcam(void);
 
 // tick every object, passes timescale as arg to tick_obj()
-void w_tick(fixed timescale);
+void w_tick(void);
+
+// print debug info to screen
+void w_print_debug(void);
+
+// only call in a benchmarking context
+// prints just the number of millisecs, tris and meshes rendered during the benchmark
+#ifdef BENCHMARK_RASTER
+void w_print_bench_result(void);
+#endif
 
 // minimum length of a single gametick in milliseconds
 #define TICK_MS 25
 #define TICK_DELTAS (TICK_MS*128/1000)
 
 // renders every renderable object in the world
-int w_render_world(bool debug_overlay, camera *cam);
+int w_render_world(camera *cam);
 
 // allocate a new node on the heap
 node *alloc_node(world_obj *data);

@@ -39,6 +39,9 @@ typedef unsigned char bool;
 #define INT_MAX 0x7FFFFFFF
 #define UINT_MAX 0xFFFFFFFFU
 
+// number of ticks in a day (tick counter resets at midnight)
+#define RTC_TICKS_MAX 11059200U
+
 // stores all data needed for a toggle in a tick function
 typedef struct {
 	bool is_on;

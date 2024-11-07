@@ -5,7 +5,7 @@
 ; THIS FILE IS MOST LIKELY NOT THE CAUSE OF ANY OF THE MANY PROBLEMS
 ; DO NOT EDIT LEST TERRIBLE SYSTEM ERRORS BEFALL THEE
 
-	.EXPORT _RTC_GetTicks, _Bdisp_SYS_FastDrawLineVRAM
+	.EXPORT _RTC_GetTicks, _Bdisp_SYS_FastDrawLineVRAM, _Keyboard_ClrBuffer
 
 	.SECTION P,CODE,ALIGN=4
 
@@ -20,6 +20,13 @@ _RTC_GetTicks:
 _Bdisp_SYS_FastDrawLineVRAM:
 	mov.l #H'80010070, r1
 	mov.w #H'0764, r0     ; syscall 764h: void Bdisp_FastDrawLineVRAM(int x1, int y1, int x2, int y2)
+	jmp @r1
+	nop
+
+; clears the keyboard input buffer
+_Keyboard_ClrBuffer:
+	mov.l #H'80010070, r1
+	mov.w #H'0241, r0     ; syscall 764h: void Bdisp_FastDrawLineVRAM(int x1, int y1, int x2, int y2)
 	jmp @r1
 	nop
 

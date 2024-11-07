@@ -16,7 +16,6 @@ void display_error_screen(void);
 int Bkey_GetKeyWait(int *code1, int *code2, int wait_type, int time, int menu, short *unused);
 
 int main(void) {
-	unsigned int key;
 	// get subsystem interop pointers
 	volatile int *gamestate_ptr = get_gamestate_ptr();
 	jmp_buf *envptr = get_jmpbuf_ptr();
@@ -33,8 +32,9 @@ int main(void) {
 
 	// wait for game to quit in tick()
 	while (*gamestate_ptr != GAMESTATE_QUIT_DONE) {
-		GetKey(&key);
+		Sleep(100); // just wait kindly
 	}
+	Keyboard_ClrBuffer(); // clear before returning, because the buffer was not handled properly (with GetKey()) during runtime
 	return 0;
 }
 
@@ -45,6 +45,7 @@ void display_error_screen(void) {
 	locate(1,1);
 	Print((unsigned char *)"////////ERROR////////");
 	Bdisp_PutDisp_DD();
+	Keyboard_ClrBuffer(); // clear to make sure nothing interferes with operation
 	while (1) {
 		// wait for a keypress for 1 second (MENU returns to main menu); if no key was pressed, invert 1st row of screen
 		if (Bkey_GetKeyWait(&ka, &kb, KEYWAIT_HALTON_TIMERON, 1, 0, &uu) == KEYREP_TIMEREVENT) {

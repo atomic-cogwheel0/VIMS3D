@@ -91,7 +91,7 @@ bool fall_tick(world_obj *obj, llist l, fixed timescale, int *status) {
 	static const fixed backstep = float2f(0.1f); // the resolution of stepping back when the ground is hit
 	bool has_collided = FALSE;
 	node *ptr;
-	int iter;
+	int cnt;
 
 	// accelerate and move object downwards
 	obj->g_speed += mulff(g_accel, timescale);
@@ -101,14 +101,13 @@ bool fall_tick(world_obj *obj, llist l, fixed timescale, int *status) {
 	ptr = l.head;
 	while (ptr != NULL) {
 		if (ptr->obj->type == WORLDOBJ_GROUND) {
-			// if a collision occurs
+			// if a collision occurs, backtrack step by step until the two objects don't collide anymore
 			if (m_collide(ptr->obj->mesh, obj->mesh)) {
 				has_collided = TRUE;
-				iter = 0;
+				cnt = 0;
 				do {
 					obj->mesh->pos.pos.y += backstep;
-					iter++;
-				} while (m_collide(ptr->obj->mesh, obj->mesh) && iter < ITER_SANE_BACKTRACK);
+				} while (m_collide(ptr->obj->mesh, obj->mesh) && ++cnt < ITER_SANE_BACKTRACK);
 			}
 		}
 		ptr = ptr->next;
@@ -198,5 +197,59 @@ int tick_person(world_obj *person, llist l, world_obj *player, fixed timescale) 
 			person->mesh->pos.pos = addvv(person->mesh->pos.pos, mulvf(normalize(horiz(subvv(pdata->pathfind_target, person->mesh->pos.pos))), timescale/2));
 		}
 	}
+	return S_SUCCESS;
+}
+
+int tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timescale) {
+	camera *cam = *(camera **)the_player->data;
+	vec3f t;
+	static const fixed movement_speed = float2f(1.0f); // the amount the player should move in 1 unit of timescale
+	static const fixed rotation_speed = float2f(32.0f*DEG2RAD_MULT); // number of degrees the player should turn in 1 unit of timescale
+
+	fixed speed = mulff(movement_speed, timescale);
+	fixed rotation = mulff(rotation_speed, timescale);
+
+	// rotation control
+	if (IsKeyDown(KEY_CTRL_UP)) {
+		cam->pitch -= rotation;
+	}
+	if (IsKeyDown(KEY_CTRL_DOWN)) {
+		cam->pitch += rotation;
+	}
+	if (IsKeyDown(KEY_CTRL_RIGHT)) {
+		cam->yaw -= rotation;
+	}
+	if (IsKeyDown(KEY_CTRL_LEFT)) {
+		cam->yaw += rotation;
+	}
+
+	// keep in sane range
+	cam->pitch = clamp_f(cam->pitch, float2f(-90*DEG2RAD_MULT), float2f(90*DEG2RAD_MULT));
+	cam->yaw = mod_f(cam->yaw, float2f(360*DEG2RAD_MULT));
+
+	// player movement is NOT axis aligned, depends on looking direction
+	t = ivec3i(0, 0, 0);
+	if (IsKeyDown(KEY_CHAR_8)) {
+		t = addvv(t, rot(ivec3i(0, 0, 1), 0, cam->yaw));
+	}
+	if (IsKeyDown(KEY_CHAR_2)) {
+		t = addvv(t, rot(ivec3i(0, 0, 1), 0, cam->yaw + float2f(180*DEG2RAD_MULT)));
+	}
+	if (IsKeyDown(KEY_CHAR_4)) {
+		t = addvv(t, rot(ivec3i(0, 0, 1), 0, cam->yaw + float2f(90*DEG2RAD_MULT)));
+	}
+	if (IsKeyDown(KEY_CHAR_6)) {
+		t = addvv(t, rot(ivec3i(0, 0, 1), 0, cam->yaw - float2f(90*DEG2RAD_MULT)));
+	}
+	t = normalize(t); // normalize movement speed in the horizontal axis
+	if (IsKeyDown(KEY_CHAR_9)) {
+		t = addvv(t, ivec3i(0, 1, 0));
+	}
+	if (IsKeyDown(KEY_CHAR_3)) {
+		t = addvv(t, ivec3i(0, -1, 0));
+	}
+	t = mulvf(t, speed);
+	cam->pos = addvv(cam->pos, t);
+
 	return S_SUCCESS;
 }

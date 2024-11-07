@@ -63,11 +63,6 @@ void init(void) {
 	game_cam.pitch = float2f(10.0*DEG2RAD_MULT); 
 	game_cam.yaw = float2f(16.2*DEG2RAD_MULT);
 
-	// 32 degrees/s
-	gdelta = 32.0f*DEG2RAD_MULT;
-	// 1 unit/s
-	gspeed = 1.0f;
-
 	// make sure subsystems are initialized
 	assert(g_init() == S_SUCCESS);
 	assert(w_init() == S_SUCCESS);
@@ -232,6 +227,7 @@ void init(void) {
 	SetTimer(TICK_TIMER, TICK_MS, tick);
 #else
 	tick();
+	w_print_bench_result();
 #endif
 }
 
@@ -267,74 +263,22 @@ jmp_buf *get_jmpbuf_ptr(void) {
 }
 
 void tick(void) {
-	vec3f t;
-	int dtime;
-	static float scale = 0.0f; // first tick runs with a scale of 0 -> no movement
-	fixed speed, delta;
-	camera *cam;
-
-	cam = w_getcam();
-
 	Bdisp_AllClr_VRAM();
 
-	w_tick(float2f(scale)); // tick world objects with scaled movements
-
-	dtime = w_render_world(overlay.is_on, cam); // 1/128 s ticks
-	scale = (float)dtime/128.0f*5.0f; // convert deltatime to scaler; this makes movement speed unaffected by rendering speed
-
-	// TODO: 1/128 s is not enough resolution; this causes noticeable movement speed changes
-
-	// calculate scaled values
-	delta = float2f(gdelta * scale);
-	speed = float2f(gspeed * scale);
-	
-	Bdisp_PutDisp_DD();
-
-	// rotation control
-    if (IsKeyDown(KEY_CTRL_UP)) {
-		cam->pitch -= delta;
-	}
-	if (IsKeyDown(KEY_CTRL_DOWN)) {
-		cam->pitch += delta;
-	}
-	if (IsKeyDown(KEY_CTRL_RIGHT)) {
-		cam->yaw -= delta;
-	}
-	if (IsKeyDown(KEY_CTRL_LEFT)) {
-		cam->yaw += delta;
-	}
-
-	// keep in sane range
-	cam->pitch = clamp_f(cam->pitch, float2f(-90*DEG2RAD_MULT), float2f(90*DEG2RAD_MULT));
-	cam->yaw = mod_f(cam->yaw, float2f(360*DEG2RAD_MULT));
-
-	// player movement is NOT axis aligned, depends on looking direction
-	t = ivec3f(0, 0, 0);
-	if (IsKeyDown(KEY_CHAR_8)) {
-		t = rot(ivec3f(0, 0, speed), 0, cam->yaw);
-	}
-	if (IsKeyDown(KEY_CHAR_2)) {
-		t = rot(ivec3f(0, 0, speed), 0, cam->yaw + float2f(180*DEG2RAD_MULT));
-	}
-	if (IsKeyDown(KEY_CHAR_4)) {
-		t = rot(ivec3f(0, 0, speed), 0, cam->yaw + float2f(90*DEG2RAD_MULT));
-	}
-	if (IsKeyDown(KEY_CHAR_6)) {
-		t = rot(ivec3f(0, 0, speed), 0, cam->yaw - float2f(90*DEG2RAD_MULT));
-	}
-	if (IsKeyDown(KEY_CHAR_9)) {
-		t = ivec3f(0, speed, 0);
-	}
-	if (IsKeyDown(KEY_CHAR_3)) {
-		t = ivec3f(0, -speed, 0);
-	}
-	cam->pos = addvv(cam->pos, t);
+	w_tick(); // tick world objects
+	w_render_world(w_getcam()); // 1/128 s ticks
 
 	toggle_rising(&overlay, (bool)IsKeyDown(KEY_CTRL_F3));
+
+	if (overlay.is_on) {
+		w_print_debug();
+	}
 
 	if (IsKeyDown(KEY_CTRL_EXIT)) {
 		quit();
 	}
+
+	Bdisp_PutDisp_DD();
 }
 
 volatile int *get_gamestate_ptr(void) {

@@ -7,6 +7,13 @@ camera *global_cam = NULL;
 world_obj player;
 node *player_node;
 
+static unsigned int last_tick = RTC_TICKS_MAX + 1; // impossible value
+
+// debug info
+static int w_dbg_mesh_cnt;
+static int w_dbg_tri_cnt;
+static unsigned int ticks_elapsed;
+
 world_obj iworld_obj(uint8_t type, mesh *m, void *dataptr, int (*add)(world_obj *, llist), int (*del)(world_obj *, llist), int (*tck)(world_obj *, llist, world_obj *, fixed)) {
 	world_obj w;
 	w.type = type;
@@ -84,7 +91,8 @@ world_obj *w_getplayer(void) {
 	return &player;
 }
 
-int tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timescale);
+// defined in worldobj.c; handles player movement
+extern int tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timescale);
 
 int w_init(void) {
 	int status;
@@ -130,8 +138,30 @@ int w_dall_world_objs(void) {
 	return del_ret;
 }
 
-void w_tick(fixed timescale) {
-	node *curr_ptr = wlist.head;
+void w_tick(void) {
+	node *curr_ptr;
+	fixed timescale;
+
+	unsigned int curr_tick = RTC_GetTicks();
+
+	if (last_tick <= RTC_TICKS_MAX) {
+		// account for possible overflow at midnight
+		if (curr_tick < last_tick) {
+			ticks_elapsed = RTC_TICKS_MAX - last_tick + curr_tick;
+		}
+		else {
+			ticks_elapsed = curr_tick - last_tick;
+		}
+	}
+	else {
+		ticks_elapsed = 0;
+	}
+	last_tick = curr_tick;
+
+	timescale = int2f(ticks_elapsed) / 25; // convert deltatime to scaler; this makes movement speed unaffected by rendering speed
+	// TODO: 1/128 s is not enough resolution; this causes noticeable movement speed changes
+
+	curr_ptr = wlist.head;
 	while (curr_ptr != NULL) {
 		// call the object's tick function
 		if (curr_ptr->obj->tick_obj != NULL)
@@ -150,15 +180,8 @@ int w_run_on_every_obj(int (*func)(world_obj *obj, llist l, world_obj *pl, void 
 	return S_SUCCESS;
 }
 
-int tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timescale) {
-	return S_SUCCESS;
-}
-
-static char buf[64]; // for sprintf()
-
-int w_render_world(bool debug_overlay, camera *cam) {
-	int m_cnt = 0, t_iter, dx, dy, i;
-	unsigned int time_s, time_e, deltaticks, deltaticks_true, tr_cnt = 0;
+int w_render_world(camera *cam) {
+	int dx, dy, i;
 	mesh *curr;
 	int16_t **depthbuf; // the pixel depth buffer, reset before meshes are rendered
 	node *curr_ptr = wlist.head;
@@ -167,8 +190,8 @@ int w_render_world(bool debug_overlay, camera *cam) {
 
 	depthbuf = g_getdepthbuf();
 
-	// time before rendering
-	time_s = RTC_GetTicks();
+	// reset debugging global variables
+	w_dbg_mesh_cnt = w_dbg_tri_cnt = 0;
 
 	curr_ptr = wlist.head;
 	// clear depth values
@@ -187,43 +210,46 @@ int w_render_world(bool debug_overlay, camera *cam) {
 			}
 			if (!curr->flag_renderable)
 				continue;
-			tr_cnt += g_rasterize_triangles(curr->mesh_arr, curr->tx_arr, curr->tr_cnt, *cam, curr->pos, curr->ctr);
+			w_dbg_tri_cnt += g_rasterize_triangles(curr->mesh_arr, curr->tx_arr, curr->tr_cnt, *cam, curr->pos, curr->ctr);
 		}
-		m_cnt++;
+		w_dbg_mesh_cnt++;
 		curr_ptr = curr_ptr->next;
 	}
 
-	// time after rendering
-	time_e = RTC_GetTicks();
-	// calculate deltatick value
-	deltaticks_true = time_e-time_s;
-	if (deltaticks_true < 1) deltaticks_true = 1; // delta is used as a divisor later
-	//if (deltaticks > 128) deltaticks -= 128; // the emulator sometimes skips a whole second :)
+	return S_SUCCESS;
+}
 
-	// correct for TICK_MS existing if the tick finished faster than that
-	if (deltaticks_true < TICK_DELTAS) {
-		deltaticks = TICK_DELTAS;
+static char buf[64]; // for sprintf()
+
+void w_print_debug(void) {
+	snprintf_light(buf, 64, "%1fms (%1ffps) %dt/%dm", float2f(1000.0f/128.0f)*ticks_elapsed, int2f(128)/ticks_elapsed, w_dbg_tri_cnt, w_dbg_mesh_cnt);
+	PrintMini(0, 0, (unsigned char *)buf, 0);
+	if (global_cam != NULL) {
+		snprintf_light(buf, 64, "%1f %1f %1f %1fp %1fy", global_cam->pos.x,
+														 global_cam->pos.y,
+														 global_cam->pos.z, rad2deg(global_cam->pitch), rad2deg(global_cam->yaw));
 	}
 	else {
-		deltaticks = deltaticks_true;
+		snprintf_light(buf, 64, "global_cam is NULL!");
 	}
-
-	// print debug data
-#ifndef BENCHMARK_RASTER
-	if (debug_overlay)
-#endif
-	{
-		snprintf_light(buf, 64, "%1fms (%1ffps) %dt/%dm", float2f(1000.0f/128.0f)*deltaticks_true, int2f(128)/deltaticks, tr_cnt, m_cnt);
-		PrintMini(0, 0, (unsigned char *)buf, 0);
-
-		snprintf_light(buf, 64, "%1f %1f %1f %1fp %1fy", cam->pos.x,
-		                                                 cam->pos.y,
-		                                                 cam->pos.z, rad2deg(cam->pitch), rad2deg(cam->yaw));
-		PrintMini(0, 6, (unsigned char *)buf, 0);
-	}
-
-	return deltaticks;
+	PrintMini(0, 6, (unsigned char *)buf, 0);
 }
+
+// results only make sense in the context of a graphics benchmark
+#ifdef BENCHMARK_RASTER
+void w_print_bench_result(void) {
+	// corrupts ticks_elapsed, so don't call it during normal runtime
+	unsigned int curr_tick = RTC_GetTicks();
+	if (curr_tick < last_tick) {
+		ticks_elapsed = RTC_TICKS_MAX - last_tick + curr_tick;
+	}
+	else {
+		ticks_elapsed = curr_tick - last_tick;
+	}
+	snprintf_light(buf, 64, "%1fms %dt/%dm", float2f(1000.0f/128.0f)*ticks_elapsed, w_dbg_tri_cnt, w_dbg_mesh_cnt);
+	PrintMini(0, 0, (unsigned char *)buf, 0);
+}
+#endif
 
 //------------ linked list code ------------
 
