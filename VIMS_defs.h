@@ -14,7 +14,7 @@ VIMS_defs:
 // rebuild all if changed
 //#define DEBUG_BUILD
 // if defined: renders single frame BENCHMARK_RASTER times, shows debuginfo then stops
-//#define BENCHMARK_RASTER 80
+//#define BENCHMARK_RASTER 160
 
 // typedefs (no <stddef.h>)
 

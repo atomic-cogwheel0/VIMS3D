@@ -228,6 +228,7 @@ void init(void) {
 #else
 	tick();
 	w_print_bench_result();
+	Bdisp_PutDisp_DD();
 #endif
 }
 
