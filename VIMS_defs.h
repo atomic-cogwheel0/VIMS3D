@@ -82,6 +82,11 @@ int itoax(char *to, signed int val, size_t len, int base);
 // itoax() wrapper in base 10; len should be at least 2
 int itoa(char *to, signed int val, size_t len);
 
+// snprintf misc issues:
+// fixed point rounding: TRUNCATION!
+// these fixeds aren't precise enough to make rounding worth it
+// can't really represent even two decimal places without issues, so just cut the end off
+
 // own snprintf() implementation, supports following formats:
 // ------ X is a single digit number (optional)
 // %Xf	: fixed according to fixed.h (X digits after decimal point if specified, otherwise trailing zeroes are cut off)
