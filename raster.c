@@ -92,8 +92,8 @@ int g_rasterize_triangles(trianglef *tris, texture_ptr_t *textures, int len, cam
 	fixed dot11_dot02, dot01_dot12, dot00_dot12, dot01_dot02;
 	fixed dot11_dot02_increment, dot01_dot12_increment, dot00_dot12_increment, dot01_dot02_increment;
  
-	uint8_t px;
-	uint16_t px_offset;
+	byte px;
+	int px_offset;
 	uint32_t u_mult, v_mult;
 
 	int16_t depthval;
@@ -389,8 +389,8 @@ int g_text2d(unsigned char *text, unsigned int x, unsigned int y, unsigned int p
 
 int g_texture2d(texture_ptr_t tx, unsigned int x, unsigned int y) {
 	unsigned int xiter, yiter;
-	uint8_t px;
-	uint16_t px_offset;
+	byte px;
+	int px_offset;
 	uint32_t tiled_width, tiled_height;
 
 	if (tx == NULL) return S_ENULLPTR;
