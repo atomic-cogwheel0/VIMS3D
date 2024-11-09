@@ -12,8 +12,15 @@ static uint32_t tick_per_sec;
 #define UNSET 2
 int cpuSH4 = UNSET;
 
+/*
+ * Many thanks to Lephenixnoir for the phenomenal gint engine
+ *	and Simon Lothar for the extensive documentation on the CPUs
+ * They've made the development of the machine-specific code possible
+*/
+
 bool isSH4(void) {
 	if (cpuSH4 == UNSET) {
+		// query the Processor Version Register for SH4 cpu (causes a nonexisting read error on the SDK, just continue running)
 		cpuSH4 = (((*(volatile uint32_t *)0xFF000030) & 0xffffff00) == 0x10300b00);
 	}
 	// we can assume that the processor model does not change in a single run
@@ -21,14 +28,15 @@ bool isSH4(void) {
 }
 
 void cpu_get_timer_addrs(sh_tmu_t **tmu, sh_tstr_t **tstr) {
-	// test Processor Version Register for SH4 cpu
+	// SH7305
 	if (isSH4()) {
-		*tstr = (sh_tstr_t *)0xA4490004;
-		*tmu = (sh_tmu_t *)0xA4490014;
+		*tstr = (sh_tstr_t *)0xA4490004; // TSTR
+		*tmu = (sh_tmu_t *)0xA4490014;   // TMU1.TCOR
 	}
+	// SH7705
 	else {
-		*tstr = (sh_tstr_t *)0xFFFFFE92;
-		*tmu = (sh_tmu_t *)0xFFFFFEA0;
+		*tstr = (sh_tstr_t *)0xFFFFFE92; // TSTR
+		*tmu = (sh_tmu_t *)0xFFFFFEA0;   // TMU1.TCOR
 	}
 }
 
@@ -38,9 +46,9 @@ void copy_tmu(sh_tmu_t *to, sh_tmu_t *from) {
 }
 
 // register addresses
-#define FRQCR_7305 (*(uint32_t *)0xa4150000)
-#define FLLFRQ_7305 (*(uint32_t *)0xa4150050)
-#define PLLCR_7305 (*(uint32_t *)0xa4150024)
+#define FRQCR_7305 (*(uint32_t *)0xA4150000)
+#define FLLFRQ_7305 (*(uint32_t *)0xA4150050)
+#define PLLCR_7305 (*(uint32_t *)0xA4150024)
 
 #define FRQCR_7705 (*(uint16_t *)0xFFFFFF80)
 
@@ -50,19 +58,19 @@ uint32_t calc_pphi(void) {
 	// calculate peripheral clock speed based on processor model
 	if (isSH4()) {
 		pll = ((FRQCR_7305 & (63 << 24)) >> 24) + 1; // FRQCR.STC
-		fll = (FLLFRQ_7305 & 2047) >> ((FLLFRQ_7305 & (3 << 14)) ? 1 : 0);
+		fll = (FLLFRQ_7305 & 2047) >> ((FLLFRQ_7305 & (3 << 14)) ? 1 : 0); // FLLFRQ.FLF ; FLLFRQ.SELXM
 
 		base = 32768U;
 
 		if (PLLCR_7305 & (1 << 12)) base *= fll; // PLLCR.FLLE
 		if (PLLCR_7305 & (1 << 14)) base *= pll; // PLLCR.PLLE
 		
-		return base >> ((FRQCR_7305 & 15) + 1);
+		return base >> ((FRQCR_7305 & 15) + 1); // FRQCR.P1FC
 	}
 	else {
-		pll = 14745600*2 * (((FRQCR_7705 & (3 << 8)) >> 8) + 1);
+		pll = 14745600*2 * (((FRQCR_7705 & (3 << 8)) >> 8) + 1); // FRQCR.STC
 
-		return pll / ((FRQCR_7705 & 3) + 1);
+		return pll / ((FRQCR_7705 & 3) + 1); // FRQCR.PFC
 	}
 }
 
