@@ -10,3 +10,6 @@ INIT/*
 INIT
 *.dlw
 *.dlr
+.vscode
+.vscode/*
+FXSH_Build.bat
