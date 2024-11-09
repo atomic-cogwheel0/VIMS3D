@@ -221,15 +221,7 @@ void init(void) {
 	// some call might have modified it (called quit()/halt())
 	if (gamestate != GAMESTATE_PREINIT) return;
 
-#ifndef BENCHMARK_RASTER
-	// schedule tick()
 	gamestate = GAMESTATE_RUNNING;
-	SetTimer(TICK_TIMER, TICK_MS, tick);
-#else
-	tick();
-	w_print_bench_result();
-	Bdisp_PutDisp_DD();
-#endif
 }
 
 // deallocate buffers, stop timers, set quit status
@@ -264,6 +256,8 @@ jmp_buf *get_jmpbuf_ptr(void) {
 }
 
 void tick(void) {
+	if (gamestate != GAMESTATE_RUNNING) return;
+
 	Bdisp_AllClr_VRAM();
 
 	w_tick(); // tick world objects

@@ -13,12 +13,16 @@
 */ 
 
 void display_error_screen(void);
+void reset_before_exit(void);
+
 int Bkey_GetKeyWait(int *code1, int *code2, int wait_type, int time, int menu, short *unused);
 
 int main(void) {
 	// get subsystem interop pointers
 	volatile int *gamestate_ptr = get_gamestate_ptr();
 	jmp_buf *envptr = get_jmpbuf_ptr();
+
+	unsigned int key;
 
 	// setup longjmp environment for later call from halt()
 	if (setjmp(*envptr)) {
@@ -28,13 +32,21 @@ int main(void) {
 		return 1;
 	}
 
+	setup_hires_timer();
 	init();
 
+#ifndef BENCHMARK_RASTER
 	// wait for game to quit in tick()
 	while (*gamestate_ptr != GAMESTATE_QUIT_DONE) {
-		Sleep(100); // just wait kindly
+		tick(); // run a tick
 	}
-	Keyboard_ClrBuffer(); // clear before returning, because the buffer was not handled properly (with GetKey()) during runtime
+#else
+	// do a single tick and show stats
+	tick();
+	w_print_bench_result();
+	GetKey(&key);
+#endif
+	reset_before_exit();
 	return 0;
 }
 
@@ -45,7 +57,7 @@ void display_error_screen(void) {
 	locate(1,1);
 	Print((unsigned char *)"////////ERROR////////");
 	Bdisp_PutDisp_DD();
-	Keyboard_ClrBuffer(); // clear to make sure nothing interferes with operation
+	reset_before_exit(); // clear to make sure nothing interferes with operation
 	while (1) {
 		// wait for a keypress for 1 second (MENU returns to main menu); if no key was pressed, invert 1st row of screen
 		if (Bkey_GetKeyWait(&ka, &kb, KEYWAIT_HALTON_TIMERON, 1, 0, &uu) == KEYREP_TIMEREVENT) {
@@ -53,6 +65,11 @@ void display_error_screen(void) {
 			Bdisp_PutDisp_DD();
 		}
 	}
+}
+
+void reset_before_exit(void) {
+	reset_timer_state();
+	Keyboard_ClrBuffer(); // clear before returning, because the buffer was not handled properly (with GetKey()) during runtime
 }
 
 // ----- SDK funcs -----

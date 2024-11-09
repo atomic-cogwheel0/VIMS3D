@@ -6,6 +6,8 @@
 #include "VIMS_defs.h"
 #include "mesh.h"
 
+#include "hires_timer.h"
+
 // single node of a linked list of world_objects
 typedef struct _node {
 	struct _node *prev;
