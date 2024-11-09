@@ -1,10 +1,11 @@
 #ifndef VIMS_DEFS_H
 #define VIMS_DEFS_H
 
-#include "fxlib.h"
-
 #include <string.h>
 #include <stdarg.h>
+#include "fxlib.h"
+
+#include "assembly.h"
 
 /*
 VIMS_defs:

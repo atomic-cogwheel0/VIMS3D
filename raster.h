@@ -7,10 +7,6 @@
 #include "vec.h"
 #include "texture.h"
 
-// syscalls
-unsigned int RTC_GetTicks(void);
-int Bdisp_SYS_FastDrawLineVRAM(int x1, int y1, int x2, int y2);
-
 // number of triangles the subsys can handle at once
 #define MAX_TRIANGLES 72
 
