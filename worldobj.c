@@ -20,6 +20,7 @@ world_obj iworld_obj_static_mesh(uint8_t t, mesh *m) {
 fixed angle_horizontal_plane(vec3f u, vec3f v) {
 	fixed dot = mulff(u.x, v.x) + mulff(u.z, v.z); // dot product
 	fixed det = mulff(u.x, v.z) - mulff(u.z, v.x); // determinant
+	// just do it with floats and atan2, this only runs a few times in a tick
 	fixed angle = float2f((float)atan2(f2float(det), f2float(dot)));
 	return angle;
 }

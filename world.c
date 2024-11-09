@@ -246,7 +246,8 @@ void w_print_bench_result(void) {
 	else {
 		us_elapsed = curr_time - last_time;
 	}
-	snprintf_light(buf, 64, "%1fms %dt/%dm", int2f(us_elapsed/100)/10, w_dbg_tri_cnt, w_dbg_mesh_cnt);
+	// print in microseconds
+	snprintf_light(buf, 64, "%d\xe6\x4bs %dt/%dm", us_elapsed, w_dbg_tri_cnt, w_dbg_mesh_cnt);
 	PrintMini(0, 0, (unsigned char *)buf, 0);
 }
 #endif

@@ -227,8 +227,6 @@ void init(void) {
 // deallocate buffers, stop timers, set quit status
 void quit(void) {
 	gamestate = GAMESTATE_QUIT_INPROG; // game is quitting, but not ready to return to main menu yet
-	// must not tick() any more
-	KillTimer(TICK_TIMER);
 	// deinit every subsystem
 	g_dealloc();
 	w_dall_world_objs();
@@ -240,7 +238,6 @@ jmp_buf jmpbuf; // for halt handling
 
 void halt(void) {
 	gamestate = GAMESTATE_ERR;
-	KillTimer(TICK_TIMER);
 	longjmp(jmpbuf, 1); // jump back to main (displays error screen)
 }
 
@@ -261,7 +258,7 @@ void tick(void) {
 	Bdisp_AllClr_VRAM();
 
 	w_tick(); // tick world objects
-	w_render_world(w_getcam()); // 1/128 s ticks
+	w_render_world(w_getcam());
 
 	toggle_rising(&overlay, (bool)IsKeyDown(KEY_CTRL_F3));
 
