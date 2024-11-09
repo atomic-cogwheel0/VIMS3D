@@ -126,17 +126,19 @@ int w_free_world(void) {
 }
 
 int w_dall_world_objs(void) {
-	int del_ret = S_SUCCESS; // return S_SUCCESS when del_obj == NULL, otherwise the return value of del_obj()
+	int ret = S_SUCCESS; // the mainloop will update this if any error has occurred
 	node *curr_ptr = wlist.head;
 	while (curr_ptr != NULL) {
 		// call the deleter to free everything gracefully
 		if (curr_ptr->obj->del_obj != NULL) {
-			del_ret = curr_ptr->obj->del_obj(curr_ptr->obj, wlist);
+			if (curr_ptr->obj->del_obj(curr_ptr->obj, wlist) != S_SUCCESS) {
+				ret = S_EUNSPECIFIED; // there can be multiple errors, so this function's error reason might not be determinable
+			}
 		}
 		dworld_obj(*(curr_ptr->obj));
 		curr_ptr = curr_ptr->next;
 	}
-	return del_ret;
+	return ret;
 }
 
 void w_tick(void) {

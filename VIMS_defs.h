@@ -15,9 +15,12 @@ VIMS_defs:
 //#define DEBUG_BUILD
 // if defined: renders single frame BENCHMARK_RASTER times, shows debuginfo then stops
 //#define BENCHMARK_RASTER 80
+// this build is on the official sdk (not on gint)
+#define OFFICIAL_SDK
 
-// typedefs (no <stddef.h>)
+// typedefs (no <stdint.h> or <stdbool.h> on official SDK)
 
+#ifdef OFFICIAL_SDK
 typedef signed long long int64_t;
 typedef signed long int32_t;
 typedef signed short int16_t;
@@ -26,9 +29,11 @@ typedef unsigned long long uint64_t;
 typedef unsigned long uint32_t;
 typedef unsigned short uint16_t;
 typedef unsigned char uint8_t;
+typedef unsigned char bool;
+#endif
+
 typedef unsigned char byte;
 
-typedef unsigned char bool;
 #define TRUE 1
 #define FALSE 0
 
@@ -38,9 +43,6 @@ typedef unsigned char bool;
 #define INT_MIN 0x80000000
 #define INT_MAX 0x7FFFFFFF
 #define UINT_MAX 0xFFFFFFFFU
-
-// number of ticks in a day (tick counter resets at midnight)
-#define RTC_TICKS_MAX 11059200U
 
 // stores all data needed for a toggle in a tick function
 typedef struct {
@@ -64,6 +66,7 @@ void toggle_falling(toggle_t *t, bool state);
 #define S_EALREADYINITED -6 // subsystem was already initialized [init() called twice]
 #define S_EDOWN -7          // subsystem is down
 #define S_EIMPLEMENT -8     // requested feature not implemented
+#define S_EUNSPECIFIED -9   // multiple errors have occurred and their nature is unimportant
 
 // if defined, uitoax and itoax will write alphabetical digits (base 11 or more) uppercase, else lowercase
 //#define UITOAX_UPPERCASE

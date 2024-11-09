@@ -22,7 +22,9 @@ int main(void) {
 	volatile int *gamestate_ptr = get_gamestate_ptr();
 	jmp_buf *envptr = get_jmpbuf_ptr();
 
+#ifdef BENCHMARK_RASTER
 	unsigned int key;
+#endif
 
 	// setup longjmp environment for later call from halt()
 	if (setjmp(*envptr)) {
