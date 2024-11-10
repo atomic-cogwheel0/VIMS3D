@@ -131,6 +131,10 @@ vec3f transform_vec_to_camera(vec3f u, camera cam) {
 	return rot(subvv(u, cam.pos), -cam.pitch, -cam.yaw);
 }
 
+trianglef move_tri_by_vec(trianglef q, vec3f v) {
+	return itrianglef(addvv(q.a, v), addvv(q.b, v), addvv(q.c, v), q.flip_texture);
+}
+
 trianglef transform_tri_from_zero(trianglef q, vec3f v, fixed pitch, fixed yaw) {
 	return itrianglef(addvv(rot(q.a, pitch, yaw), v), addvv(rot(q.b, pitch, yaw), v), addvv(rot(q.c, pitch, yaw), v), q.flip_texture);
 }

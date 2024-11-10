@@ -83,6 +83,9 @@ typedef struct {
 // initialize trianglef
 trianglef itrianglef(vec3f a, vec3f b, vec3f c, bool flip);
 
+// add v to every point of q
+trianglef move_tri_by_vec(trianglef q, vec3f v);
+
 // rotate vector u around (0;0;0) with given angles and offset it with v
 vec3f transform_vec_from_zero(vec3f u, vec3f v, fixed pitch, fixed yaw);
 // transform vector from world space to camera relative space
