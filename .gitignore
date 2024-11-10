@@ -3,6 +3,7 @@
 *.G1A
 test/*
 test
+SDCard
 SDCard/*
 Debug/*
 Debug
@@ -13,3 +14,4 @@ INIT
 .vscode
 .vscode/*
 FXSH_Build.bat
+*.sh
