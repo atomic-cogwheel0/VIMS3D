@@ -1,4 +1,3 @@
-#include "fxlib.h"
 #include "game.h"
 
 /*

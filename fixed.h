@@ -1,7 +1,7 @@
 #ifndef FIXED_H
 #define FIXED_H
 
-#include <math.h>
+#include <mathf.h>
 
 #include "VIMS_defs.h"
 

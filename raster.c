@@ -126,11 +126,9 @@ int g_rasterize_triangles(trianglef *tris, texture_ptr_t *textures, int len, cam
 		nrm = normal(t);
 		ctot = t.a;
 
-		// cull
-		if (t.a.z < float2f(.5f) || t.b.z < float2f(.5f) || t.c.z < float2f(.5f) ||		// near-plane
-		    dotp(ctot, nrm) >= 0) {														// backface
+		// cull (first backface, then near-plane)
+		if (dotp(ctot, nrm) >= 0 || (t.a.z < int2f(1) || t.b.z < int2f(1) || t.c.z < int2f(1)))
 			continue;
-		}
 
 		// never divide by 0, check even when near-plane culling is on, don't want stuff to go wrong
 		if (t.a.z == 0) {	

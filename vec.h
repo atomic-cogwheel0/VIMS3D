@@ -1,9 +1,7 @@
 #ifndef VEC_H
 #define VEC_H
 
-#include <math.h>
 #include <stdio.h>
-#include "fxlib.h"
 
 #include "fixed.h"
 #include "texture.h"

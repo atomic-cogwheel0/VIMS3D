@@ -2,7 +2,6 @@
 #define RASTER_H
 
 #include <stdlib.h>
-#include "fxlib.h"
 
 #include "vec.h"
 #include "texture.h"

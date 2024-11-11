@@ -3,7 +3,6 @@
 
 #include <stdlib.h>
 #include <setjmp.h>
-#include "fxlib.h"
 #include "timer.h"
 
 #include "worldobj.h"
