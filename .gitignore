@@ -15,3 +15,6 @@ INIT
 .vscode/*
 FXSH_Build.bat
 *.sh
+gintbuild/build-fx
+gintbuild/assets-cg
+gintbuild/.vscode

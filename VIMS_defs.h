@@ -17,7 +17,9 @@ VIMS_defs:
 // if defined: renders single frame BENCHMARK_RASTER times, shows debuginfo then stops
 //#define BENCHMARK_RASTER 80
 // this build is on the official sdk (not on gint)
+#ifndef GINT_PORT
 #define OFFICIAL_SDK
+#endif
 
 // typedefs (no <stdint.h> or <stdbool.h> on official SDK)
 
