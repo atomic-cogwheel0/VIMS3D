@@ -101,7 +101,7 @@ bool fall_tick(world_obj *obj, llist l, fixed timescale, int *status) {
 	// check every GROUND object for collision
 	ptr = l.head;
 	while (ptr != NULL) {
-		if (ptr->obj->type == WORLDOBJ_GROUND) {
+		if (ptr->obj->type == WORLDOBJ_GROUND && ptr->obj != obj) {
 			// if a collision occurs, backtrack step by step until the two objects don't collide anymore
 			if (m_collide(ptr->obj->mesh, obj->mesh)) {
 				has_collided = TRUE;
@@ -114,7 +114,7 @@ bool fall_tick(world_obj *obj, llist l, fixed timescale, int *status) {
 		ptr = ptr->next;
 	}
 
-	// bounce lol
+	// reset vertical speed
 	if (has_collided) {
 		obj->g_speed = 0;
 	}
