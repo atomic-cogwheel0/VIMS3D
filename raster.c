@@ -13,6 +13,8 @@ int16_t *depthbuf[64];
 
 int g_status = SUBSYS_DOWN;
 
+void *vram;
+
 // initialize all buffers (static alloc for buffers isn't possible)
 int g_init(void) {
 	int i;
@@ -29,8 +31,9 @@ int g_init(void) {
 			return S_EALLOC;
 		}
 	}
-	g_status = SUBSYS_UP;
+	vram = GetVRAMAddress();
 
+	g_status = SUBSYS_UP;
 	return S_SUCCESS;
 }
 
@@ -336,7 +339,7 @@ int g_rasterize_triangles(trianglef *tris, texture_ptr_t *textures, int len, cam
 					px = (tx.tx_data[px_offset/4] & (3 << ((3 - (px_offset%4)) * 2))) >> ((3 - (px_offset%4)) * 2);
 					// is transparency bit set?
 					if (!(px & 2)) {
-						Bdisp_SetPoint_VRAM(xiter, yiter, px & 1);
+						SetPoint_VRAM(xiter, yiter, px & 1, vram);
 						depthbuf[yiter][xiter] = depthval; // write new depthval
 					}
 				}

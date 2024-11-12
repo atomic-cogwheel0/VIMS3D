@@ -15,7 +15,7 @@ VIMS_defs:
 // rebuild all if changed
 //#define DEBUG_BUILD
 // if defined: renders single frame BENCHMARK_RASTER times, shows debuginfo then stops
-//#define BENCHMARK_RASTER 80
+//#define BENCHMARK_RASTER 160
 // this build is on the official sdk (not on gint)
 #define OFFICIAL_SDK
 
