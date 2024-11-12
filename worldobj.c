@@ -59,7 +59,7 @@ world_obj *find_closest_object(world_obj *obj, llist l, int type_to_find, fixed 
 static const vec3f z_axis = {0, 0, int2f(1)}; //ivec3f(0, 0, int2f(1));
 
 int move_rot_towards(world_obj *obj, world_obj *dir, fixed speed, bool check_collision) {
-	vec3f a_to_b = ivec3f(0, 0, 0);
+	vec3f a_to_b;
 	vec3f prev_pos;
 
 	if (obj == NULL || dir == NULL) return S_ENULLPTR;
@@ -206,6 +206,7 @@ int tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timesca
 	vec3f t;
 	static const fixed movement_speed = float2f(1.0f); // the amount the player should move in 1 unit of timescale
 	static const fixed rotation_speed = float2f(32.0f*DEG2RAD_MULT); // number of degrees the player should turn in 1 unit of timescale
+	static const vec3f z_axis = {0, 0, int2f(1)}; // unit vector on the z axis
 
 	fixed speed = mulff(movement_speed, timescale);
 	fixed rotation = mulff(rotation_speed, timescale);
@@ -231,16 +232,16 @@ int tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timesca
 	// player movement is NOT axis aligned, depends on looking direction
 	t = ivec3i(0, 0, 0);
 	if (IsKeyDown(KEY_CHAR_8)) {
-		t = addvv(t, rot(ivec3i(0, 0, 1), 0, cam->yaw));
+		t = addvv(t, rot(z_axis, 0, cam->yaw));
 	}
 	if (IsKeyDown(KEY_CHAR_2)) {
-		t = addvv(t, rot(ivec3i(0, 0, 1), 0, cam->yaw + float2f(180*DEG2RAD_MULT)));
+		t = addvv(t, rot(z_axis, 0, cam->yaw + float2f(180*DEG2RAD_MULT)));
 	}
 	if (IsKeyDown(KEY_CHAR_4)) {
-		t = addvv(t, rot(ivec3i(0, 0, 1), 0, cam->yaw + float2f(90*DEG2RAD_MULT)));
+		t = addvv(t, rot(z_axis, 0, cam->yaw + float2f(90*DEG2RAD_MULT)));
 	}
 	if (IsKeyDown(KEY_CHAR_6)) {
-		t = addvv(t, rot(ivec3i(0, 0, 1), 0, cam->yaw - float2f(90*DEG2RAD_MULT)));
+		t = addvv(t, rot(z_axis, 0, cam->yaw - float2f(90*DEG2RAD_MULT)));
 	}
 	t = normalize(t); // normalize movement speed in the horizontal axis
 	if (IsKeyDown(KEY_CHAR_9)) {
