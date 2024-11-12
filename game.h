@@ -3,15 +3,11 @@
 
 #include <stdlib.h>
 #include <setjmp.h>
-#include "timer.h"
 
 #include "worldobj.h"
 #include "VIMS_defs.h"
 
-// timer id
-#define TICK_TIMER ID_USER_TIMER1
-
-// prepares game & objects, sets tick() to run on a timer
+// prepares game & objects
 void init(void);
 // handles input, initiates rendering and object ticking
 void tick(void);

@@ -93,10 +93,6 @@ void w_print_debug(void);
 void w_print_bench_result(void);
 #endif
 
-// minimum length of a single gametick in milliseconds
-#define TICK_MS 25
-#define TICK_DELTAS (TICK_MS*128/1000)
-
 // renders every renderable object in the world
 int w_render_world(camera *cam);
 
