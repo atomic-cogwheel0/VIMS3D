@@ -31,7 +31,7 @@ typedef volatile union {
 		bits8 STR1 : 1;
 		bits8 STR0 : 1;
 	} TSTR;
-	uint8_t TSTRval;
+	bits8 TSTRv;
 } sh_tstr_t;
 
 void cpu_get_timer_addrs(sh_tmu_t **tmu, sh_tstr_t **tstr);

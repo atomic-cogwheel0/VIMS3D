@@ -82,7 +82,7 @@ int setup_hires_timer(void) {
 	// backup regs
 	copy_tmu(&tmu1_backup, tmu1);
 
-	tstr_backup = *tstr;
+	tstr_backup.TSTRv = tstr->TSTRv;
 
 	tstr->TSTR.STR1 = 0; // disable TMU1
 
@@ -121,7 +121,7 @@ int reset_timer_state(void) {
 
 	// restore regs
 	copy_tmu(tmu1, &tmu1_backup);
-	*tstr = tstr_backup;
+	tstr->TSTRv = tstr_backup.TSTRv; // entire TSTR
 
 	is_inited = FALSE;
 
