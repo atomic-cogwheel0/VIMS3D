@@ -46,6 +46,7 @@ int main(void) {
 	tick();
 	w_print_bench_result();
 	GetKey(&key);
+	quit();
 #endif
 	reset_before_exit();
 	return 0;

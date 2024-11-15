@@ -8,29 +8,35 @@
   using the higher level mesh system is preferred to raw triangles
 */
 
-// depth buffer: a 128*64 array, every pixel has a 11+5 bit fixed-point depth value
-int16_t *depthbuf[64];
+// depth buffer: an array 128*64=8192 depth values, every pixel has a 11+5 bit fixed-point depth value
+int16_t *depthbuf;
 
-int g_status = SUBSYS_DOWN;
+// macro to access the depth buffer
+#define DEPTHBUF_AT(x, y) depthbuf[x*64 + y]
 
-void *vram;
+static int g_status = SUBSYS_DOWN;
+
+static void *vram;
 
 // initialize all buffers (static alloc for buffers isn't possible)
 int g_init(void) {
-	int i;
-
 	if (g_status != SUBSYS_DOWN) return S_EALREADYINITED;
 
-	// allocate every row of the depth buffer
-	for (i = 0; i < 64; i++) {
-		depthbuf[i] = (int16_t *) malloc(128*sizeof(int16_t));
-		if (depthbuf[i] == NULL) {
+	// allocate the depth buffer
+	if (!isSH4()) {
+		depthbuf = (int16_t *) malloc(128*64*sizeof(int16_t));
+		if (depthbuf == NULL) {
 			// cancel all previous allocations and return
 			g_dealloc();
 			g_status = SUBSYS_ERR;
 			return S_EALLOC;
 		}
 	}
+	else {
+		// use 16 kbytes of XYRAM as the depth buffer
+		depthbuf = (int16_t *) 0xe500e000;
+	}
+
 	vram = GetVRAMAddress();
 
 	g_status = SUBSYS_UP;
@@ -38,13 +44,10 @@ int g_init(void) {
 }
 
 void g_dealloc(void) {
-	int i;
 	// free all buffers
-	for (i = 0; i < 64; i++) {
-		if (depthbuf[i] != NULL) {
-			free(depthbuf[i]);
-			depthbuf[i] = NULL;
-		}
+	if (!isSH4() && depthbuf != NULL) {
+		free(depthbuf);
+		depthbuf = NULL;
 	}
 	g_status = SUBSYS_DOWN;
 }
@@ -53,8 +56,21 @@ int g_getstatus(void) {
 	return g_status;
 }
 
-int16_t **g_getdepthbuf(void) {
-	return (int16_t **)depthbuf;
+int16_t *g_getdepthbuf(void) {
+	return (int16_t *)depthbuf;
+}
+
+int g_clr_depthbuf(void) {
+	int dx, dy;
+	if (g_status != SUBSYS_UP) return S_EDOWN;
+
+	for (dx = 0; dx < 128; dx++) {
+		for (dy = 0; dy < 64; dy++) {
+			DEPTHBUF_AT(dx, dy) = 0x7FFF; // FIXED16_MAX
+		}
+	}
+
+	return S_SUCCESS;
 }
 
 int g_draw_horizon(camera *cam) {
@@ -88,7 +104,6 @@ int g_rasterize_triangles(trianglef *tris, texture_ptr_t *textures, int len, cam
 	trianglef t;
 	vec3f v0, v1, v2, a, b, c, nrm, ctot; // ctot is Camera TO Triangle
 	vec3f v2_increment;
-	fixed v2_x_l, v2_x_r;
 	fixed denom, dot00, dot01, dot02l, dot02r, dot11, dot12l, dot12r, u, v, ui, vi; // for barycentric
 	fixed ozstep, uzstep, vzstep; // perspective correctness iterators
 	fixed ozp, uzp, vzp, ozq, uzq, vzq, oza, ozb, vzb, ozc, uzc, ozi, uzi, vzi, zci; // practical variable naming, UV data calculation
@@ -350,7 +365,7 @@ int g_rasterize_triangles(trianglef *tris, texture_ptr_t *textures, int len, cam
 				depthval = (f2int(zci/2) << 5) | (((zci/2) & FIXED_FRAC_MASK) >> (FIXED_PRECISION-5)); // transform 22+10bit zci to 11+5bit depth
 
 				// is current pixel closer than the last depth written there?
-				if (depthbuf[yiter][xiter] > depthval) {
+				if (DEPTHBUF_AT(xiter, yiter) > depthval) {
 					ui = divshiftfi(mulff(uzi, zci), ZREC_EXP+ZREC_EXP); // only use of divshiftfi is here
 					vi = divshiftfi(mulff(vzi, zci), ZREC_EXP+ZREC_EXP);
 
@@ -369,7 +384,7 @@ int g_rasterize_triangles(trianglef *tris, texture_ptr_t *textures, int len, cam
 					// is transparency bit set?
 					if (!(px & 2)) {
 						SetPoint_VRAM(xiter, yiter, px & 1, vram);
-						depthbuf[yiter][xiter] = depthval; // write new depthval
+						DEPTHBUF_AT(xiter, yiter) = depthval; // write new depthval
 					}
 				}
 			}
