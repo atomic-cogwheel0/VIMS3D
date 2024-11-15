@@ -20,8 +20,14 @@ int cpuSH4 = UNSET;
 
 bool isSH4(void) {
 	if (cpuSH4 == UNSET) {
-		// query the Processor Version Register for SH4 cpu (causes a nonexisting read error on the SDK, just continue running)
-		cpuSH4 = (((*(volatile uint32_t *)0xFF000030) & 0xffffff00) == 0x10300b00);
+		// check for 1.XX OS (SH3-only and SDK emulator)
+		if (*(byte *)0xA0010021 != '1') {
+			// query the Processor Version Register for SH4 cpu (causes a nonexisting read error on the SDK, just continue running)
+			cpuSH4 = (((*(volatile uint32_t *)0xFF000030) & 0xffffff00) == 0x10300b00);
+		}
+		else {
+			cpuSH4 = FALSE;
+		}
 	}
 	// we can assume that the processor model does not change in a single run
 	return cpuSH4 ? TRUE : FALSE;
