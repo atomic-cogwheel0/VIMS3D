@@ -87,13 +87,20 @@ int g_rasterize_triangles(trianglef *tris, texture_ptr_t *textures, int len, cam
 
 	trianglef t;
 	vec3f v0, v1, v2, a, b, c, nrm, ctot; // ctot is Camera TO Triangle
-	fixed denom, dot00, dot01, dot02, dot11, dot12, u, v, ui, vi; // for barycentric
+	vec3f v2_increment;
+	fixed v2_x_l, v2_x_r;
+	fixed denom, dot00, dot01, dot02l, dot02r, dot11, dot12l, dot12r, u, v, ui, vi; // for barycentric
 	fixed ozstep, uzstep, vzstep; // perspective correctness iterators
 	fixed ozp, uzp, vzp, ozq, uzq, vzq, oza, ozb, vzb, ozc, uzc, ozi, uzi, vzi, zci; // practical variable naming, UV data calculation
 	fixed v0x_sc, v1x_sc;
 
-	fixed dot11_dot02, dot01_dot12, dot00_dot12, dot01_dot02;
-	fixed dot11_dot02_increment, dot01_dot12_increment, dot00_dot12_increment, dot01_dot02_increment;
+	fixed dot11_dot02, dot01_dot12, dot00_dot12, dot01_dot02; // incremented every loop
+	fixed dot11_dot02l, dot01_dot12l, dot00_dot12l, dot01_dot02l; // values on the leftmost pixel of current row
+	fixed dot11_dot02r, dot01_dot12r, dot00_dot12r, dot01_dot02r; // values on the rightmost pixel of current row
+	fixed dot11_dot02_odelta, dot01_dot12_odelta, dot00_dot12_odelta, dot01_dot02_odelta; // outer (y-)loop deltas
+	fixed dot11_dot02_idelta, dot01_dot12_idelta, dot00_dot12_idelta, dot01_dot02_idelta; // inner (x-)loop deltas
+
+	fixed dot02_increment, dot12_increment;
  
 	byte px;
 	int px_offset;
@@ -215,6 +222,48 @@ int g_rasterize_triangles(trianglef *tris, texture_ptr_t *textures, int len, cam
 		vzb = mulff(int2f(u_mult), ozb); // V is max in point B, 0 in point C
 		uzc = mulff(int2f(v_mult), ozc); // U is max in point C, 0 in point B
 
+		// break the dot products down to simple additions in the main loop
+		// first, calculate v2's values on the left and right sides
+		v2.y = divfi(int2f(bbox_top) - a.y, OF_SC);
+
+		v2.x = divfi(int2f(bbox_left) - a.x, OF_SC);
+		dot02l = dotp2(v0, v2);
+		dot12l = dotp2(v1, v2);
+
+		v2.x = divfi(int2f(bbox_right) - a.x, OF_SC);
+		dot02r = dotp2(v0, v2);
+		dot12r = dotp2(v1, v2);
+
+		// get increments on every y-loop
+		v2_increment.x = 0;
+		v2_increment.y = divfi(int2f(1), OF_SC);
+		dot02_increment = dotp2(v0, v2_increment);
+		dot12_increment = dotp2(v1, v2_increment);
+
+		// deltas in the y-lopp
+		dot11_dot02_odelta = mulff(dot11, dot02_increment);
+		dot01_dot12_odelta = mulff(dot01, dot12_increment);
+		dot00_dot12_odelta = mulff(dot00, dot12_increment);
+		dot01_dot02_odelta = mulff(dot01, dot02_increment);
+
+		// deltas in the x-loops
+		dot11_dot02_idelta = mulff(dot11, v0x_sc);
+		dot01_dot12_idelta = mulff(dot01, v1x_sc);
+		dot00_dot12_idelta = mulff(dot00, v1x_sc);
+		dot01_dot02_idelta = mulff(dot01, v0x_sc);
+
+		// leftmost value of the dotprods in the current y-loop
+		dot11_dot02l = mulff(dot11, dot02l);
+		dot01_dot12l = mulff(dot01, dot12l);
+		dot00_dot12l = mulff(dot00, dot12l);
+		dot01_dot02l = mulff(dot01, dot02l);
+
+		// rightmost value of the dotprods in the current y-loop
+		dot11_dot02r = mulff(dot11, dot02r);
+		dot01_dot12r = mulff(dot01, dot12r);
+		dot00_dot12r = mulff(dot00, dot12r);
+		dot01_dot02r = mulff(dot01, dot02r);
+
 		// 1. PRECALCULATE everything that can be precalculated!
 		// 2. If needed, split vectors into coordinates and use them separately!
 		// 3. Remember what dot products are, avoid recalculating them if only a single coordinate has changed!
@@ -226,31 +275,19 @@ int g_rasterize_triangles(trianglef *tris, texture_ptr_t *textures, int len, cam
 		//  Ui and Vi are the real texture coordinates
 		//  1/Z, 1/Ui and 1/Vi are interpolated because they are linear across the surface in screen space
 
-		for (yiter = bbox_top; yiter <= bbox_bottom; yiter += 1) {
-			if (yiter < 0 || yiter >= 64) continue;
-
+		for (yiter = bbox_top; yiter <= bbox_bottom; yiter++) {
 			// find leftmost
-			v2 = divvi(subvv(ivec3f(int2f(bbox_left), int2f(yiter), 0), a), OF_SC);
-			dot02 = dotp2(v0, v2);
-			dot12 = dotp2(v1, v2);
-
-			// calculate products of dot products
-			dot11_dot02 = mulff(dot11, dot02);
-			dot01_dot12 = mulff(dot01, dot12);
-			dot00_dot12 = mulff(dot00, dot12);
-			dot01_dot02 = mulff(dot01, dot02);
-
-			// how much does a product of dotp's change in a cycle
-			dot11_dot02_increment = mulff(dot11, v0x_sc);
-			dot01_dot12_increment = mulff(dot01, v1x_sc);
-			dot00_dot12_increment = mulff(dot00, v1x_sc);
-			dot01_dot02_increment = mulff(dot01, v0x_sc);
+			// increment leftmost dotp's and set up the loop iterators
+			dot11_dot02 = (dot11_dot02l += dot11_dot02_odelta);
+			dot01_dot12 = (dot01_dot12l += dot01_dot12_odelta);
+			dot00_dot12 = (dot00_dot12l += dot00_dot12_odelta);
+			dot01_dot02 = (dot01_dot02l += dot01_dot02_odelta);
 
 			for (xiterl = bbox_left; xiterl <= bbox_right; xiterl++) {
-				dot11_dot02 += dot11_dot02_increment;
-				dot01_dot12 += dot01_dot12_increment;
-				dot00_dot12 += dot00_dot12_increment;
-				dot01_dot02 += dot01_dot02_increment;
+				dot11_dot02 += dot11_dot02_idelta;
+				dot01_dot12 += dot01_dot12_idelta;
+				dot00_dot12 += dot00_dot12_idelta;
+				dot01_dot02 += dot01_dot02_idelta;
 				u = dot11_dot02 - dot01_dot12;
 				if (u < 0) continue;
 				v = dot00_dot12 - dot01_dot02;
@@ -269,25 +306,17 @@ int g_rasterize_triangles(trianglef *tris, texture_ptr_t *textures, int len, cam
 				vzp = mulff(vzb, v);
 
 			// find rightmost, same stuff but different
-			v2 = divvi(subvv(ivec3f(int2f(bbox_right), int2f(yiter), 0), a), OF_SC);
-			dot02 = dotp2(v0, v2);
-			dot12 = dotp2(v1, v2);
-
-			dot11_dot02 = mulff(dot11, dot02);
-			dot01_dot12 = mulff(dot01, dot12);
-			dot00_dot12 = mulff(dot00, dot12);
-			dot01_dot02 = mulff(dot01, dot02);
-
-			dot11_dot02_increment = mulff(dot11, v0x_sc);
-			dot01_dot12_increment = mulff(dot01, v1x_sc);
-			dot00_dot12_increment = mulff(dot00, v1x_sc);
-			dot01_dot02_increment = mulff(dot01, v0x_sc);
+			// increment rightmost dotp's and set up the loop iterators
+			dot11_dot02 = (dot11_dot02r += dot11_dot02_odelta);
+			dot01_dot12 = (dot01_dot12r += dot01_dot12_odelta);
+			dot00_dot12 = (dot00_dot12r += dot00_dot12_odelta);
+			dot01_dot02 = (dot01_dot02r += dot01_dot02_odelta);
 
 			for (xiterr = bbox_right; xiterr >= xiterl; xiterr--) {
-				dot11_dot02 -= dot11_dot02_increment;
-				dot01_dot12 -= dot01_dot12_increment;
-				dot00_dot12 -= dot00_dot12_increment;
-				dot01_dot02 -= dot01_dot02_increment;
+				dot11_dot02 -= dot11_dot02_idelta;
+				dot01_dot12 -= dot01_dot12_idelta;
+				dot00_dot12 -= dot00_dot12_idelta;
+				dot01_dot02 -= dot01_dot02_idelta;
 				u = dot11_dot02 - dot01_dot12;
 				if (u < 0) continue;
 				v = dot00_dot12 - dot01_dot02;
@@ -321,7 +350,7 @@ int g_rasterize_triangles(trianglef *tris, texture_ptr_t *textures, int len, cam
 				depthval = (f2int(zci/2) << 5) | (((zci/2) & FIXED_FRAC_MASK) >> (FIXED_PRECISION-5)); // transform 22+10bit zci to 11+5bit depth
 
 				// is current pixel closer than the last depth written there?
-				if (depthbuf[yiter][xiter] > depthval) {			
+				if (depthbuf[yiter][xiter] > depthval) {
 					ui = divshiftfi(mulff(uzi, zci), ZREC_EXP+ZREC_EXP); // only use of divshiftfi is here
 					vi = divshiftfi(mulff(vzi, zci), ZREC_EXP+ZREC_EXP);
 
