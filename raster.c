@@ -89,12 +89,13 @@ int g_draw_horizon(camera *cam) {
 
 // define fallback texture (2*2 checkerboard)
 byte tx_o_fallback[] = {65};
-texture_t fallback_texture = {2, 2, 1, 1, tx_o_fallback};
+tx_data_t fallback_txdata = {2, 2, 1, 1, tx_o_fallback};
+texture_t fallback_texture = {&fallback_txdata, {-1}}; // inits a static animated texture
 
 // the One and Only Rendering(TM) function
 // have fun :)
 
-int g_rasterize_triangles(trianglef *tris, texture_ptr_t *textures, int len, camera cam, position pos, vec3f zero_offset) {
+int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera cam, position pos, vec3f zero_offset) {
 	int curr_tidx, xiterl, xiterr, xiter, yiter;
 	int bbox_left, bbox_right, bbox_top, bbox_bottom; // bounding box (on screen)
 	int tri_cnt = 0;
@@ -193,17 +194,19 @@ int g_rasterize_triangles(trianglef *tris, texture_ptr_t *textures, int len, cam
 
 		tri_cnt++;
 
-		// show missing texture instead of SYSTEM ERROR
-		if (textures[curr_tidx] == NULL)
+		// show missing texture instead of SYSTEM ERROR and don't render animated textures
+		if (textures[curr_tidx] == NULL || textures[curr_tidx]->anim.nframes >= 0) {
 			tx = fallback_texture;
-		else 
+		}
+		else {
 			tx = *textures[curr_tidx];
+		}
 
 		// U and V are the barycentric coordinates of a pixel within the current triangle in screen space
 		// their range is from 0 to 1, calculate with both tiling and texture size
 
-		u_mult = tx.w * tx.u_tile_size;
-		v_mult = tx.h * tx.v_tile_size;
+		u_mult = tx.texture->w * tx.texture->u_tile_size;
+		v_mult = tx.texture->h * tx.texture->v_tile_size;
 
 		// the following code does barycentric coord calculation (u and v)
 		// src: https://web.archive.org/web/20240910155457/https://blackpawn.com/texts/pointinpoly/
@@ -372,15 +375,15 @@ int g_rasterize_triangles(trianglef *tris, texture_ptr_t *textures, int len, cam
 					// calculate pixel offset into the array (row by row)
 					if (t.flip_texture) {
 						// index coordinates from the bottom right instead of top left
-						px_offset = (tx.h-1 - f2int(ui)%tx.h)*tx.w + (tx.w-1 - f2int(vi)%tx.w);
+						px_offset = (tx.texture->h-1 - f2int(ui)%tx.texture->h)*tx.texture->w + (tx.texture->w-1 - f2int(vi)%tx.texture->w);
 					}
 					else {
-						px_offset = (f2int(ui)%tx.h)*tx.w + (f2int(vi)%tx.w);
+						px_offset = (f2int(ui)%tx.texture->h)*tx.texture->w + (f2int(vi)%tx.texture->w);
 					}
 					// ensure array access does not cause an invalid dereference
-					if (px_offset >= tx.h*tx.w) continue;
+					if (px_offset >= tx.texture->h*tx.texture->w) continue;
 					// extract pixel at given offset (2 bit pixel extracted from byte arr)
-					px = (tx.tx_data[px_offset/4] & (3 << ((3 - (px_offset%4)) * 2))) >> ((3 - (px_offset%4)) * 2);
+					px = (tx.texture->pixels[px_offset/4] & (3 << ((3 - (px_offset%4)) * 2))) >> ((3 - (px_offset%4)) * 2);
 					// is transparency bit set?
 					if (!(px & 2)) {
 						SetPoint_VRAM(xiter, yiter, px & 1, vram);
@@ -427,12 +430,12 @@ int g_text2d(unsigned char *text, unsigned int x, unsigned int y, unsigned int p
 		PrintMini(x, y, text, (params & TEXT_INVERTED) ? MINI_REV : MINI_OVER);
 	}
 	else if (params & TEXT_LARGE) {
-		PrintXY(x, y, text, (params & TEXT_INVERTED) ? MINI_REV : MINI_OVER);
+		PrintXY(x, y, text, (params & TEXT_INVERTED) ? 1 : 0);
 	}
 	return S_SUCCESS;
 }
 
-int g_texture2d(texture_ptr_t tx, unsigned int x, unsigned int y) {
+int g_texture2d(texture_t *tx, unsigned int x, unsigned int y) {
 	unsigned int xiter, yiter;
 	byte px;
 	int px_offset;
@@ -441,17 +444,17 @@ int g_texture2d(texture_ptr_t tx, unsigned int x, unsigned int y) {
 	if (tx == NULL) return S_ENULLPTR;
 
 	// if tx is tiled, draw it multiple times
-	tiled_width = tx->w * tx->u_tile_size;
-	tiled_height = tx->h * tx->v_tile_size;
+	tiled_width = tx->texture->w * tx->texture->u_tile_size;
+	tiled_height = tx->texture->h * tx->texture->v_tile_size;
 
 	for (yiter = 0; yiter < tiled_height; yiter++) {
 		for (xiter = 0; xiter < tiled_width; xiter++) {
 			// add top left coords; is still onscreen?
 			if (xiter+x >= 0 && xiter+x < 128 && yiter+y >= 0 && yiter+y < 64) {
 				// calculate pixel offset into the array (row by row)
-				px_offset = (yiter % tx->h) * tx->w + xiter % tx->w;
+				px_offset = (yiter % tx->texture->h) * tx->texture->w + xiter % tx->texture->w;
 				// extract pixel at given offset (2 bit pixel extracted from byte arr)
-				px = (tx->tx_data[px_offset/4] & (3 << ((3 - (px_offset%4)) * 2))) >> ((3 - (px_offset%4)) * 2);
+				px = (tx->texture->pixels[px_offset/4] & (3 << ((3 - (px_offset%4)) * 2))) >> ((3 - (px_offset%4)) * 2);
 				// is transparency bit set?
 				if (!(px & 2)) {
 					Bdisp_SetPoint_VRAM(xiter+x, yiter+y, px & 1);

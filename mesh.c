@@ -5,7 +5,7 @@
   functions for handling meshes and colliders
 */
 
-mesh imesh(trianglef *arr, texture_ptr_t *tx_arr, uint8_t arrlen, vec3f pos, vec3f ctr) {
+mesh imesh(trianglef *arr, texture_t **tx_arr, uint8_t arrlen, vec3f pos, vec3f ctr) {
 	mesh m;
 	m.mesh_arr = arr;
 	m.tx_arr = tx_arr;
@@ -16,9 +16,10 @@ mesh imesh(trianglef *arr, texture_ptr_t *tx_arr, uint8_t arrlen, vec3f pos, vec
 	m.pos.pitch = 0;
 	m.pos.yaw = 0;
 	m.ctr = ctr;
-	m.flag_renderable = TRUE;
-	m.flag_has_collision = FALSE;
-	m.flag_is_billboard = FALSE;
+	m.is_renderable = TRUE;
+	m.has_collision = FALSE;
+	m.is_billboard = FALSE;
+	m.is_animated = FALSE;
 	return m;
 }
 
@@ -26,11 +27,11 @@ int m_setcoll(mesh *m, collider *colls, uint8_t coll_cnt) {
 	if (m == NULL) return S_ENULLPTR;
 	m->coll_arr = colls;
 	m->coll_cnt = coll_cnt;
-	m->flag_has_collision = (colls == NULL) ? FALSE : TRUE;
+	m->has_collision = (colls == NULL) ? FALSE : TRUE;
 	return S_SUCCESS;
 }
 
-mesh ibill(trianglef *arr, texture_ptr_t *tx_arr, vec3f pos) {
+mesh ibill(trianglef *arr, texture_t **tx_arr, vec3f pos) {
 	mesh m;
 	m.mesh_arr = arr;
 	m.tx_arr = tx_arr;
@@ -42,9 +43,9 @@ mesh ibill(trianglef *arr, texture_ptr_t *tx_arr, vec3f pos) {
 	m.pos.yaw = 0;
 	// (0;0;0) is the center -> please make sure it's symmetric
 	m.ctr = ivec3f(0, 0, 0);
-	m.flag_renderable = TRUE;
-	m.flag_has_collision = FALSE;
-	m.flag_is_billboard = TRUE;
+	m.is_renderable = TRUE;
+	m.has_collision = FALSE;
+	m.is_billboard = TRUE;
 	return m;
 }
 
@@ -54,7 +55,7 @@ int m_collide(mesh *a, mesh *b) {
 	if (a == NULL || b == NULL)
 		return S_ENULLPTR;
 
-	if (!a->flag_has_collision || !b->flag_has_collision)
+	if (!a->has_collision || !b->has_collision)
 		return FALSE;
 
 	if (a->coll_cnt == 0 && b->coll_cnt == 0)

@@ -5,7 +5,7 @@
   game setup, adding meshes, handling input
 */
 
-extern texture_t textures[TX_CNT];
+extern tx_data_t textures[TX_CNT];
 
 camera game_cam; // camera (player view position)
 float gdelta; // player rotation speed
@@ -18,13 +18,13 @@ volatile int gamestate = GAMESTATE_PREINIT;
 // arrays for storing mesh data (vertices, triangles, textures)
 vec3f vertices[26];
 trianglef tank_mesh[TANK_MODEL_TRI_CNT];
-texture_ptr_t tank_txarr[TANK_MODEL_TRI_CNT];
+texture_t *tank_txarr[TANK_MODEL_TRI_CNT];
 
 trianglef person_mesh[2];
-texture_ptr_t person_txarr[2];
+texture_t *person_txarr[2];
 
 trianglef tree_mesh[2];
-texture_ptr_t tree_txarr[2];
+texture_t *tree_txarr[2];
 
 // objects (these are global because they are referenced by address)
 mesh tank_meshobj;
@@ -77,12 +77,12 @@ void init(void) {
 
 	// initialize every texture of every triangle of the tank mesh
 	for (i = 0; i < TANK_MODEL_TRI_CNT; i++) {
-		tank_txarr[i] = &textures[TX_WHITE];
+		tank_txarr[i] = i_tx_static(&textures[TX_WHITE]);
 	}
-	tank_txarr[1] = tank_txarr[5] = tank_txarr[2] = tank_txarr[6] = &textures[TX_TANKTRACK];
-	tank_txarr[31] = tank_txarr[32] = tank_txarr[33] = tank_txarr[34] = tank_txarr[35] = tank_txarr[36] = tank_txarr[37] = &textures[TX_BLACK];
-	tank_txarr[26] = tank_txarr[27] = &textures[TX_TANKFRONT];
-	tank_txarr[28] = tank_txarr[29] = &textures[TX_TANKTOP];
+	tank_txarr[1] = tank_txarr[5] = tank_txarr[2] = tank_txarr[6] = i_tx_static(&textures[TX_TANKTRACK]);
+	tank_txarr[31] = tank_txarr[32] = tank_txarr[33] = tank_txarr[34] = tank_txarr[35] = tank_txarr[36] = tank_txarr[37] = i_tx_static(&textures[TX_BLACK]);
+	tank_txarr[26] = tank_txarr[27] = i_tx_static(&textures[TX_TANKFRONT]);
+	tank_txarr[28] = tank_txarr[29] = i_tx_static(&textures[TX_TANKTOP]);
 
 	// preset vertices for easier triangle declaration
 	vertices[0] = ivec3i(1, 1, 0);
@@ -128,7 +128,7 @@ void init(void) {
 	tank_mesh[7] = itrianglef(vertices[9], vertices[10], vertices[8], FALSE);
 
 	tank_mesh[8] = itrianglef(vertices[7], vertices[1], vertices[8], FALSE);
-	tank_mesh[9] = itrianglef(vertices[2], vertices[8], vertices[1], FALSE);	
+	tank_mesh[9] = itrianglef(vertices[2], vertices[8], vertices[1], FALSE);
 	tank_mesh[10] = itrianglef(vertices[2], vertices[3], vertices[8], FALSE);
 	tank_mesh[11] = itrianglef(vertices[9], vertices[8], vertices[3], FALSE);
 	tank_mesh[12] = itrianglef(vertices[3], vertices[4], vertices[9], FALSE);
@@ -143,11 +143,11 @@ void init(void) {
 
 	
 	tank_mesh[20] = itrianglef(vertices[13], vertices[12], vertices[14], FALSE);
-	tank_mesh[21] = itrianglef(vertices[15], vertices[14], vertices[12], FALSE);	
+	tank_mesh[21] = itrianglef(vertices[15], vertices[14], vertices[12], FALSE);
 	tank_mesh[22] = itrianglef(vertices[14], vertices[15], vertices[18], FALSE);
 	tank_mesh[23] = itrianglef(vertices[19], vertices[18], vertices[15], FALSE);
 	tank_mesh[24] = itrianglef(vertices[18], vertices[19], vertices[17], FALSE);
-	tank_mesh[25] = itrianglef(vertices[16], vertices[17], vertices[19], FALSE);	
+	tank_mesh[25] = itrianglef(vertices[16], vertices[17], vertices[19], FALSE);
 	tank_mesh[26] = itrianglef(vertices[17], vertices[16], vertices[13], FALSE);
 	tank_mesh[27] = itrianglef(vertices[12], vertices[13], vertices[16], FALSE);
 
@@ -158,7 +158,7 @@ void init(void) {
 	tank_mesh[30] = itrianglef(vertices[21], vertices[22], vertices[20], FALSE);
 
 	tank_mesh[31] = itrianglef(vertices[21], vertices[20], vertices[24], FALSE);
-	tank_mesh[32] = itrianglef(vertices[23], vertices[24], vertices[20], FALSE);	
+	tank_mesh[32] = itrianglef(vertices[23], vertices[24], vertices[20], FALSE);
 	tank_mesh[33] = itrianglef(vertices[20], vertices[22], vertices[23], FALSE);
 	tank_mesh[34] = itrianglef(vertices[25], vertices[23], vertices[22], FALSE);
 	tank_mesh[35] = itrianglef(vertices[22], vertices[21], vertices[25], FALSE);
@@ -175,8 +175,7 @@ void init(void) {
 	person_mesh[0] = itrianglef(ivec3i(-1, 4, 0), ivec3i(1, 4, 0), ivec3i(-1, 0, 0), FALSE);
 	person_mesh[1] = itrianglef(ivec3i(1, 0, 0), ivec3i(-1, 0, 0), ivec3i(1, 4, 0), TRUE);
 
-	person_txarr[0] = &textures[TX_PERSON];
-	person_txarr[1] = &textures[TX_PERSON];
+	person_txarr[0] = person_txarr[1] = i_tx_static(&textures[TX_PERSON]);
 
 	// a simple rectangular prism that has an area of 2x2 units
 	person_collider = icoll_aabb(ivec3i(-1, 0, -1), ivec3i(1, 4, 1));
@@ -189,8 +188,7 @@ void init(void) {
 	tree_mesh[0] = itrianglef(ivec3i(-3, 12, 0), ivec3i(3, 12, 0), ivec3i(-3, 0, 0), FALSE);
 	tree_mesh[1] = itrianglef(ivec3i(3, 0, 0), ivec3i(-3, 0, 0), ivec3i(3, 12, 0), TRUE);
 
-	tree_txarr[0] = &textures[TX_TREE];
-	tree_txarr[1] = &textures[TX_TREE];
+	tree_txarr[0] = tree_txarr[1] = i_tx_static(&textures[TX_TREE]);
 	
 	for (i = 0; i < 10; i++) {
 		// the mesh is memcpyed in iworld_obj, so we can reinit tree_meshobj every time, just don't modify tree_mesh or tree_txarr
@@ -224,9 +222,28 @@ void init(void) {
 	gamestate = GAMESTATE_RUNNING;
 }
 
+static void free_textures(void) {
+	int i;
+	char buf[20];
+	locate(1,1);
+	for (i = 0; i < 2; i++) {
+		Print("2"); Bdisp_PutDisp_DD();
+		tx_free(&person_txarr[i]);
+	}
+	locate(1,1);
+	for (i = 0; i < 2; i++) {
+		Print("3"); Bdisp_PutDisp_DD();
+		tx_free(&tree_txarr[i]);
+	}
+	for (i = 0; i < TANK_MODEL_TRI_CNT; i++) {
+		tx_free(&tank_txarr[i]);
+	}
+}
+
 // deallocate buffers, stop timers, set quit status
 void quit(void) {
 	gamestate = GAMESTATE_QUIT_INPROG; // game is quitting, but not ready to return to main menu yet
+	free_textures();
 	// deinit every subsystem
 	g_dealloc();
 	w_dall_world_objs();

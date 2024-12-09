@@ -1,6 +1,7 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
+#include <stdlib.h>
 #include "VIMS_defs.h"
 
 // 2-bit pixels
@@ -15,9 +16,31 @@ typedef struct {
 	uint8_t h; // height
 	unsigned int u_tile_size : 4; // number of repeats on the X axis
 	unsigned int v_tile_size : 4; // number of repeats on the Y axis
-	byte *tx_data; // array of bytes; each byte is 4 pixels; iterated horizontally
+	byte *pixels; // array of bytes; each byte is 4 pixels; serialized row by row
+} tx_data_t;
+
+// data for animation
+typedef struct {
+	short nframes; // number of frames in animation (-1 means not animated)
+	unsigned int frame_ms; // number of milliseconds each frame takes
+	uint8_t frame; // currently displayed frame
+	
+	bool is_loop : 1; // should the animation loop?
+	bool is_running : 1; // used to pause animation
+} anim_data_t;
+
+// a texture INSTANCE with unique animation data and possibly shared texture data
+typedef struct {
+	tx_data_t *texture;
+	// if animated, texture->tx_data holds every frame, each frame comes immediately after the next; w, h and tile_sizes used normally
+	anim_data_t anim;
 } texture_t;
 
-typedef texture_t *texture_ptr_t;
+// init animated texture
+texture_t *i_tx_anim(tx_data_t *tx, short nframes, unsigned int frame_ms, bool loop, bool imm_start);
+// init texture with no animation (single frame)
+texture_t *i_tx_static(tx_data_t *tx);
+// free and set *tx to NULL
+void tx_free(texture_t **tx);
 
 #endif

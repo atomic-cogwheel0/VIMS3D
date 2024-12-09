@@ -94,7 +94,7 @@ int setup_hires_timer(void) {
 
 	tmu1->TCOR = TIMER_TICK_MAX;
 	tmu1->TCNT = TIMER_TICK_MAX;
-	tmu1->TCR.TCR.UNIE = 1; // enable underflow interrupt 
+	tmu1->TCR.TCR.UNIE = 1; // enable underflow interrupt
 	tmu1->TCR.TCR.CKEG = 0; // count on rising edge
 	tmu1->TCR.TCR.TPSC = 1; // Pphi/16
 

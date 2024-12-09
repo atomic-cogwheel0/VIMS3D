@@ -57,13 +57,13 @@ int g_clr_depthbuf(void);
 int g_draw_horizon(camera *cam);
 // rasterize all triangles currently in the buffer (returns number of triangles drawn OR error code)
 // zero_offset is the offset of tris[] from the world center, pos is the position they are transformed to
-int g_rasterize_triangles(trianglef *tris, texture_ptr_t *textures, int len, camera cam, position pos, vec3f zero_offset);
+int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera cam, position pos, vec3f zero_offset);
 
 // draw text at a position in 3D space (pos is the top left corner) (overwrite!) (NEEDS g_init())
 int g_text3d(camera *cam, unsigned char *text, vec3f pos, unsigned int params);
 // draw text onto the screen (overwrite!) (does not need g_init())
 int g_text2d(unsigned char *text, unsigned int x, unsigned int y, unsigned int params);
 // draw a texture (with tiling), pixel-by-pixel, (x & y are the screenspace coords of the top left corner) (overwrite!) (does not need g_init())
-int g_texture2d(texture_ptr_t tx, unsigned int x, unsigned int y);
+int g_texture2d(texture_t *tx, unsigned int x, unsigned int y);
 
 #endif

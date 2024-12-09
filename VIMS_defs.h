@@ -12,12 +12,16 @@ VIMS_defs:
  defines miscellaneous utility functions
 */
 
-// rebuild all if changed
+// CONFIG: rebuild all if flags are changed
+
+// show the debug screen by default
 //#define DEBUG_BUILD
 // if defined: renders single frame BENCHMARK_RASTER times, shows debuginfo then stops
 //#define BENCHMARK_RASTER 160
 // this build is on the official sdk (not on gint)
 #define OFFICIAL_SDK
+// should assertions be checked
+#define DO_ASSERT
 
 // typedefs (no <stdint.h> or <stdbool.h> on official SDK)
 
@@ -105,6 +109,7 @@ int snprintf_light(char *dest, size_t len, const char *fmt, ...);
 #define STRINGIZE(n) STRINGIZE_INNER(n)
 #define STRINGIZE_INNER(x) #x
 
+#ifdef DO_ASSERT
 // if given expression is true, continues exec; if it is false, prints error and expression and halt()s program
 #define assert(a)	do { \
 						if (!(a)) { \
@@ -117,5 +122,12 @@ int snprintf_light(char *dest, size_t len, const char *fmt, ...);
 							halt(); \
 						} \
 					} while(0)
+#else
+#define assert(a)	do { \
+						if (!(a)) { \
+							break; \
+						} \
+					} while(0)
+#endif
 
 #endif

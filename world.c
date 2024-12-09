@@ -184,27 +184,25 @@ int w_run_on_every_obj(int (*func)(world_obj *obj, llist l, world_obj *pl, void 
 
 int w_render_world(camera *cam) {
 	mesh *curr;
-	int16_t **depthbuf; // the pixel depth buffer, reset before meshes are rendered
 	node *curr_ptr = wlist.head;
 
 	if (g_getstatus() != SUBSYS_UP) return S_EDOWN;
 
-	depthbuf = g_getdepthbuf();
-
 	// reset debugging global variables
 	w_dbg_mesh_cnt = w_dbg_tri_cnt = 0;
 
-	curr_ptr = wlist.head;
 	g_clr_depthbuf();
 	g_draw_horizon(cam);
+
 	// iterate over the world object list
+	curr_ptr = wlist.head;
 	while (curr_ptr != NULL) {
 		if (curr_ptr->obj->mesh != NULL) {
 			curr = curr_ptr->obj->mesh;
-			if (curr->flag_is_billboard) {
+			if (curr->is_billboard) {
 				curr->pos.yaw = cam->yaw; // rotate billboard towards camera
 			}
-			if (!curr->flag_renderable)
+			if (!curr->is_renderable)
 				continue;
 			w_dbg_tri_cnt += g_rasterize_triangles(curr->mesh_arr, curr->tx_arr, curr->tr_cnt, *cam, curr->pos, curr->ctr);
 		}
