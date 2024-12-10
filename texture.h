@@ -21,8 +21,9 @@ typedef struct {
 
 // data for animation
 typedef struct {
-	short nframes; // number of frames in animation (-1 means not animated)
-	unsigned int frame_ms; // number of milliseconds each frame takes
+	uint8_t nframes; // number of frames in animation (1 means not animated; 0 is undefined)
+	unsigned int frame_us; // number of microseconds each frame takes
+	unsigned int us_elapsed; // number of microseconds since frame switch
 	uint8_t frame; // currently displayed frame
 	
 	bool is_loop : 1; // should the animation loop?
@@ -37,10 +38,19 @@ typedef struct {
 } texture_t;
 
 // init animated texture
-texture_t *i_tx_anim(tx_data_t *tx, short nframes, unsigned int frame_ms, bool loop, bool imm_start);
+texture_t *i_tx_anim(tx_data_t *tx, uint8_t nframes, unsigned int frame_us, bool loop, bool imm_start);
 // init texture with no animation (single frame)
 texture_t *i_tx_static(tx_data_t *tx);
 // free and set *tx to NULL
 void tx_free(texture_t **tx);
+
+// create a new node for the texture (returns tx and stores status (NULLable))
+texture_t *a_register_texture(texture_t *tx, int *status);
+// figure out frames to display
+void a_tick(uint32_t elapse_us);
+// deallocate every registered texture
+void a_dealloc(void);
+
+int a_px_offset(texture_t *tx);
 
 #endif

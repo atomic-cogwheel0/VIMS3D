@@ -1,16 +1,5 @@
 #include "worldobj.h"
 
-// currently unused
-/*
-int common_add_object_with_mesh(world_obj *obj, llist l) {
-	return S_SUCCESS;
-}
-
-int common_del_object_with_mesh(world_obj *obj, llist l) {
-	return S_SUCCESS;
-}
-*/
-
 world_obj iworld_obj_static_mesh(uint8_t t, mesh *m) {
 	return iworld_obj(t, m, NULL, NULL, NULL, NULL);
 }
@@ -122,6 +111,13 @@ bool fall_tick(world_obj *obj, llist l, fixed timescale, int *status) {
 	if (status != NULL)
 		status = S_SUCCESS;
 	return has_collided;
+}
+
+int tick_billboard(world_obj *bill, llist l, world_obj *player, fixed timescale) {
+	camera *cam = *(camera **)player->data;
+	if (bill->mesh->is_billboard) {
+		bill->mesh->pos.yaw = cam->yaw; // rotate billboard towards camera
+	}
 }
 
 // --- object specific functions ---

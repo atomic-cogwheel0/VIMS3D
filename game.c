@@ -26,6 +26,9 @@ texture_t *person_txarr[2];
 trianglef tree_mesh[2];
 texture_t *tree_txarr[2];
 
+trianglef flash_demo_mesh[2];
+texture_t *flash_demo_txarr[2];
+
 // objects (these are global because they are referenced by address)
 mesh tank_meshobj;
 world_obj tank_worldobj;
@@ -45,6 +48,10 @@ mesh ground_meshobj;
 world_obj ground_worldobj;
 collider ground_collider;
 node *ground_node;
+
+mesh flash_demo_meshobj;
+world_obj flash_demo_worldobj;
+node *flash_demo_node;
 
 // if debugging, set overlay to ON by default
 #ifndef DEBUG_BUILD
@@ -204,6 +211,16 @@ void init(void) {
 
 	ground_worldobj = iworld_obj_static_mesh(WORLDOBJ_GROUND, &ground_meshobj);
 
+	// initialize a beautiful two-sided triangle
+	flash_demo_mesh[0] = itrianglef(ivec3float(-0.5f, -0.433f, 0), ivec3float(0.5f, -0.433f, 0), ivec3float(0, 0.433f, 0), FALSE);
+	flash_demo_mesh[1] = itrianglef(ivec3float(0.5f, -0.433f, 0), ivec3float(-0.5f, -0.433f, 0), ivec3float(0, 0.433f, 0), FALSE);
+	// create animation and register it
+	flash_demo_txarr[0] = flash_demo_txarr[1] = a_register_texture(i_tx_anim(&textures[TX_ANIM_FLASH], 2, 500000, TRUE, TRUE), &status);
+	assert(status == S_SUCCESS);
+	
+	flash_demo_meshobj = imesh(flash_demo_mesh, flash_demo_txarr, 2, ivec3float(6.5, 0, 6.5), ivec3i(0, 0, 0));
+	flash_demo_worldobj = iworld_obj_static_mesh(WORLDOBJ_SOLID_OBJECT, &flash_demo_meshobj);
+
 	// register the finished worldobjects into the world
 	tank_node = w_register(&tank_worldobj, &status);
 	assert(status == S_SUCCESS);
@@ -215,6 +232,8 @@ void init(void) {
 	}
 	ground_node = w_register(&ground_worldobj, &status);
 	assert(status == S_SUCCESS);
+	flash_demo_node = w_register(&flash_demo_worldobj, &status);
+	assert(status == S_SUCCESS);
 
 	// some call might have modified it (called quit()/halt())
 	if (gamestate != GAMESTATE_PREINIT) return;
@@ -224,15 +243,10 @@ void init(void) {
 
 static void free_textures(void) {
 	int i;
-	char buf[20];
-	locate(1,1);
 	for (i = 0; i < 2; i++) {
-		Print("2"); Bdisp_PutDisp_DD();
 		tx_free(&person_txarr[i]);
 	}
-	locate(1,1);
 	for (i = 0; i < 2; i++) {
-		Print("3"); Bdisp_PutDisp_DD();
 		tx_free(&tree_txarr[i]);
 	}
 	for (i = 0; i < TANK_MODEL_TRI_CNT; i++) {

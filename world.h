@@ -28,6 +28,7 @@ enum {
 	WORLDOBJ_PERSON,
 	WORLDOBJ_TREE,
 	WORLDOBJ_GROUND,
+	WORLDOBJ_SOLID_OBJECT,
 };
 
 // instance of a world object, handled based on its type and function pointers

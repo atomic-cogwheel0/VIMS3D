@@ -95,6 +95,9 @@ world_obj *w_getplayer(void) {
 // defined in worldobj.c; handles player movement
 extern int tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timescale);
 
+// defined in worldobj.c; rotates billboard toward player
+extern int tick_billboard(world_obj *bill, llist l, world_obj *player, fixed timescale);
+
 int w_init(void) {
 	int status;
 	// create a player obj without a mesh
@@ -161,13 +164,21 @@ void w_tick(void) {
 
 	last_time = curr_time;
 
+	a_tick(us_elapsed);
+
 	timescale = int2f(us_elapsed / 7813) / 25; // convert deltatime to scaler; this makes movement speed unaffected by rendering speed
 
 	curr_ptr = wlist.head;
 	while (curr_ptr != NULL) {
 		// call the object's tick function
-		if (curr_ptr->obj->tick_obj != NULL)
+		if (curr_ptr->obj->tick_obj != NULL) {
 			curr_ptr->obj->tick_obj(curr_ptr->obj, wlist, &player, timescale);
+		}
+		if (curr_ptr->obj->mesh != NULL) {
+			if (curr_ptr->obj->mesh->is_billboard) {
+				tick_billboard(curr_ptr->obj, wlist, &player, timescale);
+			}
+		}
 		curr_ptr = curr_ptr->next;
 	}
 }
@@ -199,9 +210,6 @@ int w_render_world(camera *cam) {
 	while (curr_ptr != NULL) {
 		if (curr_ptr->obj->mesh != NULL) {
 			curr = curr_ptr->obj->mesh;
-			if (curr->is_billboard) {
-				curr->pos.yaw = cam->yaw; // rotate billboard towards camera
-			}
 			if (!curr->is_renderable)
 				continue;
 			w_dbg_tri_cnt += g_rasterize_triangles(curr->mesh_arr, curr->tx_arr, curr->tr_cnt, *cam, curr->pos, curr->ctr);

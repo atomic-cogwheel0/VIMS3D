@@ -90,7 +90,7 @@ int g_draw_horizon(camera *cam) {
 // define fallback texture (2*2 checkerboard)
 byte tx_o_fallback[] = {65};
 tx_data_t fallback_txdata = {2, 2, 1, 1, tx_o_fallback};
-texture_t fallback_texture = {&fallback_txdata, {-1}}; // inits a static animated texture
+texture_t fallback_texture = {&fallback_txdata, {1}}; // inits a static animated texture
 
 // the One and Only Rendering(TM) function
 // have fun :)
@@ -100,7 +100,7 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 	int bbox_left, bbox_right, bbox_top, bbox_bottom; // bounding box (on screen)
 	int tri_cnt = 0;
 	fixed diff;
-	texture_t tx;
+	texture_t *tx;
 
 	trianglef t;
 	vec3f v0, v1, v2, a, b, c, nrm, ctot; // ctot is Camera TO Triangle
@@ -119,7 +119,7 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 	fixed dot02_increment, dot12_increment;
  
 	byte px;
-	int px_offset;
+	int px_offset, anim_offset;
 	uint32_t u_mult, v_mult;
 
 	int16_t depthval;
@@ -194,19 +194,21 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 
 		tri_cnt++;
 
-		// show missing texture instead of SYSTEM ERROR and don't render animated textures
-		if (textures[curr_tidx] == NULL || textures[curr_tidx]->anim.nframes >= 0) {
-			tx = fallback_texture;
+		// show missing texture instead of SYSTEM ERROR
+		if (textures[curr_tidx] == NULL) {
+			tx = &fallback_texture;
+			anim_offset = 0;
 		}
 		else {
-			tx = *textures[curr_tidx];
+			tx = textures[curr_tidx];
+			anim_offset = a_px_offset(tx);
 		}
 
 		// U and V are the barycentric coordinates of a pixel within the current triangle in screen space
 		// their range is from 0 to 1, calculate with both tiling and texture size
 
-		u_mult = tx.texture->w * tx.texture->u_tile_size;
-		v_mult = tx.texture->h * tx.texture->v_tile_size;
+		u_mult = tx->texture->w * tx->texture->u_tile_size;
+		v_mult = tx->texture->h * tx->texture->v_tile_size;
 
 		// the following code does barycentric coord calculation (u and v)
 		// src: https://web.archive.org/web/20240910155457/https://blackpawn.com/texts/pointinpoly/
@@ -375,15 +377,17 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 					// calculate pixel offset into the array (row by row)
 					if (t.flip_texture) {
 						// index coordinates from the bottom right instead of top left
-						px_offset = (tx.texture->h-1 - f2int(ui)%tx.texture->h)*tx.texture->w + (tx.texture->w-1 - f2int(vi)%tx.texture->w);
+						px_offset = (tx->texture->h-1 - f2int(ui)%tx->texture->h)*tx->texture->w + (tx->texture->w-1 - f2int(vi)%tx->texture->w);
 					}
 					else {
-						px_offset = (f2int(ui)%tx.texture->h)*tx.texture->w + (f2int(vi)%tx.texture->w);
+						px_offset = (f2int(ui)%tx->texture->h)*tx->texture->w + (f2int(vi)%tx->texture->w);
 					}
+					// account for animation
+					px_offset += anim_offset;
 					// ensure array access does not cause an invalid dereference
-					if (px_offset >= tx.texture->h*tx.texture->w) continue;
+					if (px_offset >= tx->texture->h*tx->texture->w*tx->anim.nframes) continue;
 					// extract pixel at given offset (2 bit pixel extracted from byte arr)
-					px = (tx.texture->pixels[px_offset/4] & (3 << ((3 - (px_offset%4)) * 2))) >> ((3 - (px_offset%4)) * 2);
+					px = (tx->texture->pixels[px_offset/4] & (3 << ((3 - (px_offset%4)) * 2))) >> ((3 - (px_offset%4)) * 2);
 					// is transparency bit set?
 					if (!(px & 2)) {
 						SetPoint_VRAM(xiter, yiter, px & 1, vram);

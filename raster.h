@@ -26,6 +26,7 @@ enum {
 	TX_TRANSPARENT_SQUARE,
 	TX_PERSON,
 	TX_TREE,
+	TX_ANIM_FLASH,
 // number of textures
 	TX_CNT,
 };

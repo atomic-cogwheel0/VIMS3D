@@ -72,6 +72,7 @@ void toggle_falling(toggle_t *t, bool state);
 #define S_EDOWN -7          // subsystem is down
 #define S_EIMPLEMENT -8     // requested feature not implemented
 #define S_EUNSPECIFIED -9   // multiple errors have occurred and their nature is unimportant
+#define S_EGENERIC -10      // an error has occurred
 
 // if defined, uitoax and itoax will write alphabetical digits (base 11 or more) uppercase, else lowercase
 //#define UITOAX_UPPERCASE
