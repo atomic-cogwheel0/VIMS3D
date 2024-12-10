@@ -262,6 +262,7 @@ void quit(void) {
 	g_dealloc();
 	w_dall_world_objs();
 	w_free_world();
+	a_dealloc();
 	gamestate = GAMESTATE_QUIT_DONE; // finished everything
 }
 
