@@ -3,7 +3,7 @@
 
 #include "VIMS_defs.h"
 
-// the hires timer module uses the CPU's TMU1 to create a 1/32768 second precision timer
+// the hires timer module uses the CPU's TMU1 to create a microsecond precision timer
 
 typedef uint8_t bits8;
 typedef uint16_t bits16;

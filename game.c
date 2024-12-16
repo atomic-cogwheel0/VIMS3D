@@ -67,7 +67,7 @@ void init(void) {
 	// prepare globals
 	// set initial camera position
 	game_cam.pos = ivec3f(float2f(-3.3), float2f(2.0), float2f(-13.0));
-	game_cam.pitch = float2f(10.0*DEG2RAD_MULT); 
+	game_cam.pitch = float2f(10.0*DEG2RAD_MULT);
 	game_cam.yaw = float2f(16.2*DEG2RAD_MULT);
 
 	// make sure subsystems are initialized
