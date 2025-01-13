@@ -51,7 +51,6 @@ typedef struct {
 	bool is_renderable : 1;
 	bool has_collision : 1;
 	bool is_billboard : 1; // if true: tx_arr is assumed to have 1 element, mesh_arr is assumed to have 2
-	bool is_animated : 1;
 } mesh;
 
 // init new mesh
@@ -60,6 +59,8 @@ mesh imesh(trianglef *arr, texture_t **tx_arr, uint8_t arrlen, vec3f pos, vec3f 
 // init new billboard mesh (always faces player, single face = 2 tris, one with flipped texture, 2 textures)
 // a billboard's ctr is always (0;0;0), so make sure the triangles are centered at least on the X and Z axes
 mesh ibill(trianglef *arr, texture_t **tx_arr, vec3f pos);
+// init a new mesh with no arrs, just the positioning params (useful for certain objects like the player)
+mesh inullmesh(void);
 
 // set a given mesh's hitbox arr to colls, also sets flag_has_collision based on whether colls is NULL
 int m_setcoll(mesh *m, collider *colls, uint8_t coll_cnt);

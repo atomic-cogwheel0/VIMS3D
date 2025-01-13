@@ -131,4 +131,7 @@ int snprintf_light(char *dest, size_t len, const char *fmt, ...);
 					} while(0)
 #endif
 
+// generate random integer value within the bounds (min included, max excluded)
+#define RANDINT(min, max) (rand()%((max)-(min)) + (min))
+
 #endif

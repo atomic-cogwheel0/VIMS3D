@@ -119,7 +119,7 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 	fixed dot02_increment, dot12_increment;
  
 	byte px;
-	int px_offset, anim_offset;
+	int px_offset, max_px_offset, anim_offset;
 	uint32_t u_mult, v_mult;
 
 	int16_t depthval;
@@ -203,6 +203,7 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 			tx = textures[curr_tidx];
 			anim_offset = a_px_offset(tx);
 		}
+		max_px_offset = tx->texture->h*tx->texture->w*tx->anim.nframes;
 
 		// U and V are the barycentric coordinates of a pixel within the current triangle in screen space
 		// their range is from 0 to 1, calculate with both tiling and texture size
@@ -371,7 +372,7 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 
 				// is current pixel closer than the last depth written there?
 				if (DEPTHBUF_AT(xiter, yiter) > depthval) {
-					ui = divshiftfi(mulff(uzi, zci), ZREC_EXP+ZREC_EXP); // only use of divshiftfi is here
+					ui = divshiftfi(mulff(uzi, zci), ZREC_EXP+ZREC_EXP); // only use of divshiftfi is here lol
 					vi = divshiftfi(mulff(vzi, zci), ZREC_EXP+ZREC_EXP);
 
 					// calculate pixel offset into the array (row by row)
@@ -385,7 +386,7 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 					// account for animation
 					px_offset += anim_offset;
 					// ensure array access does not cause an invalid dereference
-					if (px_offset >= tx->texture->h*tx->texture->w*tx->anim.nframes) continue;
+					if (px_offset >= max_px_offset) continue;
 					// extract pixel at given offset (2 bit pixel extracted from byte arr)
 					px = (tx->texture->pixels[px_offset/4] & (3 << ((3 - (px_offset%4)) * 2))) >> ((3 - (px_offset%4)) * 2);
 					// is transparency bit set?
@@ -442,7 +443,7 @@ int g_text2d(unsigned char *text, unsigned int x, unsigned int y, unsigned int p
 int g_texture2d(texture_t *tx, unsigned int x, unsigned int y) {
 	unsigned int xiter, yiter;
 	byte px;
-	int px_offset;
+	int px_offset, anim_offset;
 	uint32_t tiled_width, tiled_height;
 
 	if (tx == NULL) return S_ENULLPTR;
@@ -451,17 +452,20 @@ int g_texture2d(texture_t *tx, unsigned int x, unsigned int y) {
 	tiled_width = tx->texture->w * tx->texture->u_tile_size;
 	tiled_height = tx->texture->h * tx->texture->v_tile_size;
 
+	anim_offset = a_px_offset(tx);
+
 	for (yiter = 0; yiter < tiled_height; yiter++) {
 		for (xiter = 0; xiter < tiled_width; xiter++) {
 			// add top left coords; is still onscreen?
 			if (xiter+x >= 0 && xiter+x < 128 && yiter+y >= 0 && yiter+y < 64) {
 				// calculate pixel offset into the array (row by row)
 				px_offset = (yiter % tx->texture->h) * tx->texture->w + xiter % tx->texture->w;
+				px_offset += anim_offset;
 				// extract pixel at given offset (2 bit pixel extracted from byte arr)
 				px = (tx->texture->pixels[px_offset/4] & (3 << ((3 - (px_offset%4)) * 2))) >> ((3 - (px_offset%4)) * 2);
 				// is transparency bit set?
 				if (!(px & 2)) {
-					Bdisp_SetPoint_VRAM(xiter+x, yiter+y, px & 1);
+					Bdisp_SetPoint_VRAM(xiter+x, yiter+y, px & 1); // doesn't need g_init, unlike own SetPoint
 				}
 			}
 		}

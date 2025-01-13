@@ -113,11 +113,27 @@ bool fall_tick(world_obj *obj, llist l, fixed timescale, int *status) {
 	return has_collided;
 }
 
+vec3f raycast_horiz_set_length(world_obj *originator, fixed angle_diff, fixed ray_len) {
+	vec3f r;
+	r = py2vec3f(0, originator->mesh->pos.yaw + angle_diff); // rotated normal vector
+	r = mulvf(r, ray_len); // apply length
+	r = addvv(originator->mesh->pos.pos, r); // cast from originator pos
+	return r;
+}
+
 int tick_billboard(world_obj *bill, llist l, world_obj *player, fixed timescale) {
 	camera *cam = *(camera **)player->data;
 	if (bill->mesh->is_billboard) {
 		bill->mesh->pos.yaw = cam->yaw; // rotate billboard towards camera
 	}
+	return S_SUCCESS;
+}
+
+int teleport_worldobj(world_obj *obj, vec3f new_pos) {
+	if (obj->mesh == NULL)
+		return S_ENULLPTR;
+	obj->mesh->pos.pos = new_pos;
+	return S_SUCCESS;
 }
 
 // --- object specific functions ---
@@ -133,12 +149,28 @@ int tick_tank(world_obj *tank, llist l, world_obj *player, fixed timescale) {
 	// find the unsuspecting target
 	nearest_person = find_closest_object(tank, l, WORLDOBJ_PERSON, NULL);
 
-	if (nearest_person == NULL)
-		tank->mesh->pos.yaw = 90*DEG2RAD_MULT;
+	if (nearest_person == NULL) {
+		tank->mesh->pos.yaw = 90*DEG2RAD_MULT; // rotate the tank's model to the right axis
+	}
 	else {
 		move_rot_towards(tank, nearest_person, divfi(timescale, 6), TRUE);
-		tank->mesh->pos.yaw += float2f(90*DEG2RAD_MULT);
+		tank->mesh->pos.yaw += float2f(90*DEG2RAD_MULT); // rotate the tank's model to the right axis
 	}
+
+	return S_SUCCESS;
+}
+
+int tick_tank_marker_arrow(world_obj *arrow, llist l, world_obj *player, fixed timescale) {
+	world_obj *nearest_tank;
+	fixed tank_dist;
+
+	// rotate towards nearest tank
+	nearest_tank = find_closest_object(arrow, l, WORLDOBJ_TANK, &tank_dist);
+	if (nearest_tank != NULL) {
+		move_rot_towards(arrow, nearest_tank, 0, FALSE);
+	}
+
+	arrow->mesh->pos.yaw += float2f(90*DEG2RAD_MULT);
 
 	return S_SUCCESS;
 }
@@ -181,7 +213,7 @@ int tick_person(world_obj *person, llist l, world_obj *player, fixed timescale) 
 			pdata->should_move = (tank_dist < tank_safe_dist);
 			if (pdata->should_move) {
 				// find next target by looking away from the tank then rotating a bit (at most 100 degrees in a direction) and finding a point in that direction (at least 5, at most 20 units away)
-				pdata->pathfind_target = addvv(pdata->pathfind_target, mulvi(py2vec3f(0, person->mesh->pos.yaw + float2f((rand()%200-100)*DEG2RAD_MULT)), rand()%15+5));
+				pdata->pathfind_target = raycast_horiz_set_length(person, deg2rad(int2f(RANDINT(-100, 100))), int2f(RANDINT(5, 20)));
 			}
 		}
 		// if tank comes within notice distance, start moving until it is out of the unsafe distance
@@ -203,6 +235,8 @@ int tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timesca
 	static const fixed movement_speed = float2f(1.0f); // the amount the player should move in 1 unit of timescale
 	static const fixed rotation_speed = float2f(32.0f*DEG2RAD_MULT); // number of degrees the player should turn in 1 unit of timescale
 	static const vec3f z_axis = {0, 0, int2f(1)}; // unit vector on the z axis
+
+	world_obj *tankpos_marker;
 
 	fixed speed = mulff(movement_speed, timescale);
 	fixed rotation = mulff(rotation_speed, timescale);
@@ -248,6 +282,18 @@ int tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timesca
 	}
 	t = mulvf(t, speed);
 	cam->pos = addvv(cam->pos, t);
+
+	// synchronize both position data holders
+	the_player->mesh->pos.pos = cam->pos;
+	the_player->mesh->pos.yaw = cam->yaw;
+	the_player->mesh->pos.pitch = cam->pitch;
+
+	if (IsKeyDown(KEY_CTRL_VARS)) {
+		tankpos_marker = find_closest_object(the_player, l, WORLDOBJ_MARKER_ARROW, NULL);
+		if (tankpos_marker != NULL) {
+			teleport_worldobj(tankpos_marker, raycast_horiz_set_length(the_player, 0, int2f(3)));
+		}
+	}
 
 	return S_SUCCESS;
 }

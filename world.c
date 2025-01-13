@@ -5,6 +5,7 @@ llist wlist;
 camera *global_cam = NULL;
 
 world_obj player;
+mesh player_mesh;
 node *player_node;
 
 static uint32_t last_time = 0;
@@ -101,7 +102,8 @@ extern int tick_billboard(world_obj *bill, llist l, world_obj *player, fixed tim
 int w_init(void) {
 	int status;
 	// create a player obj without a mesh
-	player = iworld_obj(WORLDOBJ_PLAYER, NULL, &global_cam, NULL, NULL, tick_player);
+	player_mesh = inullmesh();
+	player = iworld_obj(WORLDOBJ_PLAYER, &player_mesh, &global_cam, NULL, NULL, tick_player);
 	player_node = w_register(&player, &status);
 	if (status != S_SUCCESS)
 		return status;
@@ -208,7 +210,7 @@ int w_render_world(camera *cam) {
 	// iterate over the world object list
 	curr_ptr = wlist.head;
 	while (curr_ptr != NULL) {
-		if (curr_ptr->obj->mesh != NULL) {
+		if (curr_ptr->obj->mesh != NULL && curr_ptr->obj->type != WORLDOBJ_PLAYER) {
 			curr = curr_ptr->obj->mesh;
 			if (!curr->is_renderable)
 				continue;
@@ -217,7 +219,7 @@ int w_render_world(camera *cam) {
 		w_dbg_mesh_cnt++;
 		curr_ptr = curr_ptr->next;
 	}
-
+	
 	return S_SUCCESS;
 }
 

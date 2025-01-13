@@ -112,5 +112,5 @@ int a_px_offset(texture_t *tx) {
    
     if (tx->anim.nframes == 1) return 0;
 
-    return tx->anim.frame;
+    return tx->anim.frame * tx->texture->w * tx->texture->h;
 }

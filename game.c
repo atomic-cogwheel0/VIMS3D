@@ -26,8 +26,8 @@ texture_t *person_txarr[2];
 trianglef tree_mesh[2];
 texture_t *tree_txarr[2];
 
-trianglef flash_demo_mesh[2];
-texture_t *flash_demo_txarr[2];
+trianglef arrow_mesh[4];
+texture_t *arrow_txarr[4];
 
 // objects (these are global because they are referenced by address)
 mesh tank_meshobj;
@@ -49,9 +49,9 @@ world_obj ground_worldobj;
 collider ground_collider;
 node *ground_node;
 
-mesh flash_demo_meshobj;
-world_obj flash_demo_worldobj;
-node *flash_demo_node;
+mesh arrow_meshobj;
+world_obj arrow_worldobj;
+node *arrow_node;
 
 // if debugging, set overlay to ON by default
 #ifndef DEBUG_BUILD
@@ -187,7 +187,7 @@ void init(void) {
 	// a simple rectangular prism that has an area of 2x2 units
 	person_collider = icoll_aabb(ivec3i(-1, 0, -1), ivec3i(1, 4, 1));
 
-	person_meshobj = ibill(person_mesh, person_txarr, ivec3i(rand()%40-20, 0, rand()%40-20));
+	person_meshobj = ibill(person_mesh, person_txarr, ivec3i(RANDINT(20, 60), 0, RANDINT(20, 60)));
 	m_setcoll(&person_meshobj, &person_collider, 1);
 	person_worldobj = iworld_obj(WORLDOBJ_PERSON, &person_meshobj, NULL, add_person, del_person, tick_person);
 
@@ -199,7 +199,7 @@ void init(void) {
 	
 	for (i = 0; i < 10; i++) {
 		// the mesh is memcpyed in iworld_obj, so we can reinit tree_meshobj every time, just don't modify tree_mesh or tree_txarr
-		tree_meshobj = ibill(tree_mesh, tree_txarr, ivec3i((rand()%40-20) * 4, 0, (rand()%40-20) * 4));
+		tree_meshobj = ibill(tree_mesh, tree_txarr, ivec3i(RANDINT(20, 60) * 4, 0, RANDINT(20, 60) * 4));
 		tree_worldobjs[i] = iworld_obj_static_mesh(WORLDOBJ_TREE, &tree_meshobj);
 	}
 	
@@ -211,15 +211,22 @@ void init(void) {
 
 	ground_worldobj = iworld_obj_static_mesh(WORLDOBJ_GROUND, &ground_meshobj);
 
-	// initialize a beautiful two-sided triangle
-	flash_demo_mesh[0] = itrianglef(ivec3float(-0.5f, -0.433f, 0), ivec3float(0.5f, -0.433f, 0), ivec3float(0, 0.433f, 0), FALSE);
-	flash_demo_mesh[1] = itrianglef(ivec3float(0.5f, -0.433f, 0), ivec3float(-0.5f, -0.433f, 0), ivec3float(0, 0.433f, 0), FALSE);
+	// initialize a beautiful square
+	// two sided rectangle init: A---B
+	//                           |   |         *Flip or noFlip
+	//                           C---D -> ABC (nF) & DCB (F) front
+	//                                    BAD (nF) & CDA (F) back  (flip F and nF if backside should be mirrored)
+	arrow_mesh[0] = itrianglef(ivec3i(-1, 2, 0), ivec3i(1, 2, 0), ivec3i(-1, 0, 0), FALSE);
+	arrow_mesh[1] = itrianglef(ivec3i(1, 0, 0), ivec3i(-1, 0, 0), ivec3i(1, 2, 0), TRUE);
+	arrow_mesh[2] = itrianglef(ivec3i(1, 2, 0), ivec3i(-1, 2, 0), ivec3i(1, 0, 0), TRUE);
+	arrow_mesh[3] = itrianglef(ivec3i(-1, 0, 0), ivec3i(1, 0, 0), ivec3i(-1, 2, 0), FALSE);
 	// create animation and register it
-	flash_demo_txarr[0] = flash_demo_txarr[1] = a_register_texture(i_tx_anim(&textures[TX_ANIM_FLASH], 2, 500000, TRUE, TRUE), &status);
+	arrow_txarr[0] = a_register_texture(i_tx_anim(&textures[TX_ANIM_ARROW], 2, 400000, TRUE, TRUE), &status);
+	arrow_txarr[1] = arrow_txarr[2] = arrow_txarr[3] = arrow_txarr[0];
 	assert(status == S_SUCCESS);
 	
-	flash_demo_meshobj = imesh(flash_demo_mesh, flash_demo_txarr, 2, ivec3float(6.5, 0, 6.5), ivec3i(0, 0, 0));
-	flash_demo_worldobj = iworld_obj_static_mesh(WORLDOBJ_SOLID_OBJECT, &flash_demo_meshobj);
+	arrow_meshobj = imesh(arrow_mesh, arrow_txarr, 4, ivec3float(6.5, 0, 6.5), ivec3i(0, 0, 0));
+	arrow_worldobj = iworld_obj(WORLDOBJ_MARKER_ARROW, &arrow_meshobj, NULL, NULL, NULL, tick_tank_marker_arrow);
 
 	// register the finished worldobjects into the world
 	tank_node = w_register(&tank_worldobj, &status);
@@ -232,7 +239,7 @@ void init(void) {
 	}
 	ground_node = w_register(&ground_worldobj, &status);
 	assert(status == S_SUCCESS);
-	flash_demo_node = w_register(&flash_demo_worldobj, &status);
+	arrow_node = w_register(&arrow_worldobj, &status);
 	assert(status == S_SUCCESS);
 
 	// some call might have modified it (called quit()/halt())

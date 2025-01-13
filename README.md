@@ -8,6 +8,7 @@ Build this program/game engine using the official fx-9860G SDK (gint port is in 
 The software contains a small demo, some assets (a tank mesh, sample textures, sample code).
 Debug info available by pressing `F3`.
 Look around with the arrow keys, move with 8, 4, 6, and 2, float up/down with 3 and 9.
+Summon the Big Animated Marker Arrow with `VARS`
 
 ![tank_in_forest_demo](https://github.com/user-attachments/assets/35169bff-45cb-464e-b886-e05219bbd029)
 

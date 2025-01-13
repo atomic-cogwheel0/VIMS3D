@@ -29,6 +29,7 @@ enum {
 	WORLDOBJ_TREE,
 	WORLDOBJ_GROUND,
 	WORLDOBJ_SOLID_OBJECT,
+	WORLDOBJ_MARKER_ARROW,
 };
 
 // instance of a world object, handled based on its type and function pointers

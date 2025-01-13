@@ -19,7 +19,6 @@ mesh imesh(trianglef *arr, texture_t **tx_arr, uint8_t arrlen, vec3f pos, vec3f 
 	m.is_renderable = TRUE;
 	m.has_collision = FALSE;
 	m.is_billboard = FALSE;
-	m.is_animated = FALSE;
 	return m;
 }
 
@@ -46,6 +45,23 @@ mesh ibill(trianglef *arr, texture_t **tx_arr, vec3f pos) {
 	m.is_renderable = TRUE;
 	m.has_collision = FALSE;
 	m.is_billboard = TRUE;
+	return m;
+}
+
+mesh inullmesh(void) {
+	mesh m;
+	m.mesh_arr = NULL;
+	m.tx_arr = NULL;
+	m.tr_cnt = 0;
+	m.coll_arr = NULL;
+	m.coll_cnt = 0;
+	m.pos.pos = ivec3f(0, 0, 0);
+	m.pos.pitch = 0;
+	m.pos.yaw = 0;
+	m.ctr = ivec3f(0, 0, 0);
+	m.is_renderable = FALSE;
+	m.has_collision = FALSE;
+	m.is_billboard = FALSE;
 	return m;
 }
 

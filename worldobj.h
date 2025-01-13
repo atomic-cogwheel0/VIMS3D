@@ -18,12 +18,21 @@ int move_rot_towards(world_obj *obj, world_obj *dir, fixed speed, bool check_col
 // handle gravity of a given object in the given tick, returns whether obj has hit the ground; sets status (NULLable) to S_SUCCESS normally
 bool fall_tick(world_obj *obj, llist l, fixed timescale, int *status);
 
+// cast a ray of known length in the horizontal plane from originator in its facing direction offset by angle_diff
+vec3f raycast_horiz_set_length(world_obj *originator, fixed angle_diff, fixed ray_len);
+
+// move the given object instantly to new_pos
+int teleport_worldobj(world_obj *obj, vec3f new_pos);
+
 // ---- specific handlers ----
 
 // a TANK object's handlers
 int add_tank(world_obj *tank, llist l);
 // move towards nearest PERSON
 int tick_tank(world_obj *tank, llist l, world_obj *player, fixed timescale);
+
+// rotate toward nearest tank
+int tick_tank_marker_arrow(world_obj *arrow, llist l, world_obj *player, fixed timescale);
 
 // stores pathfinding data for a PERSON world object
 typedef struct { 
