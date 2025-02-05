@@ -68,4 +68,7 @@ int m_setcoll(mesh *m, collider *colls, uint8_t coll_cnt);
 // do the given meshes collide?
 int m_collide(mesh *a, mesh *b);
 
+// store 4 triangles forming a rectangle, given by the endpoints of one diagonal, visible from either side into arr
+int m_geom_two_sided_rect(trianglef *arr, vec3f topleft, vec3f bottomright, bool flip_back_tx);
+
 #endif

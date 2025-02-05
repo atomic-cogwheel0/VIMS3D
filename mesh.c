@@ -90,6 +90,27 @@ int m_collide(mesh *a, mesh *b) {
 	return FALSE;
 }
 
+// two sided rectangle init: A---B
+//                           |   |         *Flip or noFlip
+//                           C---D -> ABC (nF) & DCB (F) front
+//                                    BAD (nF) & CDA (F) back  (flip F and nF if backside should be mirrored)
+int m_geom_two_sided_rect(trianglef *arr, vec3f topleft, vec3f bottomright, bool flip_back_tx) {
+	vec3f a, b, c, d;
+	if (arr == NULL) return S_ENULLPTR;
+
+	a = topleft;
+	b = ivec3f(bottomright.x, topleft.y, bottomright.z);
+	c = ivec3f(topleft.x, bottomright.y, topleft.z);
+	d = bottomright;
+
+	arr[0] = itrianglef(a, b, c, FALSE);
+	arr[1] = itrianglef(d, c, b, TRUE);
+	arr[2] = itrianglef(b, a, d, flip_back_tx ? TRUE : FALSE);
+	arr[3] = itrianglef(c, d, a, flip_back_tx ? FALSE : TRUE);
+
+	return S_SUCCESS;
+}
+
 // --- collision code ---
 
 // simplifies internal calculation

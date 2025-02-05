@@ -204,22 +204,15 @@ void init(void) {
 	}
 	
 	// a pretty large piece of ground if you ask me
-	ground_collider = icoll_aabb(ivec3i(-100, -100, -100), ivec3i(100, 0, 100)); 
+	ground_collider = icoll_aabb(ivec3i(-100, -100, -100), ivec3i(100, 0, 100));
 	// generic init values for something with no triangles
 	ground_meshobj = imesh(NULL, NULL, 0, ivec3i(0, 0, 0), ivec3i(0, 0, 0));
 	m_setcoll(&ground_meshobj, &ground_collider, 1);
 
 	ground_worldobj = iworld_obj_static_mesh(WORLDOBJ_GROUND, &ground_meshobj);
 
-	// initialize a beautiful square
-	// two sided rectangle init: A---B
-	//                           |   |         *Flip or noFlip
-	//                           C---D -> ABC (nF) & DCB (F) front
-	//                                    BAD (nF) & CDA (F) back  (flip F and nF if backside should be mirrored)
-	arrow_mesh[0] = itrianglef(ivec3i(-1, 2, 0), ivec3i(1, 2, 0), ivec3i(-1, 0, 0), FALSE);
-	arrow_mesh[1] = itrianglef(ivec3i(1, 0, 0), ivec3i(-1, 0, 0), ivec3i(1, 2, 0), TRUE);
-	arrow_mesh[2] = itrianglef(ivec3i(1, 2, 0), ivec3i(-1, 2, 0), ivec3i(1, 0, 0), TRUE);
-	arrow_mesh[3] = itrianglef(ivec3i(-1, 0, 0), ivec3i(1, 0, 0), ivec3i(-1, 2, 0), FALSE);
+	status = m_geom_two_sided_rect(arrow_mesh, ivec3i(-1, 2, 0), ivec3i(1, 0, 0), TRUE);
+	assert(status == S_SUCCESS);
 	// create animation and register it
 	arrow_txarr[0] = a_register_texture(i_tx_anim(&textures[TX_ANIM_ARROW], 2, 400000, TRUE, TRUE), &status);
 	arrow_txarr[1] = arrow_txarr[2] = arrow_txarr[3] = arrow_txarr[0];

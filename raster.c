@@ -8,11 +8,11 @@
   using the higher level mesh system is preferred to raw triangles
 */
 
-// depth buffer: an array 128*64=8192 depth values, every pixel has a 11+5 bit fixed-point depth value
+// depth buffer: an array of 128*64=8192 depth values, every pixel has a 11+5 bit fixed-point depth value
 int16_t *depthbuf;
 
 // macro to access the depth buffer
-#define DEPTHBUF_AT(x, y) depthbuf[x*64 + y]
+#define DEPTHBUF_AT(x, y) depthbuf[(x)*64 + (y)]
 
 static int g_status = SUBSYS_DOWN;
 
