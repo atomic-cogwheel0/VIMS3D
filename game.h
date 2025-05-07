@@ -5,7 +5,7 @@
 #include <setjmp.h>
 
 #include "worldobj.h"
-#include "uiobj.h"
+#include "ui.h"
 #include "VIMS_defs.h"
 
 // prepares game & objects

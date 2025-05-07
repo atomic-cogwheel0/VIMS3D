@@ -1,6 +1,6 @@
 [DLSimProject]
 Name=VIMS3D
-Version=00.04.0004
+Version=00.04.0005
 Model=:fx-9860G.dlm
 SourcePath=SRC
 MemoryPath=INIT
@@ -27,7 +27,7 @@ SourceFile=:snprintf_light.c
 SourceFile=:hires_timer.c
 SourceFile=:texture.c
 SourceFile=:ui.c
-SourceFile=:uiobj.c
+SourceFile=:settings.c
 HeaderFile=:vec.h
 HeaderFile=:fixed.h
 HeaderFile=:game.h
@@ -39,4 +39,4 @@ HeaderFile=:world.h
 HeaderFile=:worldobj.h
 HeaderFile=:hires_timer.h
 HeaderFile=:ui.h
-HeaderFile=:uiobj.h
+HeaderFile=:settings.h

@@ -5,6 +5,7 @@
 
 #include "vec.h"
 #include "texture.h"
+#include "settings.h"
 
 #include "hires_timer.h"
 

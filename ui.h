@@ -2,6 +2,7 @@
 #define UI_H
 
 #include "VIMS_defs.h"
+#include "settings.h"
 
 // menu state
 #define MENU_CLOSED 0
@@ -10,6 +11,7 @@
 // menu element types
 #define MENUELEMENT_BUTTON 1
 #define MENUELEMENT_LABEL 2
+#define MENUELEMENT_SETUP_BOOL 3
 
 typedef struct _menuelement_t {
     bool (*onclick)(struct _menuelement_t *obj); // onclick function, gets object from which it was called, returns whether the action was run successfully
@@ -17,18 +19,21 @@ typedef struct _menuelement_t {
     int width; // width in pixels of the box
     char *text;
     uint8_t type; // MENUELEMENT
+    uint8_t setupkey; // used only if this is a SETUP element
 } menuelement_t;
 
-// create a menu element centered at given y coordinate, width and x calculated from text length
+// create a menu element centered at given y coordinate, width and x calculated from text length (useful for labels and buttons)
 menuelement_t ielement_centered(bool (*onclick)(struct _menuelement_t *obj), int y, char *text, uint8_t type);
 // create a menu element with entirely arbitrary data
 menuelement_t ielement(bool (*onclick)(struct _menuelement_t *obj), int x1, int y1, int width, char *text, uint8_t type);
+// create a menu element which is a setup element, left-aligned, sets onclick according to type
+menuelement_t ielement_setup(int y, char *text, uint8_t type, uint8_t setupkey);
 
 typedef struct _menudef_t {
     menuelement_t *elements;
     uint8_t element_cnt;
     struct _menudef_t *prev_menu; // menu to return to if this one is closed
-    bool has_button; // does this menu contain any buttons (VERY IMPORTANT THAT THIS IS SET CORRECTLY, ELSE ANY ARROW KEY PRESSES IN THIS MENU WILL FREEZE THE GAME)
+    bool has_selectable; // does this menu contain any selectables (VERY IMPORTANT THAT THIS IS SET CORRECTLY, ELSE ANY ARROW KEY PRESSES IN THIS MENU WILL FREEZE THE GAME)
 } menudef_t;
 
 // initializes a new menu object (not an instance)
@@ -37,7 +42,7 @@ menudef_t imenu(menuelement_t *elements, uint8_t element_cnt, menudef_t *prev);
 // has a single static instance, in which the global state is stored
 typedef struct {
     menudef_t *menu; // the currently open menu
-    int selected_button; // number of the selected button (beneficial if the given index really is a button; -1 means current menu has no buttons)
+    int selected; // number of the selected selectable (beneficial if the given index really is selectable; -1 means current menu has no selectables at all)
 } menu_instance_t;
 
 // returns whether a menu is open and thus the game should be paused
@@ -58,5 +63,17 @@ void menu_keyboard_handler(void);
 // changes the current global button index to the index of the next / previous MENUELEMENT_BUTTON
 int ui_inc_button_index(void);
 int ui_dec_button_index(void);
+
+bool ui_is_selectable(menuelement_t e);
+
+// ----- specific object handlers -----
+
+extern menudef_t menu_settings;
+
+bool onclick_closemenu(void *unused);
+bool onclick_quit(void *unused);
+bool onclick_open_settings(void *unused);
+// handler of any bool setup onclicks
+bool onclick_setup_bool(menuelement_t *el);
 
 #endif

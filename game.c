@@ -62,12 +62,20 @@ toggle_t overlay = {FALSE, FALSE, FALSE};
 toggle_t overlay = {TRUE, FALSE, FALSE};
 #endif
 
-menuelement_t menu_pause_element_list[3];
+menuelement_t menu_pause_element_list[4];
 menudef_t menu_pause;
+
+menuelement_t menu_settings_element_list[3];
+menudef_t menu_settings;
+
+int load_cam(camera *cam);
+int save_cam(camera *cam);
 
 void init(void) {
 	int i;
 	int status;
+
+	camera loaded_cam;
 
 	// prepare globals
 	// set initial camera position
@@ -86,6 +94,14 @@ void init(void) {
 #else
 	srand(42); // magic number: show same scene for benchmarks
 #endif
+
+	setup_load();
+
+	if (setup_getval(SETUP_BOOL_SAVEPLAYER)) {
+		if (load_cam(&loaded_cam) == S_SUCCESS) {
+			game_cam = loaded_cam;
+		}
+	}
 
 	// initialize every texture of every triangle of the tank mesh
 	tx_tank_sides = i_tx_static(&textures[TX_WHITE]);
@@ -246,11 +262,18 @@ void init(void) {
 	arrow_node = w_register(&arrow_worldobj, &status);
 	assert(status == S_SUCCESS);
 
-	menu_pause_element_list[0] = ielement_centered(NULL, 14, "Game Paused", MENUELEMENT_LABEL);
-	menu_pause_element_list[1] = ielement_centered(onclick_closemenu, 26, "Return", MENUELEMENT_BUTTON);
-	menu_pause_element_list[2] = ielement_centered(onclick_quit, 38, "Quit Game", MENUELEMENT_BUTTON);
+	menu_pause_element_list[0] = ielement_centered(NULL, 9, "Game Paused", MENUELEMENT_LABEL);
+	menu_pause_element_list[1] = ielement_centered(onclick_closemenu, 21, "Return", MENUELEMENT_BUTTON);
+	menu_pause_element_list[2] = ielement_centered(onclick_open_settings, 33, "Settings", MENUELEMENT_BUTTON);
+	menu_pause_element_list[3] = ielement_centered(onclick_quit, 45, "Quit Game", MENUELEMENT_BUTTON);
+	menu_pause = imenu(menu_pause_element_list, 4, NULL);
 
-	menu_pause = imenu(menu_pause_element_list, 3, NULL);
+	menu_settings_element_list[0] = ielement(NULL, 1, 1, 0, "Settings", MENUELEMENT_LABEL);
+	menu_settings_element_list[1] = ielement_setup(13, "Draw Textures", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_TEXTURES);
+	menu_settings_element_list[2] = ielement_setup(25, "Draw Pixel Area", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_DRAWAREA);
+	menu_settings_element_list[3] = ielement_setup(37, "Draw Wireframe", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_WIREFRAME);
+	menu_settings_element_list[4] = ielement_setup(49, "Save Player Pos", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_SAVEPLAYER);
+	menu_settings = imenu(menu_settings_element_list, 5, &menu_pause);
 
 	// some call might have modified it (called quit()/halt())
 	if (gamestate != GAMESTATE_PREINIT) return;
@@ -272,6 +295,10 @@ void free_textures(void) {
 // deallocate buffers, stop timers, set quit status
 void quit(void) {
 	gamestate = GAMESTATE_QUIT_INPROG; // game is quitting, but not ready to return to main menu yet
+	if (setup_getval(SETUP_BOOL_SAVEPLAYER)) {
+		save_cam(&game_cam);
+	}
+	setup_save();
 	free_textures();
 	// deinit every subsystem
 	g_dealloc();
@@ -334,4 +361,45 @@ void tick(void) {
 
 volatile int *get_gamestate_ptr(void) {
 	return &gamestate;
+}
+
+int load_cam(camera *cam) {
+	int handle;
+
+	handle = Bfile_OpenMainMemory("CAMDATA");
+
+	if (Bfile_ReadFile(handle, &cam->pitch, sizeof(fixed), 0) < 0) {
+		return S_EUNSPECIFIED;
+	}
+	if (Bfile_ReadFile(handle, &cam->yaw, sizeof(fixed), 4) < 0) {
+		return S_EUNSPECIFIED;
+	}
+	if (Bfile_ReadFile(handle, &cam->pos.x, sizeof(fixed), 8) < 0) {
+		return S_EUNSPECIFIED;
+	}
+	if (Bfile_ReadFile(handle, &cam->pos.y, sizeof(fixed), 12) < 0) {
+		return S_EUNSPECIFIED;
+	}
+	if (Bfile_ReadFile(handle, &cam->pos.z, sizeof(fixed), 16) < 0) {
+		return S_EUNSPECIFIED;
+	}
+	Bfile_CloseFile(handle);
+
+	return S_SUCCESS;
+}
+
+int save_cam(camera *cam) {
+	int handle;
+
+	handle = RecreateFile("CAMDATA");
+	
+	Bfile_WriteFile(handle, &cam->pitch, sizeof(fixed));
+	Bfile_WriteFile(handle, &cam->yaw, sizeof(fixed));
+	Bfile_WriteFile(handle, &cam->pos.x, sizeof(fixed));
+	Bfile_WriteFile(handle, &cam->pos.y, sizeof(fixed));
+	Bfile_WriteFile(handle, &cam->pos.z, sizeof(fixed));
+
+	Bfile_CloseFile(handle);
+
+	return S_SUCCESS;
 }

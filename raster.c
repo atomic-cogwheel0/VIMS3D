@@ -124,7 +124,14 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 
 	int16_t depthval;
 
+	bool s_wf, s_tx, s_da; // setup data
+
 	if (g_status != SUBSYS_UP) return S_EDOWN;
+
+	// load settings
+	s_da = setup_getval(SETUP_BOOL_DRAWAREA);
+	s_wf = setup_getval(SETUP_BOOL_WIREFRAME);
+	s_tx = setup_getval(SETUP_BOOL_TEXTURES);
 
 // some stuff can get stupidly large for the ~tiny~ 20-bit fixeds
 // downscale them, who needs precision anyways :)
@@ -194,22 +201,20 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 
 		tri_cnt++;
 
-#ifdef RENDER_PIXEL_BBOX
-		Bdisp_DrawLineVRAM(bbox_left, bbox_top, bbox_right, bbox_top);
-		Bdisp_DrawLineVRAM(bbox_right, bbox_top, bbox_right, bbox_bottom);
-		Bdisp_DrawLineVRAM(bbox_left, bbox_top, bbox_left, bbox_bottom);
-		Bdisp_DrawLineVRAM(bbox_left, bbox_bottom, bbox_right, bbox_bottom);
-#endif
-
-#ifdef RENDER_WIREFRAME		
-		Bdisp_DrawLineVRAM(f2int(a.x), f2int(a.y), f2int(b.x), f2int(b.y));
-		Bdisp_DrawLineVRAM(f2int(c.x), f2int(c.y), f2int(b.x), f2int(b.y));
-		Bdisp_DrawLineVRAM(f2int(a.x), f2int(a.y), f2int(c.x), f2int(c.y));
-#endif
-
-#ifndef RENDER_TEXTURES
-		continue;
-#endif
+		if (s_da) {
+			Bdisp_DrawLineVRAM(bbox_left, bbox_top, bbox_right, bbox_top);
+			Bdisp_DrawLineVRAM(bbox_right, bbox_top, bbox_right, bbox_bottom);
+			Bdisp_DrawLineVRAM(bbox_left, bbox_top, bbox_left, bbox_bottom);
+			Bdisp_DrawLineVRAM(bbox_left, bbox_bottom, bbox_right, bbox_bottom);
+		}
+		if (s_wf) {
+			Bdisp_DrawLineVRAM(f2int(a.x), f2int(a.y), f2int(b.x), f2int(b.y));
+			Bdisp_DrawLineVRAM(f2int(c.x), f2int(c.y), f2int(b.x), f2int(b.y));
+			Bdisp_DrawLineVRAM(f2int(a.x), f2int(a.y), f2int(c.x), f2int(c.y));
+		}
+		if (!s_tx) {
+			continue;
+		}
 
 		// show missing texture instead of SYSTEM ERROR
 		if (textures[curr_tidx] == NULL) {
