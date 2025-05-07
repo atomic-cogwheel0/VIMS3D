@@ -84,6 +84,10 @@ camera *w_getcam(void);
 // tick every object, passes timescale as arg to tick_obj()
 void w_tick(void);
 
+// set ticking state as frozen until next w_tick, will run next tick as if it ran at the time w_freeze_ticking was called
+// run at the end of tick OR before w_tick would be called
+void w_freeze_ticking(void);
+
 // print debug info to screen
 void w_print_debug(void);
 

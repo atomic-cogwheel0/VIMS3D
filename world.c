@@ -11,6 +11,9 @@ node *player_node;
 static uint32_t last_time = 0;
 static bool already_ticked = FALSE;
 
+static bool ticks_frozen = FALSE;
+static uint32_t frozen_at = 0;
+
 // debug info
 static int w_dbg_mesh_cnt;
 static int w_dbg_tri_cnt;
@@ -149,15 +152,23 @@ int w_dall_world_objs(void) {
 void w_tick(void) {
 	node *curr_ptr;
 	fixed timescale;
-
+	uint32_t calc_time;
 	uint32_t curr_time = timer_us();
 
-	// account for possible overflow
-	if (curr_time < last_time) {
-		us_elapsed = timer_us_max() - last_time + curr_time;
+	if (!ticks_frozen) {
+		calc_time = curr_time;
 	}
 	else {
-		us_elapsed = curr_time - last_time;
+		calc_time = frozen_at;
+		ticks_frozen = FALSE;
+	}
+
+	// account for possible overflow
+	if (calc_time < last_time) {
+		us_elapsed = timer_us_max() - last_time + calc_time;
+	}
+	else {
+		us_elapsed = calc_time - last_time;
 	}
 	if (!already_ticked) {
 		us_elapsed = 0;
@@ -182,6 +193,14 @@ void w_tick(void) {
 			}
 		}
 		curr_ptr = curr_ptr->next;
+	}
+}
+
+// run this at the end of a tick
+void w_freeze_ticking(void) {
+	if (!ticks_frozen) {
+		ticks_frozen = TRUE;
+		frozen_at = timer_us();
 	}
 }
 

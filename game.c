@@ -20,6 +20,8 @@ vec3f vertices[26];
 trianglef tank_mesh[TANK_MODEL_TRI_CNT];
 texture_t *tank_txarr[TANK_MODEL_TRI_CNT];
 
+texture_t *tx_tank_sides, *tx_tank_track, *tx_tank_barrel, *tx_tank_front, *tx_tank_top;
+
 trianglef person_mesh[2];
 texture_t *person_txarr[2];
 
@@ -60,6 +62,9 @@ toggle_t overlay = {FALSE, FALSE, FALSE};
 toggle_t overlay = {TRUE, FALSE, FALSE};
 #endif
 
+menuelement_t menu_pause_element_list[3];
+menudef_t menu_pause;
+
 void init(void) {
 	int i;
 	int status;
@@ -83,13 +88,19 @@ void init(void) {
 #endif
 
 	// initialize every texture of every triangle of the tank mesh
+	tx_tank_sides = i_tx_static(&textures[TX_WHITE]);
+	tx_tank_track = i_tx_static(&textures[TX_TANKTRACK]);
+	tx_tank_barrel = i_tx_static(&textures[TX_BLACK]);
+	tx_tank_front = i_tx_static(&textures[TX_TANKFRONT]);
+	tx_tank_top = i_tx_static(&textures[TX_TANKTOP]);
+
 	for (i = 0; i < TANK_MODEL_TRI_CNT; i++) {
-		tank_txarr[i] = i_tx_static(&textures[TX_WHITE]);
+		tank_txarr[i] = tx_tank_sides;
 	}
-	tank_txarr[1] = tank_txarr[5] = tank_txarr[2] = tank_txarr[6] = i_tx_static(&textures[TX_TANKTRACK]);
-	tank_txarr[31] = tank_txarr[32] = tank_txarr[33] = tank_txarr[34] = tank_txarr[35] = tank_txarr[36] = tank_txarr[37] = i_tx_static(&textures[TX_BLACK]);
-	tank_txarr[26] = tank_txarr[27] = i_tx_static(&textures[TX_TANKFRONT]);
-	tank_txarr[28] = tank_txarr[29] = i_tx_static(&textures[TX_TANKTOP]);
+	tank_txarr[1] = tank_txarr[5] = tank_txarr[2] = tank_txarr[6] = tx_tank_track;
+	tank_txarr[31] = tank_txarr[32] = tank_txarr[33] = tank_txarr[34] = tank_txarr[35] = tank_txarr[36] = tank_txarr[37] = tx_tank_barrel;
+	tank_txarr[26] = tank_txarr[27] = tx_tank_front;
+	tank_txarr[28] = tank_txarr[29] = tx_tank_top;
 
 	// preset vertices for easier triangle declaration
 	vertices[0] = ivec3i(1, 1, 0);
@@ -235,23 +246,27 @@ void init(void) {
 	arrow_node = w_register(&arrow_worldobj, &status);
 	assert(status == S_SUCCESS);
 
+	menu_pause_element_list[0] = ielement_centered(NULL, 16, "Game Paused", MENUELEMENT_LABEL);
+	menu_pause_element_list[1] = ielement_centered(onclick_closemenu, 26, "Return", MENUELEMENT_BUTTON);
+	menu_pause_element_list[2] = ielement_centered(onclick_quit, 36, "Quit Game", MENUELEMENT_BUTTON);
+
+	menu_pause = imenu(menu_pause_element_list, 3, NULL);
+
 	// some call might have modified it (called quit()/halt())
 	if (gamestate != GAMESTATE_PREINIT) return;
 
 	gamestate = GAMESTATE_RUNNING;
 }
 
-static void free_textures(void) {
-	int i;
-	for (i = 0; i < 2; i++) {
-		tx_free(&person_txarr[i]);
-	}
-	for (i = 0; i < 2; i++) {
-		tx_free(&tree_txarr[i]);
-	}
-	for (i = 0; i < TANK_MODEL_TRI_CNT; i++) {
-		tx_free(&tank_txarr[i]);
-	}
+void free_textures(void) {
+	tx_free(&person_txarr[0]);
+	tx_free(&tree_txarr[0]);
+	tx_free(&tx_tank_front);
+	tx_free(&tx_tank_sides);
+	tx_free(&tx_tank_barrel);
+	tx_free(&tx_tank_track);
+	tx_free(&tx_tank_top);
+	tx_free(&arrow_txarr[0]);
 }
 
 // deallocate buffers, stop timers, set quit status
@@ -285,21 +300,36 @@ jmp_buf *get_jmpbuf_ptr(void) {
 }
 
 void tick(void) {
+	int ui_menustatus;
 	if (gamestate != GAMESTATE_RUNNING) return;
 
+	ui_menustatus = ui_getmenustatus();
+
+	Keyboard_ClrBuffer(); // may alleviate some crashes
 	Bdisp_AllClr_VRAM();
 
-	w_tick(); // tick world objects
-	w_render_world(w_getcam());
-
-	toggle_rising(&overlay, (bool)IsKeyDown(KEY_CTRL_F3));
-
-	if (overlay.is_on) {
-		w_print_debug();
+	if (ui_menustatus == MENU_OPEN) {
+		w_freeze_ticking();
+		ui_rendermenu();
+		menu_keyboard_handler();
 	}
+	else {
+		w_tick(); // tick world objects
+		w_render_world(w_getcam());
 
-	if (IsKeyDown(KEY_CTRL_EXIT)) {
-		quit();
+		toggle_rising(&overlay, (bool)IsKeyDown(KEY_CTRL_F3));
+
+		if (overlay.is_on) {
+			w_print_debug();
+		}
+
+		if (IsKeyDown(KEY_CTRL_OPTN)) {
+			ui_entermenu(&menu_pause);
+		}
+
+		if (IsKeyDown(KEY_CTRL_EXIT)) {
+			quit();
+		}
 	}
 
 	Bdisp_PutDisp_DD();

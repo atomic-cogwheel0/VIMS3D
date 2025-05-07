@@ -32,7 +32,7 @@ _GetVRAMAddress:
 ; clears the keyboard input buffer
 _Keyboard_ClrBuffer:
 	mov.l #H'80010070, r1
-	mov.w #H'0241, r0     ; syscall 764h: void Bdisp_FastDrawLineVRAM(int x1, int y1, int x2, int y2)
+	mov.w #H'0241, r0     ; syscall 241h: void Keyboard_ClrBuffer(void)
 	jmp @r1
 	nop
 
