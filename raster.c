@@ -162,17 +162,6 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 		// cull (first backface, then near-plane)
 		if (dotp(ctot, nrm) >= 0 || (t.a.z < int2f(1) || t.b.z < int2f(1) || t.c.z < int2f(1)))
 			continue;
-
-		// never divide by 0, check even when near-plane culling is on, don't want stuff to go wrong
-		if (t.a.z == 0) {	
-			t.a.z = FIXED_EPSILON;
-		}
-		if (t.b.z == 0) {	
-			t.b.z = FIXED_EPSILON;
-		}
-		if (t.c.z == 0) {	
-			t.c.z = FIXED_EPSILON;
-		}
 	
 		// map to on-screen '2d' coordinates
 		a = ivec3f(divff(mulff(t.a.x, int2f(64)), -t.a.z) + int2f(64),
