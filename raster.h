@@ -9,7 +9,7 @@
 #include "hires_timer.h"
 
 // render config
-#define RENDER_WIREFRAME
+//#define RENDER_WIREFRAME
 //#define RENDER_PIXEL_BBOX
 #define RENDER_TEXTURES
 

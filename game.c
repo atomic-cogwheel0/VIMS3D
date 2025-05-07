@@ -327,9 +327,12 @@ void tick(void) {
 			ui_entermenu(&menu_pause);
 		}
 
+		// use the menu insted
+		/*
 		if (IsKeyDown(KEY_CTRL_EXIT)) {
 			quit();
 		}
+		*/
 	}
 
 	Bdisp_PutDisp_DD();

@@ -314,8 +314,6 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 		//  1/Z, 1/Ui and 1/Vi are interpolated because they are linear across the surface in screen space
 
 		for (yiter = bbox_top; yiter <= bbox_bottom; yiter++) {
-			//if (yiter > 63) break;
-
 			// increment leftmost and rightmost dotp's
 			dot11_dot02l += dot11_dot02_odelta;
 			dot01_dot12l += dot01_dot12_odelta;
@@ -326,8 +324,6 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 			dot01_dot12r += dot01_dot12_odelta;
 			dot00_dot12r += dot00_dot12_odelta;
 			dot01_dot02r += dot01_dot02_odelta;
-
-			//if (yiter < 0) continue;
 
 			// find leftmost
 			// set up the loop iterators
@@ -397,13 +393,10 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 
 			// interpolate between values in current row
 			for (ozi = ozp, uzi = uzp, vzi = vzp, xiter = xiterl; xiter <= xiterr; xiter++, ozi += ozstep, uzi += uzstep, vzi += vzstep) {
-				//if (xiter < 0) continue;
-				//if (xiter > 127) break;
-
 				zci = divff(int2f(ZREC_MULT*ZREC_MULT), ozi);
 
 				// zci is halved to handle greater distances
-				depthval = (f2int(zci/2) << 5) | (((zci/2) & FIXED_FRAC_MASK) >> (FIXED_PRECISION-5)); // transform 22+10bit zci to 11+5bit depth
+				depthval = (f2int(zci/4) << 5) | (((zci/4) & FIXED_FRAC_MASK) >> (FIXED_PRECISION-5)); // transform 22+10bit zci to 11+5bit depth
 
 				// is current pixel closer than the last depth written there?
 				if (DEPTHBUF_AT(xiter, yiter) > depthval) {
@@ -425,7 +418,7 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 					// extract pixel at given offset (2 bit pixel extracted from byte arr)
 					px = (tx->texture->pixels[px_offset/4] & (3 << ((3 - (px_offset%4)) * 2))) >> ((3 - (px_offset%4)) * 2);
 					// is transparency bit set?
-				if (!(px & 2)) {
+					if (!(px & 2)) {
 						SetPoint_VRAM(xiter, yiter, px & 1, vram);
 						DEPTHBUF_AT(xiter, yiter) = depthval; // write new depthval
 					}
