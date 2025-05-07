@@ -324,7 +324,7 @@ void tick(void) {
 		}
 
 		// use the menu
-		if (IsKeyDown(KEY_CTRL_EXIT)) {
+		if (IsKeyDown(KEY_CTRL_OPTN)) {
 			ui_entermenu(&menu_pause);
 		}
 	}
