@@ -395,8 +395,8 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 			for (ozi = ozp, uzi = uzp, vzi = vzp, xiter = xiterl; xiter <= xiterr; xiter++, ozi += ozstep, uzi += uzstep, vzi += vzstep) {
 				zci = divff(int2f(ZREC_MULT*ZREC_MULT), ozi);
 
-				// zci is halved to handle greater distances
-				depthval = (f2int(zci/4) << 5) | (((zci/4) & FIXED_FRAC_MASK) >> (FIXED_PRECISION-5)); // transform 22+10bit zci to 11+5bit depth
+				// zci is divided to handle greater distances
+				depthval = (f2int(zci >> 2) << 5) | (((zci >> 2) & FIXED_FRAC_MASK) >> (FIXED_PRECISION-5)); // transform 22+10bit zci to 11+5bit depth
 
 				// is current pixel closer than the last depth written there?
 				if (DEPTHBUF_AT(xiter, yiter) > depthval) {

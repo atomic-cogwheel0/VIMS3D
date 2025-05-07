@@ -246,9 +246,9 @@ void init(void) {
 	arrow_node = w_register(&arrow_worldobj, &status);
 	assert(status == S_SUCCESS);
 
-	menu_pause_element_list[0] = ielement_centered(NULL, 16, "Game Paused", MENUELEMENT_LABEL);
+	menu_pause_element_list[0] = ielement_centered(NULL, 14, "Game Paused", MENUELEMENT_LABEL);
 	menu_pause_element_list[1] = ielement_centered(onclick_closemenu, 26, "Return", MENUELEMENT_BUTTON);
-	menu_pause_element_list[2] = ielement_centered(onclick_quit, 36, "Quit Game", MENUELEMENT_BUTTON);
+	menu_pause_element_list[2] = ielement_centered(onclick_quit, 38, "Quit Game", MENUELEMENT_BUTTON);
 
 	menu_pause = imenu(menu_pause_element_list, 3, NULL);
 

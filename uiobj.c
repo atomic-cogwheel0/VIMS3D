@@ -1,9 +1,13 @@
 #include "uiobj.h"
 
-int onclick_closemenu(void *unused) {
-    ui_closemenu();
+bool onclick_closemenu(void *unused) {
+    if (ui_closemenu() == S_SUCCESS) {
+        return TRUE;
+    }
+    return FALSE;
 }
 
-int onclick_quit(void *unused) {
+bool onclick_quit(void *unused) {
     quit();
+    return TRUE; // won't run
 }

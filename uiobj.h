@@ -3,7 +3,7 @@
 
 #include "ui.h"
 
-int onclick_closemenu(void *unused);
-int onclick_quit(void *unused);
+bool onclick_closemenu(void *unused);
+bool onclick_quit(void *unused);
 
 #endif

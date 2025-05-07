@@ -73,6 +73,8 @@ void toggle_falling(toggle_t *t, bool state);
 #define S_EIMPLEMENT -8     // requested feature not implemented
 #define S_EUNSPECIFIED -9   // multiple errors have occurred and their nature is unimportant
 #define S_EGENERIC -10      // an error has occurred
+#define S_NOBUTTON -11		// no button in current menu
+#define S_ENOMENU -12		// no menu is open
 
 // if defined, uitoax and itoax will write alphabetical digits (base 11 or more) uppercase, else lowercase
 //#define UITOAX_UPPERCASE
