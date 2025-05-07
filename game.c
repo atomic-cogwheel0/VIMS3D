@@ -323,16 +323,10 @@ void tick(void) {
 			w_print_debug();
 		}
 
-		if (IsKeyDown(KEY_CTRL_OPTN)) {
+		// use the menu
+		if (IsKeyDown(KEY_CTRL_EXIT)) {
 			ui_entermenu(&menu_pause);
 		}
-
-		// use the menu insted
-		/*
-		if (IsKeyDown(KEY_CTRL_EXIT)) {
-			quit();
-		}
-		*/
 	}
 
 	Bdisp_PutDisp_DD();
