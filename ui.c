@@ -136,6 +136,7 @@ int ui_closemenu(void) {
 static bool done_next = FALSE;
 static bool done_prev = FALSE;
 static bool done_exec = FALSE;
+static bool done_close = FALSE;
 
 void menu_keyboard_handler(void) {
     if (!inmenu || current_menu.menu == NULL) return;
@@ -175,7 +176,13 @@ void menu_keyboard_handler(void) {
     }
 
     if (IsKeyDown(KEY_CTRL_EXIT)) {
-        ui_closemenu();
+        if (!done_close) {
+            ui_closemenu();
+            done_close = TRUE;
+        }
+    }
+    else {
+        done_close = FALSE;
     }
 }
 
