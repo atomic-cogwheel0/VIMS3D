@@ -65,7 +65,7 @@ toggle_t overlay = {TRUE, FALSE, FALSE};
 menuelement_t menu_pause_element_list[4];
 menudef_t menu_pause;
 
-menuelement_t menu_settings_element_list[3];
+menuelement_t menu_settings_element_list[5];
 menudef_t menu_settings;
 
 int load_cam(camera *cam);
