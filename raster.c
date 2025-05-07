@@ -2,10 +2,10 @@
 
 /*
  RASTER.C
-  functions for adding, removing and rendering triangles and additional drawing functions
+  functions for drawing triangles, raw textures and text
   provides the core of the rendering process
 
-  using the higher level mesh system is preferred to raw triangles
+  use the higher level mesh system instead of raw triangles
 */
 
 // depth buffer: an array of 128*64=8192 depth values, every pixel has a 11+5 bit fixed-point depth value
@@ -186,13 +186,30 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 
 		// is it entirely offscreen? (sanity check)
 		if (bbox_right < 0 || bbox_left > 127 || bbox_bottom < 0 || bbox_top > 63) continue;
-
+		
 		bbox_left = clamp_i(bbox_left, 0, 127);
 		bbox_top = clamp_i(bbox_top, 0, 63);
 		bbox_right = clamp_i(bbox_right, 0, 127);
 		bbox_bottom = clamp_i(bbox_bottom, 0, 63);
 
 		tri_cnt++;
+
+#ifdef RENDER_PIXEL_BBOX
+		Bdisp_DrawLineVRAM(bbox_left, bbox_top, bbox_right, bbox_top);
+		Bdisp_DrawLineVRAM(bbox_right, bbox_top, bbox_right, bbox_bottom);
+		Bdisp_DrawLineVRAM(bbox_left, bbox_top, bbox_left, bbox_bottom);
+		Bdisp_DrawLineVRAM(bbox_left, bbox_bottom, bbox_right, bbox_bottom);
+#endif
+
+#ifdef RENDER_WIREFRAME		
+		Bdisp_DrawLineVRAM(f2int(a.x), f2int(a.y), f2int(b.x), f2int(b.y));
+		Bdisp_DrawLineVRAM(f2int(c.x), f2int(c.y), f2int(b.x), f2int(b.y));
+		Bdisp_DrawLineVRAM(f2int(a.x), f2int(a.y), f2int(c.x), f2int(c.y));
+#endif
+
+#ifndef RENDER_TEXTURES
+		continue;
+#endif
 
 		// show missing texture instead of SYSTEM ERROR
 		if (textures[curr_tidx] == NULL) {
@@ -297,12 +314,27 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 		//  1/Z, 1/Ui and 1/Vi are interpolated because they are linear across the surface in screen space
 
 		for (yiter = bbox_top; yiter <= bbox_bottom; yiter++) {
+			//if (yiter > 63) break;
+
+			// increment leftmost and rightmost dotp's
+			dot11_dot02l += dot11_dot02_odelta;
+			dot01_dot12l += dot01_dot12_odelta;
+			dot00_dot12l += dot00_dot12_odelta;
+			dot01_dot02l += dot01_dot02_odelta;
+
+			dot11_dot02r += dot11_dot02_odelta;
+			dot01_dot12r += dot01_dot12_odelta;
+			dot00_dot12r += dot00_dot12_odelta;
+			dot01_dot02r += dot01_dot02_odelta;
+
+			//if (yiter < 0) continue;
+
 			// find leftmost
-			// increment leftmost dotp's and set up the loop iterators
-			dot11_dot02 = (dot11_dot02l += dot11_dot02_odelta);
-			dot01_dot12 = (dot01_dot12l += dot01_dot12_odelta);
-			dot00_dot12 = (dot00_dot12l += dot00_dot12_odelta);
-			dot01_dot02 = (dot01_dot02l += dot01_dot02_odelta);
+			// set up the loop iterators
+			dot11_dot02 = dot11_dot02l;
+			dot01_dot12 = dot01_dot12l;
+			dot00_dot12 = dot00_dot12l;
+			dot01_dot02 = dot01_dot02l;
 
 			for (xiterl = bbox_left; xiterl <= bbox_right; xiterl++) {
 				dot11_dot02 += dot11_dot02_idelta;
@@ -327,11 +359,11 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 				vzp = mulff(vzb, v);
 
 			// find rightmost, same stuff but different
-			// increment rightmost dotp's and set up the loop iterators
-			dot11_dot02 = (dot11_dot02r += dot11_dot02_odelta);
-			dot01_dot12 = (dot01_dot12r += dot01_dot12_odelta);
-			dot00_dot12 = (dot00_dot12r += dot00_dot12_odelta);
-			dot01_dot02 = (dot01_dot02r += dot01_dot02_odelta);
+			// set up the loop iterators
+			dot11_dot02 = dot11_dot02r;
+			dot01_dot12 = dot01_dot12r;
+			dot00_dot12 = dot00_dot12r;
+			dot01_dot02 = dot01_dot02r;
 
 			for (xiterr = bbox_right; xiterr >= xiterl; xiterr--) {
 				dot11_dot02 -= dot11_dot02_idelta;
@@ -364,7 +396,10 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 			vzstep = divff(vzq-vzp, diff);
 
 			// interpolate between values in current row
-			for (ozi = ozp, uzi = uzp, vzi = vzp, xiter = xiterl; xiter <= xiterr; xiter++, ozi+=ozstep, uzi+=uzstep, vzi+=vzstep) {
+			for (ozi = ozp, uzi = uzp, vzi = vzp, xiter = xiterl; xiter <= xiterr; xiter++, ozi += ozstep, uzi += uzstep, vzi += vzstep) {
+				//if (xiter < 0) continue;
+				//if (xiter > 127) break;
+
 				zci = divff(int2f(ZREC_MULT*ZREC_MULT), ozi);
 
 				// zci is halved to handle greater distances
@@ -390,7 +425,7 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 					// extract pixel at given offset (2 bit pixel extracted from byte arr)
 					px = (tx->texture->pixels[px_offset/4] & (3 << ((3 - (px_offset%4)) * 2))) >> ((3 - (px_offset%4)) * 2);
 					// is transparency bit set?
-					if (!(px & 2)) {
+				if (!(px & 2)) {
 						SetPoint_VRAM(xiter, yiter, px & 1, vram);
 						DEPTHBUF_AT(xiter, yiter) = depthval; // write new depthval
 					}

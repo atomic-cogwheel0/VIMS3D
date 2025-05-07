@@ -8,6 +8,11 @@
 
 #include "hires_timer.h"
 
+// render config
+#define RENDER_WIREFRAME
+//#define RENDER_PIXEL_BBOX
+#define RENDER_TEXTURES
+
 // number of triangles the subsys can handle at once
 #define MAX_TRIANGLES 72
 
