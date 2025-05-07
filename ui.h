@@ -11,7 +11,9 @@
 // menu element types
 #define MENUELEMENT_BUTTON 1
 #define MENUELEMENT_LABEL 2
-#define MENUELEMENT_SETUP_BOOL 3
+#define MENUELEMENT_TITLE 3
+
+#define MENUELEMENT_SETUP_BOOL 17
 
 typedef struct _menuelement_t {
     bool (*onclick)(struct _menuelement_t *obj); // onclick function, gets object from which it was called, returns whether the action was run successfully
@@ -22,9 +24,9 @@ typedef struct _menuelement_t {
     uint8_t setupkey; // used only if this is a SETUP element
 } menuelement_t;
 
-// create a menu element centered at given y coordinate, width and x calculated from text length (useful for labels and buttons)
+// create a menu element centered horizontally at given y (top) coordinate, width and x calculated from text length (useful for labels and buttons)
 menuelement_t ielement_centered(bool (*onclick)(struct _menuelement_t *obj), int y, char *text, uint8_t type);
-// create a menu element with entirely arbitrary data
+// create a menu element with entirely arbitrary data (-1 width means calculate from text length)
 menuelement_t ielement(bool (*onclick)(struct _menuelement_t *obj), int x1, int y1, int width, char *text, uint8_t type);
 // create a menu element which is a setup element, left-aligned, sets onclick according to type
 menuelement_t ielement_setup(int y, char *text, uint8_t type, uint8_t setupkey);

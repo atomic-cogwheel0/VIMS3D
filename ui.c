@@ -8,7 +8,15 @@ menuelement_t ielement(bool (*onclick)(struct _menuelement_t *obj), int x1, int 
     e.onclick = onclick;
     e.x1 = x1;
     e.y1 = y1;
-    e.width = width;
+    if (width != -1) {
+        e.width = width;
+    }
+    else {
+        if (text != NULL) {
+            e.width = strlen(text) * 6;
+        }
+        else width = 0;
+    }
     e.text = text;
     e.type = type;
     e.setupkey = 0;
@@ -19,12 +27,14 @@ menuelement_t ielement_centered(bool (*onclick)(struct _menuelement_t *obj), int
     int xc, wc;
 
     if (text == NULL) {
-        wc = 7;
+        wc = 0; // set a default length
     }
     else {
+        // a single glyph takes 6 characters, add a bit of spacing for the borders
         wc = strlen(text) * 6 + 4;
     }
 
+    // centered horizontally on the 128-pixel wide screen
     xc = 63 - wc/2;
 
     return ielement(onclick, xc, y, wc, text, type);
@@ -34,9 +44,10 @@ menuelement_t ielement_setup(int y, char *text, uint8_t type, uint8_t setupkey) 
     menuelement_t e;
     e.x1 = 1;
     e.y1 = y;
-    e.width = type * 6 + 4;
+    e.width = type * 6;
     e.text = text;
     e.type = type;
+    // set onclick handlers for different setup variable interactables
     if (type == MENUELEMENT_SETUP_BOOL) {
         e.onclick = onclick_setup_bool;
     }
@@ -51,6 +62,7 @@ menudef_t imenu(menuelement_t *elements, uint8_t element_cnt, menudef_t *prev) {
     d.element_cnt = element_cnt;
     d.prev_menu = prev;
     d.has_selectable = FALSE;
+    // iterate and check whether the menu has any selectables
     if (element_cnt > 0 && elements != NULL) {
         for (i = 0; i < element_cnt; i++) {
             if (ui_is_selectable(elements[i])) {
@@ -79,26 +91,34 @@ int ui_rendermenu(void) {
             PrintXY(curr.x1 + 2, curr.y1 + 2, (unsigned char *) curr.text, 0);
         }
         if (curr.type == MENUELEMENT_BUTTON) {
+            // draw a border around the button
             Bdisp_DrawLineVRAM(curr.x1, curr.y1, curr.x1 + curr.width, curr.y1);
             Bdisp_DrawLineVRAM(curr.x1, curr.y1, curr.x1, curr.y1 + 10);
             Bdisp_DrawLineVRAM(curr.x1 + curr.width, curr.y1, curr.x1 + curr.width, curr.y1 + 10);
             Bdisp_DrawLineVRAM(curr.x1, curr.y1 + 10, curr.x1 + curr.width, curr.y1 + 10);
+            // invert the inside of the button
             if (current_menu.selected == i) {
                 Bdisp_AreaReverseVRAM(curr.x1 + 1, curr.y1 + 1, curr.x1 + curr.width - 1, curr.y1 + 10 - 1);
             }
         }
         if (curr.type == MENUELEMENT_SETUP_BOOL) {
+            // create a little box
             Bdisp_AreaReverseVRAM(117, curr.y1 + 1, 125, curr.y1 + 9);
             Bdisp_AreaReverseVRAM(118, curr.y1 + 2, 124, curr.y1 + 8);
             if (setup_getval(curr.setupkey)) {
                 /*Bdisp_DrawLineVRAM(118, curr.y1 + 6, 120, curr.y1 + 8);
-                Bdisp_DrawLineVRAM(120, curr.y1 + 8, 124, curr.y1 + 4);*/
-                Bdisp_AreaReverseVRAM(119, curr.y1 + 3, 123, curr.y1 + 7);
+                Bdisp_DrawLineVRAM(120, curr.y1 + 8, 124, curr.y1 + 4);*/ // ugly tick mark
+
+                Bdisp_AreaReverseVRAM(119, curr.y1 + 3, 123, curr.y1 + 7); // fill in the middle, with some white left
             }
+            // draw small vertical line (2 thick) to indicate selection
             if (current_menu.selected == i) {
                 Bdisp_DrawLineVRAM(0, curr.y1, 0, curr.y1 + 10);
                 Bdisp_DrawLineVRAM(1, curr.y1, 1, curr.y1 + 10);
             }
+        }
+        if (curr.type == MENUELEMENT_TITLE) {
+            Bdisp_DrawLineVRAM(1, curr.y1 + 10, 126, curr.y1 + 10);
         }
     }
     return S_SUCCESS;
@@ -111,6 +131,7 @@ bool ui_is_selectable(menuelement_t e) {
 int ui_entermenu(menudef_t *menu) {
     current_menu.menu = menu;
     if (menu != NULL) {
+        // find first selectable element in menu if it exists
         if (current_menu.menu->has_selectable) {
             current_menu.selected = 0;
             while (current_menu.selected < current_menu.menu->element_cnt) {
@@ -124,6 +145,7 @@ int ui_entermenu(menudef_t *menu) {
         inmenu = TRUE;
     }
     else {
+        // invalid menu, or exiting one with no parent
         inmenu = FALSE;
     }
     return S_SUCCESS;
@@ -133,6 +155,7 @@ int ui_closemenu(void) {
     return ui_entermenu(current_menu.menu->prev_menu);
 }
 
+// used to wait for key release
 static bool done_next = FALSE;
 static bool done_prev = FALSE;
 static bool done_exec = FALSE;

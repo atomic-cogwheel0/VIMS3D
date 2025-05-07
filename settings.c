@@ -17,6 +17,7 @@ void setup_save() {
 
 	handle = RecreateFile("SETUP");
 
+	// write all variables serialized
 	for (i = 0; i < SETUP_CNT; i++) {
 		Bfile_WriteFile(handle, &setup_arr[i], 4);
 	}
@@ -31,7 +32,9 @@ void setup_load() {
 
 	handle = Bfile_OpenMainMemory("SETUP");
 
+	// load all variables
 	for (i = 0; i < SETUP_CNT; i++) {
+		// set default on read error
 		if (Bfile_ReadFile(handle, &setup_arr[i], 4, pos) < 0) {
 			setup_arr[i] = setup_arr_default[i];
 		}

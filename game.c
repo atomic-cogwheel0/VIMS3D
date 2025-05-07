@@ -268,7 +268,7 @@ void init(void) {
 	menu_pause_element_list[3] = ielement_centered(onclick_quit, 45, "Quit Game", MENUELEMENT_BUTTON);
 	menu_pause = imenu(menu_pause_element_list, 4, NULL);
 
-	menu_settings_element_list[0] = ielement(NULL, 1, 1, 0, "Settings", MENUELEMENT_LABEL);
+	menu_settings_element_list[0] = ielement(NULL, 1, 1, -1, "Settings", MENUELEMENT_TITLE);
 	menu_settings_element_list[1] = ielement_setup(13, "Draw Textures", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_TEXTURES);
 	menu_settings_element_list[2] = ielement_setup(25, "Draw Pixel Area", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_DRAWAREA);
 	menu_settings_element_list[3] = ielement_setup(37, "Draw Wireframe", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_WIREFRAME);
