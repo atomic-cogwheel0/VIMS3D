@@ -15,6 +15,7 @@
 
 #define MENUELEMENT_SETUP_BOOL 17
 
+// the height of a menu element is 11 pixels (inclusive)
 typedef struct _menuelement_t {
     bool (*onclick)(struct _menuelement_t *obj); // onclick function, gets object from which it was called, returns whether the action was run successfully
     int x1, y1; // coordinates of the top-right corner
@@ -24,12 +25,8 @@ typedef struct _menuelement_t {
     uint8_t setupkey; // used only if this is a SETUP element
 } menuelement_t;
 
-// create a menu element centered horizontally at given y (top) coordinate, width and x calculated from text length (useful for labels and buttons)
-menuelement_t ielement_centered(bool (*onclick)(struct _menuelement_t *obj), int y, char *text, uint8_t type);
-// create a menu element with entirely arbitrary data (-1 width means calculate from text length)
-menuelement_t ielement(bool (*onclick)(struct _menuelement_t *obj), int x1, int y1, int width, char *text, uint8_t type);
-// create a menu element which is a setup element, left-aligned, sets onclick according to type
-menuelement_t ielement_setup(int y, char *text, uint8_t type, uint8_t setupkey);
+// create a menu element with entirely arbitrary data (-1 width means calculate from text length, -1 to x1 means the element should be centered)
+menuelement_t ielement(bool (*onclick)(struct _menuelement_t *obj), int x1, int y1, int width, char *text, uint8_t type, int setupkey);
 
 typedef struct _menudef_t {
     menuelement_t *elements;

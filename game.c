@@ -262,17 +262,17 @@ void init(void) {
 	arrow_node = w_register(&arrow_worldobj, &status);
 	assert(status == S_SUCCESS);
 
-	menu_pause_element_list[0] = ielement_centered(NULL, 9, "Game Paused", MENUELEMENT_LABEL);
-	menu_pause_element_list[1] = ielement_centered(onclick_closemenu, 21, "Return", MENUELEMENT_BUTTON);
-	menu_pause_element_list[2] = ielement_centered(onclick_open_settings, 33, "Settings", MENUELEMENT_BUTTON);
-	menu_pause_element_list[3] = ielement_centered(onclick_quit, 45, "Quit Game", MENUELEMENT_BUTTON);
+	menu_pause_element_list[0] = ielement(NULL, -1, 9, -1, "Game Paused", MENUELEMENT_LABEL, -1);
+	menu_pause_element_list[1] = ielement(onclick_closemenu, -1, 21, -1, "Return", MENUELEMENT_BUTTON, -1);
+	menu_pause_element_list[2] = ielement(onclick_open_settings, -1, 33, -1, "Settings", MENUELEMENT_BUTTON, -1);
+	menu_pause_element_list[3] = ielement(onclick_quit, -1, 45, -1, "Quit Game", MENUELEMENT_BUTTON, -1);
 	menu_pause = imenu(menu_pause_element_list, 4, NULL);
 
-	menu_settings_element_list[0] = ielement(NULL, 1, 1, -1, "Settings", MENUELEMENT_TITLE);
-	menu_settings_element_list[1] = ielement_setup(13, "Draw Textures", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_TEXTURES);
-	menu_settings_element_list[2] = ielement_setup(25, "Draw Pixel Area", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_DRAWAREA);
-	menu_settings_element_list[3] = ielement_setup(37, "Draw Wireframe", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_WIREFRAME);
-	menu_settings_element_list[4] = ielement_setup(49, "Save Player Pos", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_SAVEPLAYER);
+	menu_settings_element_list[0] = ielement(NULL, 1, 1, -1, "Settings", MENUELEMENT_TITLE, -1);
+	menu_settings_element_list[1] = ielement(onclick_setup_bool, 1, 13, -1, "Draw Textures", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_TEXTURES);
+	menu_settings_element_list[2] = ielement(onclick_setup_bool, 1, 25, -1, "Draw Pixel Area", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_DRAWAREA);
+	menu_settings_element_list[3] = ielement(onclick_setup_bool, 1, 37, -1, "Draw Wireframe", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_WIREFRAME);
+	menu_settings_element_list[4] = ielement(onclick_setup_bool, 1, 49, -1, "Save Player Pos", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_SAVEPLAYER);
 	menu_settings = imenu(menu_settings_element_list, 5, &menu_pause);
 
 	// some call might have modified it (called quit()/halt())

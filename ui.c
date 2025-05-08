@@ -3,10 +3,9 @@
 static volatile bool inmenu = FALSE;
 menu_instance_t current_menu = {NULL, 0};
 
-menuelement_t ielement(bool (*onclick)(struct _menuelement_t *obj), int x1, int y1, int width, char *text, uint8_t type) {
+menuelement_t ielement(bool (*onclick)(struct _menuelement_t *obj), int x1, int y1, int width, char *text, uint8_t type, int setupkey) {
     menuelement_t e;
     e.onclick = onclick;
-    e.x1 = x1;
     e.y1 = y1;
     if (width != -1) {
         e.width = width;
@@ -19,39 +18,14 @@ menuelement_t ielement(bool (*onclick)(struct _menuelement_t *obj), int x1, int 
     }
     e.text = text;
     e.type = type;
-    e.setupkey = 0;
-    return e;
-}
-
-menuelement_t ielement_centered(bool (*onclick)(struct _menuelement_t *obj), int y, char *text, uint8_t type) {
-    int xc, wc;
-
-    if (text == NULL) {
-        wc = 0; // set a default length
+    e.setupkey = setupkey;
+    if (x1 != -1) {
+        e.x1 = x1;
     }
     else {
-        // a single glyph takes 6 characters, add a bit of spacing for the borders
-        wc = strlen(text) * 6 + 4;
+        // centered horizontally on the 128-pixel wide screen
+        e.x1 = 63 - e.width / 2;
     }
-
-    // centered horizontally on the 128-pixel wide screen
-    xc = 63 - wc/2;
-
-    return ielement(onclick, xc, y, wc, text, type);
-}
-
-menuelement_t ielement_setup(int y, char *text, uint8_t type, uint8_t setupkey) {
-    menuelement_t e;
-    e.x1 = 1;
-    e.y1 = y;
-    e.width = type * 6;
-    e.text = text;
-    e.type = type;
-    // set onclick handlers for different setup variable interactables
-    if (type == MENUELEMENT_SETUP_BOOL) {
-        e.onclick = onclick_setup_bool;
-    }
-    e.setupkey = setupkey;
     return e;
 }
 
@@ -92,13 +66,13 @@ int ui_rendermenu(void) {
         }
         if (curr.type == MENUELEMENT_BUTTON) {
             // draw a border around the button
-            Bdisp_DrawLineVRAM(curr.x1, curr.y1, curr.x1 + curr.width, curr.y1);
+            Bdisp_DrawLineVRAM(curr.x1, curr.y1, curr.x1 + curr.width + 4, curr.y1);
             Bdisp_DrawLineVRAM(curr.x1, curr.y1, curr.x1, curr.y1 + 10);
-            Bdisp_DrawLineVRAM(curr.x1 + curr.width, curr.y1, curr.x1 + curr.width, curr.y1 + 10);
-            Bdisp_DrawLineVRAM(curr.x1, curr.y1 + 10, curr.x1 + curr.width, curr.y1 + 10);
+            Bdisp_DrawLineVRAM(curr.x1 + curr.width + 4, curr.y1, curr.x1 + curr.width + 4, curr.y1 + 10);
+            Bdisp_DrawLineVRAM(curr.x1, curr.y1 + 10, curr.x1 + curr.width + 4, curr.y1 + 10);
             // invert the inside of the button
             if (current_menu.selected == i) {
-                Bdisp_AreaReverseVRAM(curr.x1 + 1, curr.y1 + 1, curr.x1 + curr.width - 1, curr.y1 + 10 - 1);
+                Bdisp_AreaReverseVRAM(curr.x1 + 1, curr.y1 + 1, curr.x1 + curr.width + 3, curr.y1 + 10 - 1);
             }
         }
         if (curr.type == MENUELEMENT_SETUP_BOOL) {
@@ -113,8 +87,7 @@ int ui_rendermenu(void) {
             }
             // draw small vertical line (2 thick) to indicate selection
             if (current_menu.selected == i) {
-                Bdisp_DrawLineVRAM(0, curr.y1, 0, curr.y1 + 10);
-                Bdisp_DrawLineVRAM(1, curr.y1, 1, curr.y1 + 10);
+                Bdisp_AreaReverseVRAM(curr.x1 - 1, curr.y1, curr.x1, curr.y1 + 10);
             }
         }
         if (curr.type == MENUELEMENT_TITLE) {
