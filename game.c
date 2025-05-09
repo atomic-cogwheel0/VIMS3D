@@ -7,7 +7,6 @@
 
 extern tx_data_t textures[TX_CNT];
 
-camera game_cam; // camera (player view position)
 float gdelta; // player rotation speed
 float gspeed; // player movement speed
 
@@ -77,17 +76,9 @@ void init(void) {
 
 	camera loaded_cam;
 
-	// prepare globals
-	// set initial camera position
-	game_cam.pos = ivec3f(float2f(-3.3), float2f(2.0), float2f(-13.0));
-	game_cam.pitch = float2f(10.0*DEG2RAD_MULT);
-	game_cam.yaw = float2f(16.2*DEG2RAD_MULT);
-
 	// make sure subsystems are initialized
 	assert(g_init() == S_SUCCESS);
 	assert(w_init() == S_SUCCESS);
-
-	w_setcam(&game_cam);
 
 #ifndef BENCHMARK_RASTER
 	srand(RTC_GetTicks());
@@ -97,11 +88,14 @@ void init(void) {
 
 	setup_load();
 
-	if (setup_getval(SETUP_BOOL_SAVEPLAYER)) {
-		if (load_cam(&loaded_cam) == S_SUCCESS) {
-			game_cam = loaded_cam;
-		}
+	if (!setup_getval(SETUP_BOOL_SAVEPLAYER) || load_cam(&loaded_cam) != S_SUCCESS) {
+		// set initial camera position to default if loading failed or shouldn't load
+		loaded_cam.pos = ivec3f(float2f(-3.3), float2f(2.0), float2f(-13.0));
+		loaded_cam.pitch = float2f(10.0*DEG2RAD_MULT);
+		loaded_cam.yaw = float2f(16.2*DEG2RAD_MULT);
 	}
+
+	w_set_cam_pos(loaded_cam);
 
 	// initialize every texture of every triangle of the tank mesh
 	tx_tank_sides = i_tx_static(&textures[TX_WHITE]);
@@ -296,7 +290,7 @@ void free_textures(void) {
 void quit(void) {
 	gamestate = GAMESTATE_QUIT_INPROG; // game is quitting, but not ready to return to main menu yet
 	if (setup_getval(SETUP_BOOL_SAVEPLAYER)) {
-		save_cam(&game_cam);
+		save_cam(w_getcam());
 	}
 	setup_save();
 	free_textures();

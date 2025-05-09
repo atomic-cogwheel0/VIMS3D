@@ -4,6 +4,7 @@ llist wlist;
 
 camera *global_cam = NULL;
 
+collider player_collider;
 world_obj player;
 mesh player_mesh;
 node *player_node;
@@ -81,10 +82,10 @@ int w_deregister(node *n) {
 	return del_ret;
 }
 
-int w_setcam(camera *newcam) {
-	if (newcam == NULL) return S_ENULLPTR;
+int w_set_cam_pos(camera cam) {
+	if (global_cam == NULL) return S_ENULLPTR;
 
-	global_cam = newcam;
+	(*global_cam) = cam;
 	return S_SUCCESS;
 }
 
@@ -105,11 +106,15 @@ extern int tick_billboard(world_obj *bill, llist l, world_obj *player, fixed tim
 int w_init(void) {
 	int status;
 	// create a player obj without a mesh
+	player_collider = icoll_aabb(ivec3f(float2f(0.5), int2f(2), float2f(0.5)), ivec3f(float2f(-0.5), int2f(0), float2f(-0.5)));
 	player_mesh = inullmesh();
+	m_setcoll(&player_mesh, &player_collider, 1);
 	player = iworld_obj(WORLDOBJ_PLAYER, &player_mesh, &global_cam, NULL, NULL, tick_player);
 	player_node = w_register(&player, &status);
 	if (status != S_SUCCESS)
 		return status;
+
+	global_cam = &player.mesh->pos;
 
 	wlist.head = player_node;
 	wlist.tail = player_node;

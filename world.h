@@ -76,8 +76,8 @@ int w_free_world(void);
 // call dworld_obj() on every instance in the list (dangerous!)
 int w_dall_world_objs(void);
 
-// sets the world's camera object to be newcam
-int w_setcam(camera *newcam);
+// sets the world's camera position to cam
+int w_set_cam_pos(camera cam);
 // gets the current camera instance of the world
 camera *w_getcam(void);
 

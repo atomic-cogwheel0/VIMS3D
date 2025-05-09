@@ -109,7 +109,7 @@ bool fall_tick(world_obj *obj, llist l, fixed timescale, int *status) {
 	}
 
 	if (status != NULL)
-		status = S_SUCCESS;
+		*status = S_SUCCESS;
 	return has_collided;
 }
 
@@ -282,11 +282,6 @@ int tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timesca
 	}
 	t = mulvf(t, speed);
 	cam->pos = addvv(cam->pos, t);
-
-	// synchronize both position data holders
-	the_player->mesh->pos.pos = cam->pos;
-	the_player->mesh->pos.yaw = cam->yaw;
-	the_player->mesh->pos.pitch = cam->pitch;
 
 	if (IsKeyDown(KEY_CTRL_VARS)) {
 		tankpos_marker = find_closest_object(the_player, l, WORLDOBJ_MARKER_ARROW, NULL);

@@ -272,13 +272,13 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 		dot02_increment = dotp2(v0, v2_increment);
 		dot12_increment = dotp2(v1, v2_increment);
 
-		// deltas in the y-lopp
+		// (outer)deltas in the y-loop
 		dot11_dot02_odelta = mulff(dot11, dot02_increment);
 		dot01_dot12_odelta = mulff(dot01, dot12_increment);
 		dot00_dot12_odelta = mulff(dot00, dot12_increment);
 		dot01_dot02_odelta = mulff(dot01, dot02_increment);
 
-		// deltas in the x-loops
+		// (inner)deltas in the x-loops
 		dot11_dot02_idelta = mulff(dot11, v0x_sc);
 		dot01_dot12_idelta = mulff(dot01, v1x_sc);
 		dot00_dot12_idelta = mulff(dot00, v1x_sc);
