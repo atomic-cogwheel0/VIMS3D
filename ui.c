@@ -221,6 +221,8 @@ bool onclick_closemenu(void *unused) {
     return FALSE;
 }
 
+extern void quit(void);
+
 bool onclick_quit(void *unused) {
     quit();
     return TRUE; // won't run

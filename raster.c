@@ -18,6 +18,8 @@ static int g_status = SUBSYS_DOWN;
 
 static void *vram;
 
+extern bool isSH4(void);
+
 // initialize all buffers (static alloc for buffers isn't possible)
 int g_init(void) {
 	if (g_status != SUBSYS_DOWN) return S_EALREADYINITED;
