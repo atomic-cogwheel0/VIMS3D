@@ -125,4 +125,7 @@ fixed clamp_f(fixed val, fixed min, fixed max);
 // as fixed_full_t is the same as int, this is possible
 #define clamp_i(val, min, max) (int)clamp_f((fixed)(val), (fixed)(min), (fixed)(max))
 
+// find log of power of 2
+uint8_t fast_log2(uint8_t n);
+
 #endif

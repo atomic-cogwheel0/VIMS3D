@@ -103,10 +103,10 @@ int m_geom_two_sided_rect(trianglef *arr, vec3f topleft, vec3f bottomright, bool
 	c = ivec3f(topleft.x, bottomright.y, topleft.z);
 	d = bottomright;
 
-	arr[0] = itrianglef(a, b, c, FALSE);
-	arr[1] = itrianglef(d, c, b, TRUE);
-	arr[2] = itrianglef(b, a, d, flip_back_tx ? TRUE : FALSE);
-	arr[3] = itrianglef(c, d, a, flip_back_tx ? FALSE : TRUE);
+	arr[0] = itrianglef(a, b, c, FALSE, EDGE_NONE);
+	arr[1] = itrianglef(d, c, b, TRUE, EDGE_NONE);
+	arr[2] = itrianglef(b, a, d, flip_back_tx ? TRUE : FALSE, EDGE_NONE);
+	arr[3] = itrianglef(c, d, a, flip_back_tx ? FALSE : TRUE, EDGE_NONE);
 
 	return S_SUCCESS;
 }

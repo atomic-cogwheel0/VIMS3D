@@ -94,6 +94,8 @@ byte tx_o_fallback[] = {65};
 tx_data_t fallback_txdata = {2, 2, 1, 1, tx_o_fallback};
 texture_t fallback_texture = {&fallback_txdata, {1}}; // inits a static animated texture
 
+void DrawLine_depthbuf(int x1, int y1, int x2, int y2);
+
 // the One and Only Rendering(TM) function
 // have fun :)
 
@@ -105,7 +107,7 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 	texture_t *tx;
 
 	trianglef t;
-	vec3f v0, v1, v2, a, b, c, nrm, ctot; // ctot is Camera TO Triangle
+	vec3f v0, v1, v2, a, b, c;
 	vec3f v2_increment;
 	fixed denom, dot00, dot01, dot02l, dot02r, dot11, dot12l, dot12r, u, v, ui, vi; // for barycentric
 	fixed ozstep, uzstep, vzstep; // perspective correctness iterators
@@ -126,7 +128,10 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 
 	int16_t depthval;
 
+	int tx_hmask, tx_wmask, tx_hb, tx_wb;
+
 	bool s_wf, s_tx, s_da; // setup data
+	byte edgeflags;
 
 	if (g_status != SUBSYS_UP) return S_EDOWN;
 
@@ -157,12 +162,8 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 		int i;
 		for (i = 0; i < BENCHMARK_RASTER; i++) {
 #endif
-
-		nrm = normal(t);
-		ctot = t.a;
-
 		// cull (first backface, then near-plane)
-		if (dotp(ctot, nrm) >= 0 || (t.a.z < int2f(1) || t.b.z < int2f(1) || t.c.z < int2f(1)))
+		if (dotp(t.a, normal(t)) >= 0 || (t.a.z < int2f(1) || t.b.z < int2f(1) || t.c.z < int2f(1)))
 			continue;
 	
 		// map to on-screen '2d' coordinates
@@ -192,20 +193,35 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 
 		tri_cnt++;
 
+		// draw pixel draw area bounding box
 		if (s_da) {
 			Bdisp_DrawLineVRAM(bbox_left, bbox_top, bbox_right, bbox_top);
 			Bdisp_DrawLineVRAM(bbox_right, bbox_top, bbox_right, bbox_bottom);
 			Bdisp_DrawLineVRAM(bbox_left, bbox_top, bbox_left, bbox_bottom);
 			Bdisp_DrawLineVRAM(bbox_left, bbox_bottom, bbox_right, bbox_bottom);
 		}
+
+		// show all edges if wireframe is on
 		if (s_wf) {
-			Bdisp_DrawLineVRAM(f2int(a.x), f2int(a.y), f2int(b.x), f2int(b.y));
-			Bdisp_DrawLineVRAM(f2int(c.x), f2int(c.y), f2int(b.x), f2int(b.y));
-			Bdisp_DrawLineVRAM(f2int(a.x), f2int(a.y), f2int(c.x), f2int(c.y));
+			edgeflags = EDGE_AB | EDGE_BC | EDGE_CA;
 		}
-		if (!s_tx) {
-			continue;
+		else {
+			edgeflags = t.draw_edges;
 		}
+
+		// draw each edge if needed
+		if (edgeflags & EDGE_AB) {
+			DrawLine_depthbuf(f2int(a.x), f2int(a.y), f2int(b.x), f2int(b.y));
+		}
+		if (edgeflags & EDGE_BC) {
+			DrawLine_depthbuf(f2int(b.x), f2int(b.y), f2int(c.x), f2int(c.y));
+		}
+		if (edgeflags & EDGE_CA) {
+			DrawLine_depthbuf(f2int(c.x), f2int(c.y), f2int(a.x), f2int(a.y));
+		}
+
+		// code from now on is only texture mapping
+		if (!s_tx) continue;
 
 		// show missing texture instead of SYSTEM ERROR
 		if (textures[curr_tidx] == NULL) {
@@ -223,6 +239,12 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 
 		u_mult = tx->texture->w * tx->texture->u_tile_size;
 		v_mult = tx->texture->h * tx->texture->v_tile_size;
+
+		// assume they are powers of 2 !!!
+		tx_wb = fast_log2(tx->texture->w);
+		tx_wmask = tx->texture->w - 1;
+		tx_hb = fast_log2(tx->texture->h);
+		tx_hmask = tx->texture->h - 1;
 
 		// the following code does barycentric coord calculation (u and v)
 		// src: https://web.archive.org/web/20240910155457/https://blackpawn.com/texts/pointinpoly/
@@ -412,7 +434,7 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 					// ensure array access does not cause an invalid dereference
 					if (px_offset >= max_px_offset) continue;
 					// extract pixel at given offset (2 bit pixel extracted from byte arr)
-					px = (tx->texture->pixels[px_offset/4] & (3 << ((3 - (px_offset%4)) * 2))) >> ((3 - (px_offset%4)) * 2);
+					px = (tx->texture->pixels[px_offset >> 2] & (3 << ((3 - (px_offset & 3)) * 2))) >> ((3 - (px_offset & 3)) * 2);
 					// is transparency bit set?
 					if (!(px & 2)) {
 						SetPoint_VRAM(xiter, yiter, px & 1, vram);
@@ -495,4 +517,36 @@ int g_texture2d(texture_t *tx, unsigned int x, unsigned int y) {
 		}
 	}
 	return S_SUCCESS;
+}
+
+// Bresenham's algorithm
+void DrawLine_depthbuf(int x1, int y1, int x2, int y2) {
+	int dx, dy, sx, sy, err, e2;
+
+	dx = ABS(x2 - x1);
+	sx = x1 < x2 ? 1 : -1;
+	dy = ABS(y2 - y1);
+	dy = 0 - dy;
+	sy = y1 < y2 ? 1 : -1;
+
+	err = dx + dy;
+	e2 = 0;
+
+	while (1) {
+		if (x1 > 127 || y1 > 63 || x1 < 0 || y1 < 0) break;
+		if (DEPTHBUF_AT(x1, y1) == 0x7FFF) {
+			Bdisp_SetPoint_VRAM(x1, y1, 1);
+			DEPTHBUF_AT(x1, y1) = 1;
+		}
+		if (x1 == x2 && y1 == y2) break;
+		e2 = 2 * err;
+		if (e2 >= dy) {
+			err += dy;
+			x1 += sx;
+		}
+		if (e2 <= dx) {
+			err += dx;
+			y1 += sy;
+		}
+	}
 }

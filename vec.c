@@ -114,12 +114,13 @@ vec3f horiz(vec3f v) {
 	return ivec3f(v.x, 0, v.z);
 }
 
-trianglef itrianglef(vec3f a, vec3f b, vec3f c, bool flip) {
+trianglef itrianglef(vec3f a, vec3f b, vec3f c, bool flip, byte draw_edge_flags) {
 	trianglef r;
 	r.a = a;
 	r.b = b;
 	r.c = c;
 	r.flip_texture = flip;
+	r.draw_edges = draw_edge_flags;
 	return r;
 }
 
@@ -132,11 +133,11 @@ vec3f transform_vec_to_camera(vec3f u, camera cam) {
 }
 
 trianglef move_tri_by_vec(trianglef q, vec3f v) {
-	return itrianglef(addvv(q.a, v), addvv(q.b, v), addvv(q.c, v), q.flip_texture);
+	return itrianglef(addvv(q.a, v), addvv(q.b, v), addvv(q.c, v), q.flip_texture, q.draw_edges);
 }
 
 trianglef transform_tri_from_zero(trianglef q, vec3f v, fixed pitch, fixed yaw) {
-	return itrianglef(addvv(rot(q.a, pitch, yaw), v), addvv(rot(q.b, pitch, yaw), v), addvv(rot(q.c, pitch, yaw), v), q.flip_texture);
+	return itrianglef(addvv(rot(q.a, pitch, yaw), v), addvv(rot(q.b, pitch, yaw), v), addvv(rot(q.c, pitch, yaw), v), q.flip_texture, q.draw_edges);
 }
 
 trianglef transform_tri_to_pos(trianglef q, position pos) {
@@ -144,7 +145,7 @@ trianglef transform_tri_to_pos(trianglef q, position pos) {
 }
 
 trianglef transform_tri_to_camera(trianglef q, camera cam) {
-	return itrianglef(rot(subvv(q.a, cam.pos), -cam.pitch, -cam.yaw), rot(subvv(q.b, cam.pos), -cam.pitch, -cam.yaw), rot(subvv(q.c, cam.pos), -cam.pitch, -cam.yaw), q.flip_texture);
+	return itrianglef(rot(subvv(q.a, cam.pos), -cam.pitch, -cam.yaw), rot(subvv(q.b, cam.pos), -cam.pitch, -cam.yaw), rot(subvv(q.c, cam.pos), -cam.pitch, -cam.yaw), q.flip_texture, q.draw_edges);
 }
 
 vec3f normal(trianglef q) {

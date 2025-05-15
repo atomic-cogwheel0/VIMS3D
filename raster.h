@@ -34,6 +34,11 @@ enum {
 	TX_TREE,
 	TX_ANIM_FLASH,
 	TX_ANIM_ARROW,
+	TX_BRICKS,
+	TX_BRICKS_RECT_LARGE,
+	TX_BRICKS_RECT_SMALL,
+	TX_ROOF,
+	TX_DOOR,
 // number of textures
 	TX_CNT,
 };

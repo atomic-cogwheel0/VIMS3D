@@ -71,15 +71,21 @@ typedef struct {
 } position;
 typedef position camera;
 
+#define EDGE_NONE 0
+#define EDGE_AB 1
+#define EDGE_BC 2
+#define EDGE_CA 4
+
 typedef struct {
 	vec3f a;
 	vec3f b;
 	vec3f c;
-	bool flip_texture;
+	byte draw_edges : 7;
+	byte flip_texture : 1;
 } trianglef;
 
 // initialize trianglef
-trianglef itrianglef(vec3f a, vec3f b, vec3f c, bool flip);
+trianglef itrianglef(vec3f a, vec3f b, vec3f c, bool flip, byte draw_edge_flags);
 
 // add v to every point of q
 trianglef move_tri_by_vec(trianglef q, vec3f v);

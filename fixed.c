@@ -144,3 +144,15 @@ fixed rad2deg(fixed rad) {
 fixed deg2rad(fixed deg) {
 	return divff(mulff(deg, pi), one_eighty);
 }
+
+uint8_t fast_log2(uint8_t n) {
+	uint8_t i;
+	uint8_t mask = 0x80;
+	for (i = 0; i < 8; i++) {
+		if (mask & n) {
+			break;
+		}
+		mask >>= 1;
+	}
+	return 7-i;
+}
