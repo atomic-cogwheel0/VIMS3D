@@ -232,14 +232,21 @@ int tick_person(world_obj *person, llist l, world_obj *player, fixed timescale) 
 int tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timescale) {
 	camera *cam = *(camera **)the_player->data;
 	vec3f t;
-	static const fixed movement_speed = float2f(1.0f); // the amount the player should move in 1 unit of timescale
-	static const fixed rotation_speed = float2f(32.0f*DEG2RAD_MULT); // number of degrees the player should turn in 1 unit of timescale
+	fixed movement_speed; // the amount the player should move in 1 unit of timescale
+	fixed rotation_speed; // number of degrees the player should turn in 1 unit of timescale
 	static const vec3f z_axis = {0, 0, int2f(1)}; // unit vector on the z axis
 
 	world_obj *tankpos_marker;
 
-	fixed speed = mulff(movement_speed, timescale);
-	fixed rotation = mulff(rotation_speed, timescale);
+	fixed speed;
+	fixed rotation;
+	
+	// load from setup
+	rotation_speed = deg2rad(int2f((int)setup_getval(SETUP_INT_ROTSPEED)));
+	rotation = mulff(rotation_speed, timescale);
+
+	movement_speed = divfi(int2f((int)setup_getval(SETUP_INT_MOVESPEED)), 10);
+	speed = mulff(movement_speed, timescale);
 
 	// rotation control
 	if (IsKeyDown(KEY_CTRL_UP)) {

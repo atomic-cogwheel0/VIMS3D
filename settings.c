@@ -2,8 +2,8 @@
 
 #include "fxlib.h"
 
-int setup_arr[SETUP_CNT];
-static int setup_arr_default[SETUP_CNT] = {0, 0, 1, 0}; // DRAW_TEXTURES is on
+uint32_t setup_arr[SETUP_CNT];
+static int setup_arr_default[SETUP_CNT] = {0, 0, 1, 0, 32, 10}; // DRAW_TEXTURES is on
 
 int RecreateFile(char *fname) {
 	Bfile_DeleteMainMemory(fname);
@@ -44,10 +44,29 @@ void setup_load() {
 	Bfile_CloseFile(handle);
 }
 
-void setup_setval(uint8_t key, int val) {
+void setup_setval(uint8_t key, uint32_t val) {
     setup_arr[key] = val;
 }
 
-int setup_getval(uint8_t key) {
+uint32_t setup_getval(uint8_t key) {
     return setup_arr[key];
+}
+
+void setup_getbounds(uint8_t key, uint32_t *min, uint32_t *max) {
+	if (min == NULL || max == NULL) return;
+
+	switch(key) {
+		case SETUP_INT_ROTSPEED:
+			*min = 10;
+			*max = 60;
+			break;
+		case SETUP_INT_MOVESPEED:
+			*min = 1;
+			*max = 20;
+			break;
+		default:
+			*min = 0;
+			*max = 100;
+			break;
+	}
 }

@@ -74,10 +74,12 @@ toggle_t overlay = {TRUE, FALSE, FALSE};
 #endif
 
 menuelement_t menu_pause_element_list[4];
-menudef_t menu_pause;
+menupage_t menu_pause_page_list[1];
+menu_t menu_pause;
 
-menuelement_t menu_settings_element_list[5];
-menudef_t menu_settings;
+menuelement_t menu_settings_element_list[9];
+menupage_t menu_settings_page_list[3];
+menu_t menu_settings;
 
 int load_cam(camera *cam);
 int save_cam(camera *cam);
@@ -349,14 +351,26 @@ void init(void) {
 	menu_pause_element_list[1] = ielement(onclick_closemenu, -1, 21, -1, "Return", MENUELEMENT_BUTTON, -1);
 	menu_pause_element_list[2] = ielement(onclick_open_settings, -1, 33, -1, "Settings", MENUELEMENT_BUTTON, -1);
 	menu_pause_element_list[3] = ielement(onclick_quit, -1, 45, -1, "Quit Game", MENUELEMENT_BUTTON, -1);
-	menu_pause = imenu(menu_pause_element_list, 4, NULL);
+	menu_pause_page_list[0] = imenupage(menu_pause_element_list, 4);
+	menu_pause = imenu(menu_pause_page_list, 1, NULL);
 
-	menu_settings_element_list[0] = ielement(NULL, 1, 1, -1, "Settings", MENUELEMENT_TITLE, -1);
+	// page 0
+	menu_settings_element_list[0] = ielement(NULL, 1, 1, -1, "Graphic Settings", MENUELEMENT_TITLE, -1);
 	menu_settings_element_list[1] = ielement(onclick_setup_bool, 1, 13, -1, "Draw Textures", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_TEXTURES);
 	menu_settings_element_list[2] = ielement(onclick_setup_bool, 1, 25, -1, "Draw Pixel Area", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_DRAWAREA);
 	menu_settings_element_list[3] = ielement(onclick_setup_bool, 1, 37, -1, "Draw Wireframe", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_WIREFRAME);
-	menu_settings_element_list[4] = ielement(onclick_setup_bool, 1, 49, -1, "Save Player Pos", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_SAVEPLAYER);
-	menu_settings = imenu(menu_settings_element_list, 5, &menu_pause);
+	// page 1
+	menu_settings_element_list[4] = ielement(NULL, 1, 1, -1, "Save Settings", MENUELEMENT_TITLE, -1);
+	menu_settings_element_list[5] = ielement(onclick_setup_bool, 1, 13, -1, "Save Player Pos", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_SAVEPLAYER);
+	// page 2
+	menu_settings_element_list[6] = ielement(NULL, 1, 1, -1, "Movement Settings", MENUELEMENT_TITLE, -1);
+	menu_settings_element_list[7] = ielement(onclick_setup_slider, 1, 13, -1, "Rotation Speed", MENUELEMENT_SETUP_SLIDER, SETUP_INT_ROTSPEED);
+	menu_settings_element_list[8] = ielement(onclick_setup_slider, 1, 25, -1, "Movement Speed", MENUELEMENT_SETUP_SLIDER, SETUP_INT_MOVESPEED);
+
+	menu_settings_page_list[0] = imenupage(menu_settings_element_list, 4);
+	menu_settings_page_list[1] = imenupage(&menu_settings_element_list[4], 2);
+	menu_settings_page_list[2] = imenupage(&menu_settings_element_list[6], 3);
+	menu_settings = imenu(menu_settings_page_list, 3, &menu_pause);
 
 	// some call might have modified it (called quit()/halt())
 	if (gamestate != GAMESTATE_PREINIT) return;

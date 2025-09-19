@@ -206,7 +206,7 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 			edgeflags = EDGE_AB | EDGE_BC | EDGE_CA;
 		}
 		else {
-			edgeflags = t.draw_edges;
+			//edgeflags = t.draw_edges;
 		}
 
 		// draw each edge if needed
