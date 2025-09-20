@@ -1,6 +1,6 @@
 [DLSimProject]
 Name=VIMS3D
-Version=00.04.0005
+Version=00.04.0006
 Model=:fx-9860G.dlm
 SourcePath=SRC
 MemoryPath=INIT

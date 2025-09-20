@@ -5,7 +5,7 @@
 [BINDATA]    : "FXADDINror.bin"
 [DISPNAME]   : "VIMS3D"
 [APPNAME]    : "@VIMS3D"
-[VERSION]    : "00.04.0005"
+[VERSION]    : "00.04.0006"
 [APL_ICON]   : "MainIcon.bmp"
 [MODULE_NUM] : 0
 [MOD1_TITLE] : "VIMS3D"
