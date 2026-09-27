@@ -69,7 +69,11 @@ typedef struct {
 	fixed yaw;
 	fixed pitch;
 } position;
-typedef position camera;
+
+typedef struct {
+	position *pos;
+	fixed zoom_level;
+} camera;
 
 #define EDGE_NONE 0
 #define EDGE_AB 1

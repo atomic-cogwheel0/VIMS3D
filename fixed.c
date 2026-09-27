@@ -156,3 +156,15 @@ uint8_t fast_log2(uint8_t n) {
 	}
 	return 7-i;
 }
+
+uint8_t fast_log2_64(uint64_t n) {
+	uint8_t i;
+	uint64_t mask = 0x8000000000000000;
+	for (i = 0; i < 64; i++) {
+		if (mask & n) {
+			break;
+		}
+		mask >>= 1;
+	}
+	return 63-i;
+}

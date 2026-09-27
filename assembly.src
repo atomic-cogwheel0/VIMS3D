@@ -57,7 +57,8 @@ _SetPoint_VRAM:
 	; set the pixel
 	tst r6, r6
 	bt/s empty
-	mov.b @(r0, r7), r1
+	mov.b @(r0, r7), r1 ; delay slot: get 8-pixel thingy from the display
+
 	; vram[boffset] |= mask
 	or r3, r1
 	rts

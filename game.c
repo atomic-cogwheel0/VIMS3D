@@ -7,10 +7,10 @@
 
 extern tx_data_t textures[TX_CNT];
 
-float gdelta; // player rotation speed
-float gspeed; // player movement speed
+static float gdelta; // player rotation speed
+static float gspeed; // player movement speed
 
-volatile int gamestate = GAMESTATE_PREINIT;
+volatile static int gamestate = GAMESTATE_PREINIT;
 
 #define TANK_MODEL_VERTEX_CNT 26
 #define TANK_MODEL_TRI_CNT 37
@@ -19,76 +19,81 @@ volatile int gamestate = GAMESTATE_PREINIT;
 #define HOUSE_MODEL_TRI_CNT 20
 
 // arrays for storing mesh data (vertices, triangles, textures)
-vec3f *vertices;
-trianglef tank_mesh[TANK_MODEL_TRI_CNT];
-texture_t *tank_txarr[TANK_MODEL_TRI_CNT];
+static vec3f *vertices;
+static trianglef tank_mesh[TANK_MODEL_TRI_CNT];
+static texture_t *tank_txarr[TANK_MODEL_TRI_CNT];
 
-trianglef house_mesh[HOUSE_MODEL_TRI_CNT];
-texture_t *house_txarr[HOUSE_MODEL_TRI_CNT];
+static trianglef house_mesh[HOUSE_MODEL_TRI_CNT];
+static texture_t *house_txarr[HOUSE_MODEL_TRI_CNT];
 
-texture_t *tx_tank_sides, *tx_tank_track, *tx_tank_barrel, *tx_tank_front, *tx_tank_top, *tx_house_wall, *tx_house_roof, *tx_house_wall_large_panel, *tx_house_wall_small_panel;
-texture_t *tx_door;
+static texture_t *tx_tank_sides, *tx_tank_track, *tx_tank_barrel, *tx_tank_front, *tx_tank_top, *tx_house_wall, *tx_house_roof, *tx_house_wall_large_panel, *tx_house_wall_small_panel;
+static texture_t *tx_door;
 
-trianglef person_mesh[2];
-texture_t *person_txarr[2];
+static trianglef person_mesh[2];
+static texture_t *person_txarr[2];
 
-trianglef tree_mesh[2];
-texture_t *tree_txarr[2];
+static trianglef tree_mesh[2];
+static texture_t *tree_txarr[2];
 
-trianglef arrow_mesh[4];
-texture_t *arrow_txarr[4];
+static trianglef arrow_mesh[4];
+static texture_t *arrow_txarr[4];
 
 // objects (these are global because they are referenced by address)
-mesh tank_meshobj;
-world_obj tank_worldobj;
-collider tank_collider;
-node *tank_node;
+static mesh tank_meshobj;
+static world_obj tank_worldobj;
+static collider tank_collider;
+static node *tank_node;
 
-mesh house_meshobj;
-world_obj house_worldobj;
-node *house_node;
+static mesh house_meshobj;
+static world_obj house_worldobj;
+static node *house_node;
 
-mesh person_meshobj;
-world_obj person_worldobj;
-collider person_collider;
-node *person_node;
+static mesh person_meshobj;
+static world_obj person_worldobj;
+static collider person_collider;
+static node *person_node;
 
-mesh tree_meshobj;
-world_obj tree_worldobjs[10];
-node *tree_nodes[10];
+static mesh tree_meshobj;
+static world_obj tree_worldobjs[10];
+static node *tree_nodes[10];
 
-mesh ground_meshobj;
-world_obj ground_worldobj;
-collider ground_collider;
-node *ground_node;
+static mesh ground_meshobj;
+static world_obj ground_worldobj;
+static collider ground_collider;
+static node *ground_node;
 
-mesh arrow_meshobj;
-world_obj arrow_worldobj;
-node *arrow_node;
+static mesh arrow_meshobj;
+static world_obj arrow_worldobj;
+static node *arrow_node;
+
+static mesh bullet_meshobj;
+static world_obj bullet_worldobj;
+static collider bullet_collider;
+static node *bullet_node;
 
 // if debugging, set overlay to ON by default
 #ifndef DEBUG_BUILD
-toggle_t overlay = {FALSE, FALSE, FALSE};
+static toggle_t overlay = {FALSE, FALSE, FALSE};
 #else
-toggle_t overlay = {TRUE, FALSE, FALSE};
+static toggle_t overlay = {TRUE, FALSE, FALSE};
 #endif
 
-menuelement_t menu_pause_element_list[4];
-menupage_t menu_pause_page_list[1];
-menu_t menu_pause;
+static menuelement_t menu_pause_element_list[4];
+static menupage_t menu_pause_page_list[1];
+static menu_t menu_pause;
 
-menuelement_t menu_settings_element_list[9];
-menupage_t menu_settings_page_list[3];
-menu_t menu_settings;
+static menuelement_t menu_settings_element_list[12];
+static menupage_t menu_settings_page_list[4];
+static menu_t menu_settings;
 
-int load_cam(camera *cam);
-int save_cam(camera *cam);
+static int load_cam_pos(position *pos);
+static int save_cam_pos(position *pos);
 
 void init(void) {
 	int i;
 	int status;
 
-	camera loaded_cam;
+	position loaded_cam_pos;
 
 	// make sure subsystems are initialized
 	assert(g_init() == S_SUCCESS);
@@ -102,14 +107,15 @@ void init(void) {
 
 	setup_load();
 
-	if (!setup_getval(SETUP_BOOL_SAVEPLAYER) || load_cam(&loaded_cam) != S_SUCCESS) {
+	if (!setup_getval(SETUP_BOOL_SAVEPLAYER) || load_cam_pos(&loaded_cam_pos) != S_SUCCESS) {
 		// set initial camera position to default if loading failed or shouldn't load
-		loaded_cam.pos = ivec3f(float2f(-3.3), float2f(2.0), float2f(-13.0));
-		loaded_cam.pitch = float2f(10.0*DEG2RAD_MULT);
-		loaded_cam.yaw = float2f(16.2*DEG2RAD_MULT);
+		loaded_cam_pos.pos = ivec3f(float2f(-3.3), float2f(2.0), float2f(-13.0));
+		loaded_cam_pos.pitch = float2f(10.0*DEG2RAD_MULT);
+		loaded_cam_pos.yaw = float2f(16.2*DEG2RAD_MULT);
 	}
 
-	w_set_cam_pos(loaded_cam);
+	assert(w_set_cam_pos(loaded_cam_pos) == S_SUCCESS);
+	w_set_cam_zoom(int2f(1));
 
 	// initialize each texture
 	tx_tank_sides = i_tx_static(&textures[TX_WHITE]);
@@ -355,23 +361,28 @@ void init(void) {
 	menu_pause = imenu(menu_pause_page_list, 1, NULL);
 
 	// page 0
-	menu_settings_element_list[0] = ielement(NULL, 1, 1, -1, "Graphic Settings", MENUELEMENT_TITLE, -1);
+	menu_settings_element_list[0] = ielement(NULL, 1, 1, -1, "Graphic Settings 1", MENUELEMENT_TITLE, -1);
 	menu_settings_element_list[1] = ielement(onclick_setup_bool, 1, 13, -1, "Draw Textures", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_TEXTURES);
 	menu_settings_element_list[2] = ielement(onclick_setup_bool, 1, 25, -1, "Draw Pixel Area", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_DRAWAREA);
 	menu_settings_element_list[3] = ielement(onclick_setup_bool, 1, 37, -1, "Draw Wireframe", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_WIREFRAME);
+	menu_settings_element_list[4] = ielement(onclick_setup_slider, 1, 49, -1, "FOV", MENUELEMENT_SETUP_SLIDER, SETUP_INT_FOV);
 	// page 1
-	menu_settings_element_list[4] = ielement(NULL, 1, 1, -1, "Save Settings", MENUELEMENT_TITLE, -1);
-	menu_settings_element_list[5] = ielement(onclick_setup_bool, 1, 13, -1, "Save Player Pos", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_SAVEPLAYER);
+	menu_settings_element_list[5] = ielement(NULL, 1, 1, -1, "Graphic Settings 2", MENUELEMENT_TITLE, -1);
+	menu_settings_element_list[6] = ielement(onclick_setup_bool, 1, 13, -1, "Affine Mapping", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_AFFINE);
 	// page 2
-	menu_settings_element_list[6] = ielement(NULL, 1, 1, -1, "Movement Settings", MENUELEMENT_TITLE, -1);
-	menu_settings_element_list[7] = ielement(onclick_setup_slider, 1, 13, -1, "Rotation Speed", MENUELEMENT_SETUP_SLIDER, SETUP_INT_ROTSPEED);
-	menu_settings_element_list[8] = ielement(onclick_setup_slider, 1, 25, -1, "Movement Speed", MENUELEMENT_SETUP_SLIDER, SETUP_INT_MOVESPEED);
+	menu_settings_element_list[7] = ielement(NULL, 1, 1, -1, "Save Settings", MENUELEMENT_TITLE, -1);
+	menu_settings_element_list[8] = ielement(onclick_setup_bool, 1, 13, -1, "Save Player Pos", MENUELEMENT_SETUP_BOOL, SETUP_BOOL_SAVEPLAYER);
+	// page 3
+	menu_settings_element_list[9] = ielement(NULL, 1, 1, -1, "Movement Settings", MENUELEMENT_TITLE, -1);
+	menu_settings_element_list[10] = ielement(onclick_setup_slider, 1, 13, -1, "Rotation Speed", MENUELEMENT_SETUP_SLIDER, SETUP_INT_ROTSPEED);
+	menu_settings_element_list[11] = ielement(onclick_setup_slider, 1, 25, -1, "Movement Speed", MENUELEMENT_SETUP_SLIDER, SETUP_INT_MOVESPEED);
 
-	menu_settings_page_list[0] = imenupage(menu_settings_element_list, 4);
-	menu_settings_page_list[1] = imenupage(&menu_settings_element_list[4], 2);
-	menu_settings_page_list[2] = imenupage(&menu_settings_element_list[6], 3);
-	menu_settings = imenu(menu_settings_page_list, 3, &menu_pause);
-
+	menu_settings_page_list[0] = imenupage(&menu_settings_element_list[0], 5);
+	menu_settings_page_list[1] = imenupage(&menu_settings_element_list[5], 2);
+	menu_settings_page_list[2] = imenupage(&menu_settings_element_list[7], 2);
+	menu_settings_page_list[3] = imenupage(&menu_settings_element_list[9], 3);
+	menu_settings = imenu(menu_settings_page_list, 4, &menu_pause);
+	
 	// some call might have modified it (called quit()/halt())
 	if (gamestate != GAMESTATE_PREINIT) return;
 
@@ -393,7 +404,7 @@ void free_textures(void) {
 void quit(void) {
 	gamestate = GAMESTATE_QUIT_INPROG; // game is quitting, but not ready to return to main menu yet
 	if (setup_getval(SETUP_BOOL_SAVEPLAYER)) {
-		save_cam(w_getcam());
+		save_cam_pos(w_get_cam_pos_ptr());
 	}
 	setup_save();
 	free_textures();
@@ -405,7 +416,7 @@ void quit(void) {
 	gamestate = GAMESTATE_QUIT_DONE; // finished everything
 }
 
-jmp_buf jmpbuf; // for halt handling
+static jmp_buf jmpbuf; // for halt handling
 
 void halt(void) {
 	gamestate = GAMESTATE_ERR;
@@ -425,6 +436,7 @@ jmp_buf *get_jmpbuf_ptr(void) {
 
 void tick(void) {
 	int ui_menustatus;
+	camera *cam;
 	if (gamestate != GAMESTATE_RUNNING) return;
 
 	ui_menustatus = ui_getmenustatus();
@@ -439,7 +451,16 @@ void tick(void) {
 	}
 	else {
 		w_tick(); // tick world objects
-		w_render_world(w_getcam());
+
+		cam = w_get_cam_ptr();
+		cam->zoom_level = fov_to_zoom((int)setup_getval(SETUP_INT_FOV));
+		if (IsKeyDown(KEY_CTRL_F6)) {
+			cam->zoom_level *= 6;
+		}
+		else if (IsKeyDown(KEY_CTRL_F5)) {
+			cam->zoom_level *= 3;
+		}
+		w_render_world(cam);
 
 		toggle_rising(&overlay, (bool)IsKeyDown(KEY_CTRL_F3));
 
@@ -460,24 +481,26 @@ volatile int *get_gamestate_ptr(void) {
 	return &gamestate;
 }
 
-int load_cam(camera *cam) {
+static int load_cam_pos(position *pos) {
 	int handle;
+
+	if (pos == NULL) return S_ENULLPTR;
 
 	handle = Bfile_OpenMainMemory("CAMDATA");
 
-	if (Bfile_ReadFile(handle, &cam->pitch, sizeof(fixed), 0) < 0) {
+	if (Bfile_ReadFile(handle, &pos->pitch, sizeof(fixed), 0) < 0) {
 		return S_EUNSPECIFIED;
 	}
-	if (Bfile_ReadFile(handle, &cam->yaw, sizeof(fixed), 4) < 0) {
+	if (Bfile_ReadFile(handle, &pos->yaw, sizeof(fixed), 4) < 0) {
 		return S_EUNSPECIFIED;
 	}
-	if (Bfile_ReadFile(handle, &cam->pos.x, sizeof(fixed), 8) < 0) {
+	if (Bfile_ReadFile(handle, &pos->pos.x, sizeof(fixed), 8) < 0) {
 		return S_EUNSPECIFIED;
 	}
-	if (Bfile_ReadFile(handle, &cam->pos.y, sizeof(fixed), 12) < 0) {
+	if (Bfile_ReadFile(handle, &pos->pos.y, sizeof(fixed), 12) < 0) {
 		return S_EUNSPECIFIED;
 	}
-	if (Bfile_ReadFile(handle, &cam->pos.z, sizeof(fixed), 16) < 0) {
+	if (Bfile_ReadFile(handle, &pos->pos.z, sizeof(fixed), 16) < 0) {
 		return S_EUNSPECIFIED;
 	}
 	Bfile_CloseFile(handle);
@@ -485,16 +508,18 @@ int load_cam(camera *cam) {
 	return S_SUCCESS;
 }
 
-int save_cam(camera *cam) {
+static int save_cam_pos(position *pos) {
 	int handle;
+
+	if (pos == NULL) return S_ENULLPTR;
 
 	handle = RecreateFile("CAMDATA");
 	
-	Bfile_WriteFile(handle, &cam->pitch, sizeof(fixed));
-	Bfile_WriteFile(handle, &cam->yaw, sizeof(fixed));
-	Bfile_WriteFile(handle, &cam->pos.x, sizeof(fixed));
-	Bfile_WriteFile(handle, &cam->pos.y, sizeof(fixed));
-	Bfile_WriteFile(handle, &cam->pos.z, sizeof(fixed));
+	Bfile_WriteFile(handle, &pos->pitch, sizeof(fixed));
+	Bfile_WriteFile(handle, &pos->yaw, sizeof(fixed));
+	Bfile_WriteFile(handle, &pos->pos.x, sizeof(fixed));
+	Bfile_WriteFile(handle, &pos->pos.y, sizeof(fixed));
+	Bfile_WriteFile(handle, &pos->pos.z, sizeof(fixed));
 
 	Bfile_CloseFile(handle);
 

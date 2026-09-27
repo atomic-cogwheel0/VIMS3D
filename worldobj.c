@@ -14,7 +14,7 @@ fixed angle_horizontal_plane(vec3f u, vec3f v) {
 	return angle;
 }
 
-world_obj *find_closest_object(world_obj *obj, llist l, int type_to_find, fixed *dist_found) {
+world_obj *find_closest_object(world_obj *obj, llist l, enum worldobj_type_id type_to_find, fixed *dist_found) {
 	vec3f to_obj;
 	fixed dist, dist_min = FIXED_MAX;
 	node *found = NULL;
@@ -122,9 +122,9 @@ vec3f raycast_horiz_set_length(world_obj *originator, fixed angle_diff, fixed ra
 }
 
 int tick_billboard(world_obj *bill, llist l, world_obj *player, fixed timescale) {
-	camera *cam = *(camera **)player->data;
+	camera *cam = (camera *)player->data;
 	if (bill->mesh->is_billboard) {
-		bill->mesh->pos.yaw = cam->yaw; // rotate billboard towards camera
+		bill->mesh->pos.yaw = cam->pos->yaw; // rotate billboard towards camera
 	}
 	return S_SUCCESS;
 }
@@ -230,7 +230,7 @@ int tick_person(world_obj *person, llist l, world_obj *player, fixed timescale) 
 }
 
 int tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timescale) {
-	camera *cam = *(camera **)the_player->data;
+	camera *cam = (camera *)the_player->data;
 	vec3f t;
 	fixed movement_speed; // the amount the player should move in 1 unit of timescale
 	fixed rotation_speed; // number of degrees the player should turn in 1 unit of timescale
@@ -242,7 +242,7 @@ int tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timesca
 	fixed rotation;
 	
 	// load from setup
-	rotation_speed = deg2rad(int2f((int)setup_getval(SETUP_INT_ROTSPEED)));
+	rotation_speed = deg2rad(divff(int2f((int)setup_getval(SETUP_INT_ROTSPEED)), w_get_cam_ptr()->zoom_level));
 	rotation = mulff(rotation_speed, timescale);
 
 	movement_speed = divfi(int2f((int)setup_getval(SETUP_INT_MOVESPEED)), 10);
@@ -250,35 +250,35 @@ int tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timesca
 
 	// rotation control
 	if (IsKeyDown(KEY_CTRL_UP)) {
-		cam->pitch -= rotation;
+		cam->pos->pitch -= rotation;
 	}
 	if (IsKeyDown(KEY_CTRL_DOWN)) {
-		cam->pitch += rotation;
+		cam->pos->pitch += rotation;
 	}
 	if (IsKeyDown(KEY_CTRL_RIGHT)) {
-		cam->yaw -= rotation;
+		cam->pos->yaw -= rotation;
 	}
 	if (IsKeyDown(KEY_CTRL_LEFT)) {
-		cam->yaw += rotation;
+		cam->pos->yaw += rotation;
 	}
 
 	// keep in sane range
-	cam->pitch = clamp_f(cam->pitch, float2f(-90*DEG2RAD_MULT), float2f(90*DEG2RAD_MULT));
-	cam->yaw = mod_f(cam->yaw, float2f(360*DEG2RAD_MULT));
+	cam->pos->pitch = clamp_f(cam->pos->pitch, float2f(-90*DEG2RAD_MULT), float2f(90*DEG2RAD_MULT));
+	cam->pos->yaw = mod_f(cam->pos->yaw, float2f(360*DEG2RAD_MULT));
 
 	// player movement is NOT axis aligned, depends on looking direction
 	t = ivec3i(0, 0, 0);
 	if (IsKeyDown(KEY_CHAR_8)) {
-		t = addvv(t, rot(z_axis, 0, cam->yaw));
+		t = addvv(t, rot(z_axis, 0, cam->pos->yaw));
 	}
 	if (IsKeyDown(KEY_CHAR_2)) {
-		t = addvv(t, rot(z_axis, 0, cam->yaw + float2f(180*DEG2RAD_MULT)));
+		t = addvv(t, rot(z_axis, 0, cam->pos->yaw + float2f(180*DEG2RAD_MULT)));
 	}
 	if (IsKeyDown(KEY_CHAR_4)) {
-		t = addvv(t, rot(z_axis, 0, cam->yaw + float2f(90*DEG2RAD_MULT)));
+		t = addvv(t, rot(z_axis, 0, cam->pos->yaw + float2f(90*DEG2RAD_MULT)));
 	}
 	if (IsKeyDown(KEY_CHAR_6)) {
-		t = addvv(t, rot(z_axis, 0, cam->yaw - float2f(90*DEG2RAD_MULT)));
+		t = addvv(t, rot(z_axis, 0, cam->pos->yaw - float2f(90*DEG2RAD_MULT)));
 	}
 	t = normalize(t); // normalize movement speed in the horizontal axis
 	if (IsKeyDown(KEY_CHAR_9)) {
@@ -288,7 +288,7 @@ int tick_player(world_obj *the_player, llist l, world_obj *unused, fixed timesca
 		t = addvv(t, ivec3i(0, -1, 0));
 	}
 	t = mulvf(t, speed);
-	cam->pos = addvv(cam->pos, t);
+	cam->pos->pos = addvv(cam->pos->pos, t);
 
 	if (IsKeyDown(KEY_CTRL_VARS)) {
 		tankpos_marker = find_closest_object(the_player, l, WORLDOBJ_MARKER_ARROW, NULL);

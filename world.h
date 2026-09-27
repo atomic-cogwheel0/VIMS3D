@@ -21,7 +21,7 @@ typedef struct {
 } llist;
 
 // world_obj types
-enum {
+enum worldobj_type_id {
 	WORLDOBJ_NULL = 0,
 	WORLDOBJ_PLAYER,
 	WORLDOBJ_TANK,
@@ -30,11 +30,12 @@ enum {
 	WORLDOBJ_GROUND,
 	WORLDOBJ_SOLID_OBJECT,
 	WORLDOBJ_MARKER_ARROW,
+	WORLDOBJ_BULLET,
 };
 
 // instance of a world object, handled based on its type and function pointers
 typedef struct _wobj {
-	uint8_t type;
+	enum worldobj_type_id type;
 
 	mesh *mesh; // may be NULL
 	fixed g_speed; // the speed at which this mesh moves vertically per time unit (negative is downwards)
@@ -44,11 +45,11 @@ typedef struct _wobj {
 	// function pointers (when called: obj is a ptr to this object, l is the list of world objects, pl is the player)
 	int (*add_obj)(struct _wobj *obj, llist l); // runs automatically, immediately after w_register() adds it to its list of objects
 	int (*del_obj)(struct _wobj *obj, llist l); // runs automatically, before w_deregister() removes it from the list
-	int (*tick_obj)(struct _wobj *obj, llist l, struct _wobj *pl, fixed timescale); // run this every tick, with timescale based on the time it took to render last frame
+	int (*tick_obj)(struct _wobj *obj, llist l, struct _wobj *pl, fixed timescale); // runs every tick while the object is registered, with timescale based on the time it took to render the last frame
 } world_obj;
 
 // returns a new world object, m is memcpyed, so feel free to modify it afterwards (BUT DO NOT EDIT THE ARRS)
-world_obj iworld_obj(uint8_t type, mesh *m, void *dataptr, int (*add)(world_obj *, llist), int (*del)(world_obj *, llist), int (*tck)(world_obj *, llist, world_obj *, fixed));
+world_obj iworld_obj(enum worldobj_type_id type, mesh *m, void *dataptr, int (*add)(world_obj *, llist), int (*del)(world_obj *, llist), int (*tck)(world_obj *, llist, world_obj *, fixed));
 // delete a world object 
 // UNSAFE if add_obj() allocated any memory! (call del_obj() beforehand)
 void dworld_obj(world_obj obj);
@@ -76,10 +77,17 @@ int w_free_world(void);
 // call dworld_obj() on every instance in the list (dangerous!)
 int w_dall_world_objs(void);
 
-// sets the world's camera position to cam
-int w_set_cam_pos(camera cam);
+// sets the data of the position object linked to the world's camera to pos
+int w_set_cam_pos(position pos);
+// sets zoom level
+int w_set_cam_zoom(fixed zoom_level);
 // gets the current camera instance of the world
-camera *w_getcam(void);
+camera *w_get_cam_ptr(void);
+// gets the current camera instance's position
+position *w_get_cam_pos_ptr(void);
+
+// converts a FOV in degrees to a zoom level (90 degrees = zoom level 1)
+fixed fov_to_zoom(int fov);
 
 // tick every object, passes timescale as arg to tick_obj()
 void w_tick(void);

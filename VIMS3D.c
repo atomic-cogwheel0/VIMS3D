@@ -39,7 +39,7 @@ int main(void) {
 #ifndef BENCHMARK_RASTER
 	// wait for game to quit in tick()
 	while (*gamestate_ptr != GAMESTATE_QUIT_DONE) {
-		tick(); // run a tick
+		tick();
 	}
 #else
 	// do a single tick and show stats

@@ -27,11 +27,11 @@ VIMS_defs:
 
 #ifdef OFFICIAL_SDK
 typedef signed long long int64_t;
-typedef signed long int32_t;
+typedef signed int int32_t;
 typedef signed short int16_t;
 typedef signed char int8_t;
 typedef unsigned long long uint64_t;
-typedef unsigned long uint32_t;
+typedef unsigned int uint32_t;
 typedef unsigned short uint16_t;
 typedef unsigned char uint8_t;
 typedef unsigned char bool;
@@ -136,6 +136,6 @@ int snprintf_light(char *dest, size_t len, const char *fmt, ...);
 // generate random integer value within the bounds (min included, max excluded)
 #define RANDINT(min, max) (rand()%((max)-(min)) + (min))
 
-#define ABS(x) ((x) >= 0) ? (x) : -(x);
+#define ABS(x) (((x) >= 0) ? (x) : -(x));
 
 #endif

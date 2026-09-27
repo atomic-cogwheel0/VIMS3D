@@ -3,7 +3,6 @@
 /*
   VEC.C
 	functions for handling vectors (and triangles)
-	they are most likely correct
 */
 
 vec3f ivec3f(fixed x, fixed y, fixed z) {
@@ -129,7 +128,7 @@ vec3f transform_vec_from_zero(vec3f u, vec3f v, fixed pitch, fixed yaw) {
 }
 
 vec3f transform_vec_to_camera(vec3f u, camera cam) {
-	return rot(subvv(u, cam.pos), -cam.pitch, -cam.yaw);
+	return rot(subvv(u, cam.pos->pos), -cam.pos->pitch, -cam.pos->yaw);
 }
 
 trianglef move_tri_by_vec(trianglef q, vec3f v) {
@@ -145,7 +144,7 @@ trianglef transform_tri_to_pos(trianglef q, position pos) {
 }
 
 trianglef transform_tri_to_camera(trianglef q, camera cam) {
-	return itrianglef(rot(subvv(q.a, cam.pos), -cam.pitch, -cam.yaw), rot(subvv(q.b, cam.pos), -cam.pitch, -cam.yaw), rot(subvv(q.c, cam.pos), -cam.pitch, -cam.yaw), q.flip_texture, q.draw_edges);
+	return itrianglef(rot(subvv(q.a, cam.pos->pos), - cam.pos->pitch, -cam.pos->yaw), rot(subvv(q.b, cam.pos->pos), -cam.pos->pitch, -cam.pos->yaw), rot(subvv(q.c, cam.pos->pos), -cam.pos->pitch, -cam.pos->yaw), q.flip_texture, q.draw_edges);
 }
 
 vec3f normal(trianglef q) {

@@ -9,25 +9,27 @@
 #define MENU_OPEN 1
 
 // menu element types
-#define MENUELEMENT_BUTTON 1
-#define MENUELEMENT_LABEL 2
-#define MENUELEMENT_TITLE 3
+enum menuelement_id {
+    MENUELEMENT_BUTTON = 1,
+    MENUELEMENT_LABEL,
+    MENUELEMENT_TITLE,
 
-#define MENUELEMENT_SETUP_BOOL 17
-#define MENUELEMENT_SETUP_SLIDER 18
+    MENUELEMENT_SETUP_BOOL,
+    MENUELEMENT_SETUP_SLIDER,
+};
 
 // the height of a menu element is 11 pixels (inclusive)
 typedef struct _menuelement_t {
-    bool (*onclick)(struct _menuelement_t *obj); // onclick function, gets object from which it was called, returns whether the action was run successfully
+    bool (*onclick)(struct _menuelement_t *this); // onclick function, gets object from which it was called, returns whether the action was run successfully
     int x1, y1; // coordinates of the top-right corner
     int width; // width in pixels of the box
     char *text;
-    uint8_t type; // MENUELEMENT
-    uint8_t setupkey; // used only if this is a SETUP element
+    enum menuelement_id type; // MENUELEMENT
+    enum setup_key_id setupkey; // used only if this is a SETUP element
 } menuelement_t;
 
 // create a menu element with entirely arbitrary data (-1 width means calculate from text length, -1 to x1 means the element should be centered)
-menuelement_t ielement(bool (*onclick)(struct _menuelement_t *obj), int x1, int y1, int width, char *text, uint8_t type, int setupkey);
+menuelement_t ielement(bool (*onclick)(struct _menuelement_t *this), int x1, int y1, int width, char *text, enum menuelement_id type, enum setup_key_id setupkey);
 
 // a collection of menu elements, a page
 typedef struct _menupage_t {
@@ -52,7 +54,7 @@ menu_t imenu(menupage_t *pages, uint8_t page_cnt, menu_t *prev);
 typedef struct {
     menu_t *menu; // the currently open menu
     int page; // currently viewed page
-    int selected; // number of the selected selectable (this element should be selectable; -1 means current menu has no selectables at all)
+    int selected; // index of the selected selectable (this element should be selectable; -1 means current menu has no selectables at all)
     menuelement_t *in_slider;
     int sliderpos;
 } menu_instance_t;
@@ -90,11 +92,11 @@ bool ui_is_selectable(menuelement_t e);
 
 extern menu_t menu_settings;
 
-bool onclick_closemenu(void *unused);
-bool onclick_quit(void *unused);
-bool onclick_open_settings(void *unused);
-// handler of any bool setup onclicks
-bool onclick_setup_bool(menuelement_t *el);
-bool onclick_setup_slider(menuelement_t *el);
+bool onclick_closemenu(menuelement_t *this);
+bool onclick_quit(menuelement_t *this);
+bool onclick_open_settings(menuelement_t *this);
+// can handle any setup-type element
+bool onclick_setup_bool(menuelement_t *this);
+bool onclick_setup_slider(menuelement_t *this);
 
 #endif

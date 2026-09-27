@@ -8,8 +8,10 @@
   use the higher level mesh system instead of raw triangles
 */
 
-// depth buffer: an array of 128*64=8192 depth values, every pixel has a 11+5 bit fixed-point depth value
-int16_t *depthbuf;
+extern bool isSH4(void);
+
+// depth buffer: an array of 128*64=8192 depth values, every pixel has a fixed-point depth value
+static int32_t *depthbuf;
 
 // macro to access the depth buffer
 #define DEPTHBUF_AT(x, y) depthbuf[(x)*64 + (y)]
@@ -18,15 +20,13 @@ static int g_status = SUBSYS_DOWN;
 
 static void *vram;
 
-extern bool isSH4(void);
-
 // initialize all buffers (static alloc for buffers isn't possible)
 int g_init(void) {
 	if (g_status != SUBSYS_DOWN) return S_EALREADYINITED;
 
 	// allocate the depth buffer
 	if (!isSH4()) {
-		depthbuf = (int16_t *) malloc(128*64*sizeof(int16_t));
+		depthbuf = (int32_t *) malloc(128*64*sizeof(int32_t));
 		if (depthbuf == NULL) {
 			// cancel all previous allocations and return
 			g_dealloc();
@@ -35,8 +35,8 @@ int g_init(void) {
 		}
 	}
 	else {
-		// use 16 kbytes of XYRAM as the depth buffer
-		depthbuf = (int16_t *) 0xe500e000;
+		// use 16 kbytes of DSP PRAM as the depth buffer
+		depthbuf = (int32_t *) 0xfe200000;
 	}
 
 	vram = GetVRAMAddress();
@@ -58,8 +58,8 @@ int g_getstatus(void) {
 	return g_status;
 }
 
-int16_t *g_getdepthbuf(void) {
-	return (int16_t *)depthbuf;
+int32_t *g_getdepthbuf(void) {
+	return (int32_t *)depthbuf;
 }
 
 int g_clr_depthbuf(void) {
@@ -68,7 +68,7 @@ int g_clr_depthbuf(void) {
 
 	for (dx = 0; dx < 128; dx++) {
 		for (dy = 0; dy < 64; dy++) {
-			DEPTHBUF_AT(dx, dy) = 0x7FFF; // FIXED16_MAX
+			DEPTHBUF_AT(dx, dy) = FIXED_MIN;
 		}
 	}
 
@@ -79,7 +79,7 @@ int g_draw_horizon(camera *cam) {
 	int sspace_horiz_y;
 	if (g_status != SUBSYS_UP) return S_EDOWN;
 	// calculate onscreen y coordinate of the horizon line
-	sspace_horiz_y = f2int(mulff(sin_f(-cam->pitch), int2f(64))) + 32;
+	sspace_horiz_y = f2int(mulff(sin_f(-cam->pos->pitch), cam->zoom_level)*64) + 32;
 	// is on screen?
 	if (sspace_horiz_y < 0 || sspace_horiz_y >= 64) {
 		return 0;
@@ -90,28 +90,37 @@ int g_draw_horizon(camera *cam) {
 }
 
 // define fallback texture (2*2 checkerboard)
-byte tx_o_fallback[] = {65};
-tx_data_t fallback_txdata = {2, 2, 1, 1, tx_o_fallback};
-texture_t fallback_texture = {&fallback_txdata, {1}}; // inits a static animated texture
+static byte tx_o_fallback[] = {65};
+static tx_data_t fallback_txdata = {2, 2, 1, 1, tx_o_fallback};
+static texture_t fallback_texture = {&fallback_txdata, {1}}; // inits a static animated texture
 
-void DrawLine_depthbuf(int x1, int y1, int x2, int y2);
+static void DrawLine_depthbuf(int x1, int y1, int x2, int y2);
 
 // the One and Only Rendering(TM) function
 // have fun :)
-
 int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera cam, position pos, vec3f zero_offset) {
-	int curr_tidx, xiterl, xiterr, xiter, yiter;
+	int curr_tidx;
 	int bbox_left, bbox_right, bbox_top, bbox_bottom; // bounding box (on screen)
 	int tri_cnt = 0;
-	fixed diff;
 	texture_t *tx;
 
 	trianglef t;
-	vec3f v0, v1, v2, a, b, c;
+	vec3f a, b, c;
+
+	bool s_wireframe, s_tx, s_drawarea, s_affine; // setup data
+	byte edgeflags;
+		
+	// some stuff can get too large for the ~tiny~ 20-bit fixeds
+	// downscale them, who needs precision anyways :)
+	unsigned long long size_on_screen;
+	int overflow_scaler;
+
+	vec3f v0, v1, v2;
 	vec3f v2_increment;
+	int xiterl, xiterr, xiter, yiter;
 	fixed denom, dot00, dot01, dot02l, dot02r, dot11, dot12l, dot12r, u, v, ui, vi; // for barycentric
-	fixed ozstep, uzstep, vzstep; // perspective correctness iterators
-	fixed ozp, uzp, vzp, ozq, uzq, vzq, oza, ozb, vzb, ozc, uzc, ozi, uzi, vzi, zci; // practical variable naming, UV data calculation
+	fixed diff;
+	fixed ozp, uzp, up, vzp, vp, ozq, uzq, uq, vzq, vq, oza, ozb, vzb, vb, ozc, uzc, uc, ozi, uzi, vzi, zci; // practical variable naming, UV data calculation
 	fixed v0x_sc, v1x_sc;
 
 	fixed dot11_dot02, dot01_dot12, dot00_dot12, dot01_dot02; // incremented every loop
@@ -127,27 +136,34 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 	uint32_t u_mult, v_mult;
 
 	int16_t depthval;
+	
+	fixed zoom_level;
 
 	int tx_hmask, tx_wmask, tx_hb, tx_wb;
-
-	bool s_wf, s_tx, s_da; // setup data
-	byte edgeflags;
+	
+	// we need precision for the texture calc :(
+	// 12 bits aren't really enough for precise calculations with inverses, so let's make them 16-bit!
+	const int z_rec_scaler_exponent = 4;
+	const int z_rec_scaler_exponent_doubled = z_rec_scaler_exponent << 1;
+	const int z_rec_scaler = 1 << z_rec_scaler_exponent;
+	const int z_rec_scaler_squared = int2f(1 << z_rec_scaler_exponent_doubled);
 
 	if (g_status != SUBSYS_UP) return S_EDOWN;
 
 	// load settings
-	s_da = setup_getval(SETUP_BOOL_DRAWAREA);
-	s_wf = setup_getval(SETUP_BOOL_WIREFRAME);
+	s_affine = setup_getval(SETUP_BOOL_AFFINE);
+	s_drawarea = setup_getval(SETUP_BOOL_DRAWAREA);
+	s_wireframe = setup_getval(SETUP_BOOL_WIREFRAME);
 	s_tx = setup_getval(SETUP_BOOL_TEXTURES);
 
-// some stuff can get stupidly large for the ~tiny~ 20-bit fixeds
-// downscale them, who needs precision anyways :)
-#define OF_SC 4	//OverFlow downSCale constant
+	/*
+#define OF_SC 4	// OverFlow downSCale constant
 
-// we need precision for the texture calc :(
-// 12 bits aren't really enough for precise calculations with inverses, so let's make them 16-bit!
 #define ZREC_EXP 4 // exponent (spares some cycles with rshift instead of division)
 #define ZREC_MULT (1<<ZREC_EXP)
+ */
+
+	zoom_level = cam.zoom_level;
 
 	// iterate on every triangle in the buffer
 	for (curr_tidx = 0; curr_tidx < len; curr_tidx++) {
@@ -163,18 +179,18 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 		for (i = 0; i < BENCHMARK_RASTER; i++) {
 #endif
 		// cull (first backface, then near-plane)
-		if (dotp(t.a, normal(t)) >= 0 || (t.a.z < int2f(1) || t.b.z < int2f(1) || t.c.z < int2f(1)))
+		if (dotp(t.a, normal(t)) >= 0 || (t.a.z < int2f(1)/4 || t.b.z < int2f(1)/4 || t.c.z < int2f(1)/4))
 			continue;
 	
 		// map to on-screen '2d' coordinates
-		a = ivec3f(divff(mulff(t.a.x, int2f(64)), -t.a.z) + int2f(64),
-                   divff(mulff(t.a.y, int2f(64)), -t.a.z) + int2f(32),
+		a = ivec3f(divff(mulff(t.a.x * 64, zoom_level), -t.a.z) + int2f(64),
+                   divff(mulff(t.a.y * 64, zoom_level), -t.a.z) + int2f(32),
                    0);
-		b = ivec3f(divff(mulff(t.b.x, int2f(64)), -t.b.z) + int2f(64),
-                   divff(mulff(t.b.y, int2f(64)), -t.b.z) + int2f(32),
+		b = ivec3f(divff(mulff(t.b.x * 64, zoom_level), -t.b.z) + int2f(64),
+                   divff(mulff(t.b.y * 64, zoom_level), -t.b.z) + int2f(32),
                    0);
-		c = ivec3f(divff(mulff(t.c.x, int2f(64)), -t.c.z) + int2f(64),
-                   divff(mulff(t.c.y, int2f(64)), -t.c.z) + int2f(32),
+		c = ivec3f(divff(mulff(t.c.x * 64, zoom_level), -t.c.z) + int2f(64),
+                   divff(mulff(t.c.y * 64, zoom_level), -t.c.z) + int2f(32),
                    0);
 
 		// get bounding box (extremes)
@@ -194,7 +210,7 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 		tri_cnt++;
 
 		// draw pixel draw area bounding box
-		if (s_da) {
+		if (s_drawarea) {
 			Bdisp_DrawLineVRAM(bbox_left, bbox_top, bbox_right, bbox_top);
 			Bdisp_DrawLineVRAM(bbox_right, bbox_top, bbox_right, bbox_bottom);
 			Bdisp_DrawLineVRAM(bbox_left, bbox_top, bbox_left, bbox_bottom);
@@ -202,7 +218,7 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 		}
 
 		// show all edges if wireframe is on
-		if (s_wf) {
+		if (s_wireframe) {
 			edgeflags = EDGE_AB | EDGE_BC | EDGE_CA;
 		}
 		else {
@@ -222,6 +238,9 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 
 		// code from now on is only texture mapping
 		if (!s_tx) continue;
+		
+		size_on_screen = ((unsigned long long)(bbox_right - bbox_left)) * (bbox_bottom - bbox_top);
+		overflow_scaler = 1 << (fast_log2_64(size_on_screen) >> 1);
 
 		// show missing texture instead of SYSTEM ERROR
 		if (textures[curr_tidx] == NULL) {
@@ -232,6 +251,7 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 			tx = textures[curr_tidx];
 			anim_offset = a_px_offset(tx);
 		}
+			
 		max_px_offset = tx->texture->h*tx->texture->w*tx->anim.nframes;
 
 		// U and V are the barycentric coordinates of a pixel within the current triangle in screen space
@@ -256,9 +276,10 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 
 		// u is on side CA and v is on side BA
 
-		v0 = divvi(subvv(c, a), OF_SC);
-		v1 = divvi(subvv(b, a), OF_SC);
-		v0x_sc = divfi(v0.x, OF_SC); v1x_sc = divfi(v1.x, OF_SC);
+		v0 = divvi(subvv(c, a), overflow_scaler);
+		v1 = divvi(subvv(b, a), overflow_scaler);
+		v0x_sc = divfi(v0.x, overflow_scaler);
+		v1x_sc = divfi(v1.x, overflow_scaler);
 		
 		dot00 = dotp2(v0, v0);
 		dot01 = dotp2(v0, v1);
@@ -269,30 +290,32 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 		// https://en.wikipedia.org/wiki/Texture_mapping#Perspective_correctness
 		
 		// ozX, uzX and vzX are One over Z, U/Z and V/Z calculated at point (X) of current triangle
-		// U and V are used to interpolate them across the surface
+		// U and V are used to map texture coordinates across the surface
 
-		oza = divff(int2f(ZREC_MULT), t.a.z);
-		ozb = divff(int2f(ZREC_MULT), t.b.z);
-		ozc = divff(int2f(ZREC_MULT), t.c.z);
+		oza = divff(int2f(z_rec_scaler), t.a.z);
+		ozb = divff(int2f(z_rec_scaler), t.b.z);
+		ozc = divff(int2f(z_rec_scaler), t.c.z);
 		
 		vzb = mulff(int2f(u_mult), ozb); // V is max in point B, 0 in point C
 		uzc = mulff(int2f(v_mult), ozc); // U is max in point C, 0 in point B
+		vb = int2f(u_mult); // V is max in point B, 0 in point C
+		uc = int2f(v_mult); // U is max in point C, 0 in point B
 
 		// break the dot products down to simple additions in the main loop
 		// first, calculate v2's values on the left and right sides
-		v2.y = divfi(int2f(bbox_top) - a.y, OF_SC);
+		v2.y = divfi(int2f(bbox_top) - a.y, overflow_scaler);
 
-		v2.x = divfi(int2f(bbox_left) - a.x, OF_SC);
+		v2.x = divfi(int2f(bbox_left) - a.x, overflow_scaler);
 		dot02l = dotp2(v0, v2);
 		dot12l = dotp2(v1, v2);
 
-		v2.x = divfi(int2f(bbox_right) - a.x, OF_SC);
+		v2.x = divfi(int2f(bbox_right) - a.x, overflow_scaler);
 		dot02r = dotp2(v0, v2);
 		dot12r = dotp2(v1, v2);
 
 		// get increments on every y-loop
 		v2_increment.x = 0;
-		v2_increment.y = divfi(int2f(1), OF_SC);
+		v2_increment.y = divfi(int2f(1), overflow_scaler);
 		dot02_increment = dotp2(v0, v2_increment);
 		dot12_increment = dotp2(v1, v2_increment);
 
@@ -369,8 +392,14 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 				v = divff(v, denom);
 				// interpolate
 				ozp = mulff(ozb, v) + mulff(ozc, u) + mulff(oza, int2f(1) - u - v);
-				uzp = mulff(uzc, u);
-				vzp = mulff(vzb, v);
+				if (s_affine) {
+					up = mulff(uc, u);
+					vp = mulff(vb, v);
+				}
+				else {
+					uzp = mulff(uzc, u);
+					vzp = mulff(vzb, v);
+				}
 
 			// find rightmost, same stuff but different
 			// set up the loop iterators
@@ -397,48 +426,85 @@ int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera
 				u = divff(u, denom);
 				v = divff(v, denom);
 				ozq = mulff(ozb, v) + mulff(ozc, u) + mulff(oza, int2f(1) - u - v);
-				uzq = mulff(uzc, u);
-				vzq = mulff(vzb, v);
+				if (s_affine) {
+					uq = mulff(uc, u);
+					vq = mulff(vb, v);
+				}
+				else {
+					uzq = mulff(uzc, u);
+					vzq = mulff(vzb, v);
+				}
 
 			if ((xiterr-xiterl) <= 0) continue; // probably a good idea to not render
 
 			// number of pixels to interpolate over
 			diff = int2f(xiterr-xiterl);
 
-			ozstep = divff(ozq-ozp, diff);
-			uzstep = divff(uzq-uzp, diff);
-			vzstep = divff(vzq-vzp, diff);
+			if (s_affine) {
+				fixed ozstep = divff(ozq-ozp, diff);
+				fixed ustep = divff(uq-up, diff);
+				fixed vstep = divff(vq-vp, diff);
 
-			// interpolate between values in current row
-			for (ozi = ozp, uzi = uzp, vzi = vzp, xiter = xiterl; xiter <= xiterr; xiter++, ozi += ozstep, uzi += uzstep, vzi += vzstep) {
-				zci = divff(int2f(ZREC_MULT*ZREC_MULT), ozi);
-
-				// zci is divided to handle greater distances
-				depthval = (f2int(zci >> 2) << 5) | (((zci >> 2) & FIXED_FRAC_MASK) >> (FIXED_PRECISION-5)); // transform 22+10bit zci to 11+5bit depth
-
-				// is current pixel closer than the last depth written there?
-				if (DEPTHBUF_AT(xiter, yiter) > depthval) {
-					ui = divshiftfi(mulff(uzi, zci), ZREC_EXP+ZREC_EXP); // only use of divshiftfi is here lol
-					vi = divshiftfi(mulff(vzi, zci), ZREC_EXP+ZREC_EXP);
-
-					// calculate pixel offset into the array (row by row)
-					if (t.flip_texture) {
-						// index coordinates from the bottom right instead of top left
-						px_offset = (tx->texture->h-1 - f2int(ui)%tx->texture->h)*tx->texture->w + (tx->texture->w-1 - f2int(vi)%tx->texture->w);
+				// interpolate between values in current row
+				for (ozi = ozp, ui = up, vi = vp, xiter = xiterl; xiter <= xiterr; xiter++, ozi += ozstep, ui += ustep, vi += vstep) {
+					// is current pixel closer than the last depth written there?
+					if (DEPTHBUF_AT(xiter, yiter) < ozi) {
+						// calculate pixel offset into the array (row by row)
+						if (t.flip_texture) {
+							// index coordinates from the bottom right instead of top left
+							px_offset = ((tx->texture->h-1 - (f2int(ui)&tx_hmask))<<tx_wb) + (tx->texture->w-1 - (f2int(vi)&tx_wmask));
+						}
+						else {
+							px_offset = ((f2int(ui)&tx_hmask)<<tx_wb) + (f2int(vi)&tx_wmask);
+						}
+						// account for animation
+						px_offset += anim_offset;
+						// ensure array access does not cause an invalid dereference
+						if (px_offset >= max_px_offset) continue;
+						// extract pixel at given offset (2 bit pixel extracted from byte arr)
+						px = (tx->texture->pixels[px_offset >> 2] & (3 << ((3 - (px_offset & 3)) * 2))) >> ((3 - (px_offset & 3)) * 2);
+						// is transparency bit set?
+						if (!(px & 2)) {
+							SetPoint_VRAM(xiter, yiter, px & 1, vram);
+							DEPTHBUF_AT(xiter, yiter) = ozi; // write new depthval
+						}
 					}
-					else {
-						px_offset = (f2int(ui)%tx->texture->h)*tx->texture->w + (f2int(vi)%tx->texture->w);
-					}
-					// account for animation
-					px_offset += anim_offset;
-					// ensure array access does not cause an invalid dereference
-					if (px_offset >= max_px_offset) continue;
-					// extract pixel at given offset (2 bit pixel extracted from byte arr)
-					px = (tx->texture->pixels[px_offset >> 2] & (3 << ((3 - (px_offset & 3)) * 2))) >> ((3 - (px_offset & 3)) * 2);
-					// is transparency bit set?
-					if (!(px & 2)) {
-						SetPoint_VRAM(xiter, yiter, px & 1, vram);
-						DEPTHBUF_AT(xiter, yiter) = depthval; // write new depthval
+				}
+			}
+			else {
+				fixed ozstep = divff(ozq-ozp, diff);
+				fixed uzstep = divff(uzq-uzp, diff);
+				fixed vzstep = divff(vzq-vzp, diff);
+
+				// interpolate between values in current row
+				for (ozi = ozp, uzi = uzp, vzi = vzp, xiter = xiterl; xiter <= xiterr; xiter++, ozi += ozstep, uzi += uzstep, vzi += vzstep) {
+					zci = divff(z_rec_scaler_squared, ozi);
+
+					// is current pixel closer than the last depth written there?
+					// in the affine mapping version, only 1/z is calculated (which is linear in sspace), so the reciprocal is used here too
+					if (DEPTHBUF_AT(xiter, yiter) < ozi) {
+						ui = divshiftfi(mulff(uzi, zci), z_rec_scaler_exponent_doubled); // only use of divshiftfi is here lol
+						vi = divshiftfi(mulff(vzi, zci), z_rec_scaler_exponent_doubled);
+
+						// calculate pixel offset into the array (row by row)
+						if (t.flip_texture) {
+							// index coordinates from the bottom right instead of top left
+							px_offset = ((tx->texture->h-1 - (f2int(ui)&tx_hmask))<<tx_wb) + (tx->texture->w-1 - (f2int(vi)&tx_wmask));
+						}
+						else {
+							px_offset = ((f2int(ui)&tx_hmask)<<tx_wb) + (f2int(vi)&tx_wmask);
+						}
+						// account for animation
+						px_offset += anim_offset;
+						// ensure array access does not cause an invalid dereference
+						if (px_offset >= max_px_offset) continue;
+						// extract pixel at given offset (2 bit pixel extracted from byte arr)
+						px = (tx->texture->pixels[px_offset >> 2] & (3 << ((3 - (px_offset & 3)) * 2))) >> ((3 - (px_offset & 3)) * 2);
+						// is transparency bit set?
+						if (!(px & 2)) {
+							SetPoint_VRAM(xiter, yiter, px & 1, vram);
+							DEPTHBUF_AT(xiter, yiter) = ozi; // write new depthval
+						}
 					}
 				}
 			}
@@ -511,7 +577,7 @@ int g_texture2d(texture_t *tx, unsigned int x, unsigned int y) {
 				px = (tx->texture->pixels[px_offset/4] & (3 << ((3 - (px_offset%4)) * 2))) >> ((3 - (px_offset%4)) * 2);
 				// is transparency bit set?
 				if (!(px & 2)) {
-					Bdisp_SetPoint_VRAM(xiter+x, yiter+y, px & 1); // doesn't need g_init, unlike own SetPoint
+					Bdisp_SetPoint_VRAM(xiter+x, yiter+y, px & 1); // won't require g_init, so it can run in menus/title screens and such, unlike my own SetPoint used in rasterize
 				}
 			}
 		}
@@ -520,7 +586,7 @@ int g_texture2d(texture_t *tx, unsigned int x, unsigned int y) {
 }
 
 // Bresenham's algorithm
-void DrawLine_depthbuf(int x1, int y1, int x2, int y2) {
+static void DrawLine_depthbuf(int x1, int y1, int x2, int y2) {
 	int dx, dy, sx, sy, err, e2;
 
 	dx = ABS(x2 - x1);
@@ -534,7 +600,7 @@ void DrawLine_depthbuf(int x1, int y1, int x2, int y2) {
 
 	while (1) {
 		if (x1 > 127 || y1 > 63 || x1 < 0 || y1 < 0) break;
-		if (DEPTHBUF_AT(x1, y1) == 0x7FFF) {
+		if (DEPTHBUF_AT(x1, y1) == FIXED_MIN) {
 			Bdisp_SetPoint_VRAM(x1, y1, 1);
 			DEPTHBUF_AT(x1, y1) = 1;
 		}

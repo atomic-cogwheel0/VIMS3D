@@ -60,10 +60,10 @@ void g_dealloc(void);
 // get status
 int g_getstatus(void);
 
-// returns pointer to the depth buffer (128*64=8192-element 1D arr of int16_t)
-int16_t *g_getdepthbuf(void);
+// returns pointer to the depth buffer (128*64=8192-element 1D arr of int32_t)
+int32_t *g_getdepthbuf(void);
 
-// clears the depth buffer, filling it with the largest possible int16
+// clears the depth buffer, filling it with the largest possible fixed
 int g_clr_depthbuf(void);
 
 // draw the horizon (returns number of pixels drawn OR error code)

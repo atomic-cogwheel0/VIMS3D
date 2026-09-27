@@ -127,5 +127,6 @@ fixed clamp_f(fixed val, fixed min, fixed max);
 
 // find log of power of 2
 uint8_t fast_log2(uint8_t n);
+uint8_t fast_log2_64(uint64_t n);
 
 #endif

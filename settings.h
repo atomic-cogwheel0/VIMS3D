@@ -5,16 +5,20 @@
 #include "fixed.h"
 
 // the variables in order in the setup array
-#define SETUP_BOOL_WIREFRAME 0
-#define SETUP_BOOL_DRAWAREA 1
-#define SETUP_BOOL_TEXTURES 2
-#define SETUP_BOOL_SAVEPLAYER 3
+enum setup_key_id {
+    SETUP_BOOL_WIREFRAME = 0,
+    SETUP_BOOL_DRAWAREA,
+    SETUP_BOOL_TEXTURES,
+    SETUP_BOOL_SAVEPLAYER,
 
-#define SETUP_INT_ROTSPEED 4
-#define SETUP_INT_MOVESPEED 5
+    SETUP_INT_ROTSPEED,
+    SETUP_INT_MOVESPEED,
+    SETUP_INT_FOV,
 
-// count of setup vars
-#define SETUP_CNT 6
+    SETUP_BOOL_AFFINE,
+
+    SETUP_CNT // count of setup vars, must be at the end of the enum
+};
 
 // deletes, creates and opens file, returns handle
 int RecreateFile(char *fname);
@@ -25,12 +29,15 @@ void setup_save(void);
 void setup_load(void);
 
 // set the value the setup variable with the given key in the global arr
-void setup_setval(uint8_t key, uint32_t val);
+void setup_setval(enum setup_key_id key, int32_t val);
 
 // get variable from global setup arr
-uint32_t setup_getval(uint8_t key);
+int32_t setup_getval(enum setup_key_id key);
 
 // fill arguments with bounds of given key
-void setup_getbounds(uint8_t key, uint32_t *min, uint32_t *max);
+void setup_getbounds(enum setup_key_id key, int32_t *min, int32_t *max);
+
+// fill arguments with step size of given key
+void setup_getstep(enum setup_key_id key, int32_t *step);
 
 #endif

@@ -10,7 +10,7 @@ world_obj iworld_obj_static_mesh(uint8_t t, mesh *m);
 fixed angle_horizontal_plane(vec3f u, vec3f v);
 
 // find closest object to a given type of world object (returns NULL if not found); sets dist_found (nullable) to distance of closest object if found, otherwise dist_found isn't modified
-world_obj *find_closest_object(world_obj *obj, llist l, int type_to_find, fixed *dist_found);
+world_obj *find_closest_object(world_obj *obj, llist l, enum worldobj_type_id type_to_find, fixed *dist_found);
 
 // move and rotate obj towards dir with speed (0 means no movement, negatives mean away from dir); with check_collision set, no movement if collision occurs
 int move_rot_towards(world_obj *obj, world_obj *dir, fixed speed, bool check_collision);

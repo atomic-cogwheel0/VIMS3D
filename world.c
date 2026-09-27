@@ -1,13 +1,13 @@
 #include "world.h"
 
-llist wlist;
+static llist wlist;
 
-camera *global_cam = NULL;
+static camera global_cam;
 
-collider player_collider;
-world_obj player;
-mesh player_mesh;
-node *player_node;
+static collider player_collider;
+static world_obj player;
+static mesh player_mesh;
+static node *player_node;
 
 static uint32_t last_time = 0;
 static bool already_ticked = FALSE;
@@ -20,7 +20,7 @@ static int w_dbg_mesh_cnt;
 static int w_dbg_tri_cnt;
 static unsigned int us_elapsed;
 
-world_obj iworld_obj(uint8_t type, mesh *m, void *dataptr, int (*add)(world_obj *, llist), int (*del)(world_obj *, llist), int (*tck)(world_obj *, llist, world_obj *, fixed)) {
+world_obj iworld_obj(enum worldobj_type_id type, mesh *m, void *dataptr, int (*add)(world_obj *, llist), int (*del)(world_obj *, llist), int (*tck)(world_obj *, llist, world_obj *, fixed)) {
 	world_obj w;
 	w.type = type;
 	w.mesh = NULL;
@@ -82,19 +82,32 @@ int w_deregister(node *n) {
 	return del_ret;
 }
 
-int w_set_cam_pos(camera cam) {
-	if (global_cam == NULL) return S_ENULLPTR;
+int w_set_cam_pos(position pos) {
+	if (global_cam.pos == NULL) return S_ENULLPTR;
 
-	(*global_cam) = cam;
+	*(global_cam.pos) = pos;
 	return S_SUCCESS;
 }
 
-camera *w_getcam(void) {
-	return global_cam;
+int w_set_cam_zoom(fixed zoom_level) {
+	global_cam.zoom_level = zoom_level;
+	return S_SUCCESS;
+}
+
+camera *w_get_cam_ptr(void) {
+	return &global_cam;
+}
+
+position *w_get_cam_pos_ptr(void) {
+	return global_cam.pos;
 }
 
 world_obj *w_getplayer(void) {
 	return &player;
+}
+
+fixed fov_to_zoom(int fov) {
+	return int2f(90) / fov;
 }
 
 // defined in worldobj.c; handles player movement
@@ -114,7 +127,8 @@ int w_init(void) {
 	if (status != S_SUCCESS)
 		return status;
 
-	global_cam = &player.mesh->pos;
+	global_cam.pos = &player.mesh->pos;
+	global_cam.zoom_level = int2f(1);
 
 	wlist.head = player_node;
 	wlist.tail = player_node;
@@ -159,6 +173,8 @@ void w_tick(void) {
 	fixed timescale;
 	uint32_t calc_time;
 	uint32_t curr_time = timer_us();
+
+	int i = 3;
 
 	if (!ticks_frozen) {
 		calc_time = curr_time;
@@ -252,10 +268,10 @@ static char buf[64]; // for sprintf()
 void w_print_debug(void) {
 	snprintf_light(buf, 64, "%1fms (%1ffps) %dt/%dm", int2f(us_elapsed/100)/10, float2f(1e6f/us_elapsed), w_dbg_tri_cnt, w_dbg_mesh_cnt);
 	PrintMini(0, 0, (unsigned char *)buf, 0);
-	if (global_cam != NULL) {
-		snprintf_light(buf, 64, "%1f %1f %1f %1fp %1fy", global_cam->pos.x,
-														 global_cam->pos.y,
-														 global_cam->pos.z, rad2deg(global_cam->pitch), rad2deg(global_cam->yaw));
+	if (global_cam.pos != NULL) {
+		snprintf_light(buf, 64, "%1f %1f %1f %1fp %1fy %1f", global_cam.pos->pos.x,
+														 global_cam.pos->pos.y,
+														 global_cam.pos->pos.z, rad2deg(global_cam.pos->pitch), rad2deg(global_cam.pos->yaw), global_cam.zoom_level);
 	}
 	else {
 		snprintf_light(buf, 64, "global_cam is NULL!");

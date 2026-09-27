@@ -1,9 +1,9 @@
 #include "ui.h"
 
 static volatile bool inmenu = FALSE;
-menu_instance_t current_menu = {NULL, 0, 0, NULL, 0};
+static menu_instance_t current_menu = {NULL, 0, 0, NULL, 0};
 
-menuelement_t ielement(bool (*onclick)(struct _menuelement_t *obj), int x1, int y1, int width, char *text, uint8_t type, int setupkey) {
+menuelement_t ielement(bool (*onclick)(struct _menuelement_t *this), int x1, int y1, int width, char *text, enum menuelement_id type, enum setup_key_id setupkey) {
     menuelement_t e;
     e.onclick = onclick;
     e.y1 = y1;
@@ -114,7 +114,7 @@ int ui_rendermenu(void) {
         }
         if (curr.type == MENUELEMENT_SETUP_SLIDER) {
             l = snprintf_light(buf, 24, "%d", setup_getval(curr.setupkey));
-            PrintXY(127 - (l)*6, curr.y1 + 2, buf, 0);
+            PrintXY(127 - (l)*6, curr.y1 + 2, (unsigned char *)buf, 0);
             // draw small vertical line (2 wide) to indicate selection
             if (current_menu.selected == i) {
                 Bdisp_AreaReverseVRAM(curr.x1 - 1, curr.y1, curr.x1, curr.y1 + 10);
@@ -239,7 +239,7 @@ static bool done_exec = FALSE;
 static bool done_close = FALSE;
 
 void menu_keyboard_handler(void) {
-    int lower, upper;
+    int lower, upper, step;
     if (!inmenu || current_menu.menu == NULL) return;
 
     if (IsKeyDown(KEY_CTRL_DOWN)) {
@@ -262,10 +262,14 @@ void menu_keyboard_handler(void) {
     }
     else done_prev = FALSE;
 
+    if (current_menu.in_slider != NULL) {
+        setup_getstep(current_menu.in_slider->setupkey, &step);
+    }
+
     if (IsKeyDown(KEY_CTRL_RIGHT)) {
         if (!done_nextpage) {
             if (current_menu.in_slider != NULL) {
-                current_menu.sliderpos++;
+                current_menu.sliderpos += step;
             }
             else {
                 ui_nextpage();
@@ -278,7 +282,7 @@ void menu_keyboard_handler(void) {
     if (IsKeyDown(KEY_CTRL_LEFT)) {
         if (!done_prevpage) {
             if (current_menu.in_slider != NULL) {
-                current_menu.sliderpos--;
+                current_menu.sliderpos -= step;
             }
             else {
                 ui_prevpage();
@@ -356,7 +360,7 @@ int ui_prevbutton(void) {
 
 // ----- specific object handlers -----
 
-bool onclick_closemenu(void *unused) {
+bool onclick_closemenu(menuelement_t *this) {
     if (ui_closemenu() == S_SUCCESS) {
         return TRUE;
     }
@@ -365,23 +369,23 @@ bool onclick_closemenu(void *unused) {
 
 extern void quit(void);
 
-bool onclick_quit(void *unused) {
+bool onclick_quit(menuelement_t *this) {
     quit();
     return TRUE; // won't run
 }
 
-bool onclick_open_settings(void *unused) {
+bool onclick_open_settings(menuelement_t *this) {
     return ui_entermenu(&menu_settings);
 }
 
-bool onclick_setup_bool(menuelement_t *el) {
-    uint8_t key = el->setupkey;
+bool onclick_setup_bool(menuelement_t *this) {
+    uint8_t key = this->setupkey;
     setup_setval(key, !setup_getval(key));
     return TRUE;
 }
 
-bool onclick_setup_slider(menuelement_t *el) {
-    current_menu.in_slider = el;
-    current_menu.sliderpos = (int)setup_getval(el->setupkey);
+bool onclick_setup_slider(menuelement_t *this) {
+    current_menu.in_slider = this;
+    current_menu.sliderpos = (int)setup_getval(this->setupkey);
     return TRUE;
 }
