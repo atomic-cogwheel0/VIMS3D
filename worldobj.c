@@ -177,12 +177,12 @@ int tick_tank_marker_arrow(world_obj *arrow, llist l, world_obj *player, fixed t
 
 int add_person(world_obj *person, llist l) {
 	// allocate place for data
-	person->data = malloc(sizeof(person_data_t));
+	person->data = malloc(sizeof(person_data));
 	if (person->data == NULL)
 		return S_EALLOC;
 	// initialize pathfinding target
-	((person_data_t *)person->data)->pathfind_target = person->mesh->pos.pos;
-	((person_data_t *)person->data)->should_move = FALSE;
+	((person_data *)person->data)->pathfind_target = person->mesh->pos.pos;
+	((person_data *)person->data)->should_move = FALSE;
 
 	return S_SUCCESS;
 }
@@ -193,7 +193,7 @@ int del_person(world_obj *person, llist l) {
 }
 
 int tick_person(world_obj *person, llist l, world_obj *player, fixed timescale) {
-	person_data_t *pdata = (person_data_t *)person->data; // interpret data as pathfinding
+	person_data *pdata = (person_data *)person->data; // interpret data as pathfinding
 	static const fixed min_dist = int2f(1); // the distance that counts as reaching a target point
 	static const fixed tank_notice_dist = int2f(15); // start fleeing at this distance
 	static const fixed tank_safe_dist = int2f(30); // stop fleeing at this distance

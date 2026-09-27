@@ -54,12 +54,12 @@ typedef struct {
 	bool is_on;
 	bool toggle;
 	bool prev_toggle;
-} toggle_t;
+} toggle;
 
 // toggles t->is_on if state has changed to TRUE since last call
-void toggle_rising(toggle_t *t, bool state);
+void toggle_rising(toggle *t, bool state);
 // toggles t->is_on if state has changed to FALSE since last call
-void toggle_falling(toggle_t *t, bool state);
+void toggle_falling(toggle *t, bool state);
 
 // status codes
 #define S_SUCCESS 0         // function did everything successfully/error-free

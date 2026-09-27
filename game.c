@@ -5,7 +5,7 @@
   game setup, adding meshes, handling input
 */
 
-extern tx_data_t textures[TX_CNT];
+extern tx_data textures[TX_CNT];
 
 static float gdelta; // player rotation speed
 static float gspeed; // player movement speed
@@ -21,22 +21,22 @@ volatile static int gamestate = GAMESTATE_PREINIT;
 // arrays for storing mesh data (vertices, triangles, textures)
 static vec3f *vertices;
 static trianglef tank_mesh[TANK_MODEL_TRI_CNT];
-static texture_t *tank_txarr[TANK_MODEL_TRI_CNT];
+static texture *tank_txarr[TANK_MODEL_TRI_CNT];
 
 static trianglef house_mesh[HOUSE_MODEL_TRI_CNT];
-static texture_t *house_txarr[HOUSE_MODEL_TRI_CNT];
+static texture *house_txarr[HOUSE_MODEL_TRI_CNT];
 
-static texture_t *tx_tank_sides, *tx_tank_track, *tx_tank_barrel, *tx_tank_front, *tx_tank_top, *tx_house_wall, *tx_house_roof, *tx_house_wall_large_panel, *tx_house_wall_small_panel;
-static texture_t *tx_door;
+static texture *tx_tank_sides, *tx_tank_track, *tx_tank_barrel, *tx_tank_front, *tx_tank_top, *tx_house_wall, *tx_house_roof, *tx_house_wall_large_panel, *tx_house_wall_small_panel;
+static texture *tx_door;
 
 static trianglef person_mesh[2];
-static texture_t *person_txarr[2];
+static texture *person_txarr[2];
 
 static trianglef tree_mesh[2];
-static texture_t *tree_txarr[2];
+static texture *tree_txarr[2];
 
 static trianglef arrow_mesh[4];
-static texture_t *arrow_txarr[4];
+static texture *arrow_txarr[4];
 
 // objects (these are global because they are referenced by address)
 static mesh tank_meshobj;
@@ -73,18 +73,18 @@ static node *bullet_node;
 
 // if debugging, set overlay to ON by default
 #ifndef DEBUG_BUILD
-static toggle_t overlay = {FALSE, FALSE, FALSE};
+static toggle overlay = {FALSE, FALSE, FALSE};
 #else
-static toggle_t overlay = {TRUE, FALSE, FALSE};
+static toggle overlay = {TRUE, FALSE, FALSE};
 #endif
 
-static menuelement_t menu_pause_element_list[4];
-static menupage_t menu_pause_page_list[1];
-static menu_t menu_pause;
+static menu_element menu_pause_element_list[4];
+static menu_page menu_pause_page_list[1];
+static menu menu_pause;
 
-static menuelement_t menu_settings_element_list[12];
-static menupage_t menu_settings_page_list[4];
-static menu_t menu_settings;
+static menu_element menu_settings_element_list[12];
+static menu_page menu_settings_page_list[4];
+static menu menu_settings;
 
 static int load_cam_pos(position *pos);
 static int save_cam_pos(position *pos);

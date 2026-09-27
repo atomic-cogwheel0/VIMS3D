@@ -39,7 +39,7 @@ collider c_move_collider(collider c, vec3f v);
 // a single instance of a mesh, stores position, and POINTERS to hitboxes, triangles and colliders -> reusable arrays
 typedef struct {
 	trianglef *mesh_arr; // array of triangles, relative to pos.pos
-	texture_t **tx_arr; // array of matching textures
+	texture **tx_arr; // array of matching textures
 	uint8_t tr_cnt; // tx_arr and mesh_arr both must have tr_cnt elements
 
 	collider *coll_arr; // array of colliders, relative to pos.pos
@@ -55,10 +55,10 @@ typedef struct {
 
 // init new mesh
 // tx_arr should be an array of pointers to the textures defined in "texturemap.c" (or anywhere else, really)
-mesh imesh(trianglef *arr, texture_t **tx_arr, uint8_t arrlen, vec3f pos, vec3f ctr);
+mesh imesh(trianglef *arr, texture **tx_arr, uint8_t arrlen, vec3f pos, vec3f ctr);
 // init new billboard mesh (always faces player, single face = 2 tris, one with flipped texture, 2 textures)
 // a billboard's ctr is always (0;0;0), so make sure the triangles are centered at least on the X and Z axes
-mesh ibill(trianglef *arr, texture_t **tx_arr, vec3f pos);
+mesh ibill(trianglef *arr, texture **tx_arr, vec3f pos);
 // init a new mesh with no arrs, just the positioning params (useful for certain objects like the player)
 mesh inullmesh(void);
 

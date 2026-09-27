@@ -1,7 +1,7 @@
 #include "texture.h"
 
-texture_t *i_tx_anim(tx_data_t *tx, uint8_t nframes, unsigned int frame_us, bool loop, bool imm_start) {
-    texture_t *r = (texture_t *) malloc(sizeof(texture_t));
+texture *i_tx_anim(tx_data *tx, uint8_t nframes, unsigned int frame_us, bool loop, bool imm_start) {
+    texture *r = (texture *) malloc(sizeof(texture));
     r->texture = tx;
     r->anim.frame = 0;
     r->anim.nframes = nframes;
@@ -12,14 +12,14 @@ texture_t *i_tx_anim(tx_data_t *tx, uint8_t nframes, unsigned int frame_us, bool
     return r;
 }
 
-texture_t *i_tx_static(tx_data_t *tx) {
-    texture_t *r = (texture_t *) malloc(sizeof(texture_t));
+texture *i_tx_static(tx_data *tx) {
+    texture *r = (texture *) malloc(sizeof(texture));
     r->texture = tx;
     r->anim.nframes = 1;
     return r;
 }
 
-void tx_free(texture_t **t) {
+void tx_free(texture **t) {
     if (t != NULL && *t != NULL) {
         free(*t);
         *t = NULL;
@@ -27,14 +27,14 @@ void tx_free(texture_t **t) {
 }
 
 typedef struct _a_data_node {
-    anim_data_t *data;
+    anim_data *data;
     struct _a_data_node *next;
 } a_data_node;
 
 // head->data is not actually used
 static a_data_node head = {NULL, NULL};
 
-static int a_append(anim_data_t *ad) {
+static int a_append(anim_data *ad) {
     a_data_node *new = (a_data_node *) malloc(sizeof(a_data_node));
     a_data_node *ptr = &head;
 
@@ -52,7 +52,7 @@ static int a_append(anim_data_t *ad) {
     return S_SUCCESS;
 }
 
-static void a_remove(anim_data_t *ad) {
+static void a_remove(anim_data *ad) {
     a_data_node *prev_next;
     a_data_node *ptr = &head;
     while (ptr->next != NULL) {
@@ -78,7 +78,7 @@ void a_dealloc(void) {
     }
 }
 
-texture_t *a_register_texture(texture_t *tx, int *status) {
+texture *a_register_texture(texture *tx, int *status) {
     int ret;
     ret = a_append(&(tx->anim));
     if (status != NULL) *status = ret;
@@ -107,7 +107,7 @@ void a_tick(uint32_t elapse_us) {
     }
 }
 
-int a_px_offset(texture_t *tx) {
+int a_px_offset(texture *tx) {
     a_data_node *ptr = &head;
    
     if (tx->anim.nframes == 1) return 0;

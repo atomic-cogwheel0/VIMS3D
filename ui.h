@@ -19,45 +19,36 @@ enum menuelement_id {
 };
 
 // the height of a menu element is 11 pixels (inclusive)
-typedef struct _menuelement_t {
-    bool (*onclick)(struct _menuelement_t *this); // onclick function, gets object from which it was called, returns whether the action was run successfully
+typedef struct _menu_element {
+    bool (*onclick)(struct _menu_element *this); // onclick function, gets object from which it was called, returns whether the action was run successfully
     int x1, y1; // coordinates of the top-right corner
     int width; // width in pixels of the box
     char *text;
     enum menuelement_id type; // MENUELEMENT
     enum setup_key_id setupkey; // used only if this is a SETUP element
-} menuelement_t;
+} menu_element;
 
 // create a menu element with entirely arbitrary data (-1 width means calculate from text length, -1 to x1 means the element should be centered)
-menuelement_t ielement(bool (*onclick)(struct _menuelement_t *this), int x1, int y1, int width, char *text, enum menuelement_id type, enum setup_key_id setupkey);
+menu_element ielement(bool (*onclick)(struct _menu_element *this), int x1, int y1, int width, char *text, enum menuelement_id type, enum setup_key_id setupkey);
 
 // a collection of menu elements, a page
-typedef struct _menupage_t {
-    menuelement_t *elements;
+typedef struct _menu_page {
+    menu_element *elements;
     uint8_t element_cnt;
     bool has_selectable; // does this menu page contain any selectables (VERY IMPORTANT THAT THIS IS SET CORRECTLY, ELSE ANY ARROW KEY PRESSES IN THIS PAGE WILL FREEZE THE GAME)
-} menupage_t;
+} menu_page;
 
-menupage_t imenupage(menuelement_t *elements, uint8_t element_cnt);
+menu_page imenupage(menu_element *elements, uint8_t element_cnt);
 
 // collection of pages
-typedef struct _menu_t {
-    menupage_t *pages;
+typedef struct _menu {
+    menu_page *pages;
     uint8_t page_cnt;
-    struct _menu_t *prev_menu; // menu to return to if this one is closed
-} menu_t;
+    struct _menu *prev_menu; // menu to return to if this one is closed
+} menu;
 
 // initializes a new menu object (not an instance)
-menu_t imenu(menupage_t *pages, uint8_t page_cnt, menu_t *prev);
-
-// has a single static instance, in which the global state is stored
-typedef struct {
-    menu_t *menu; // the currently open menu
-    int page; // currently viewed page
-    int selected; // index of the selected selectable (this element should be selectable; -1 means current menu has no selectables at all)
-    menuelement_t *in_slider;
-    int sliderpos;
-} menu_instance_t;
+menu imenu(menu_page *pages, uint8_t page_cnt, menu *prev);
 
 // returns whether a menu is open and thus the game should be paused
 int ui_getmenustatus(void);
@@ -68,7 +59,7 @@ int ui_rendermenu(void);
 int ui_rendermenu_slider(void);
 
 // sets the global state to be in the given menu
-int ui_entermenu(menu_t *menu);
+int ui_entermenu(menu *menu);
 
 // switch pages
 int ui_prevpage(void);
@@ -86,17 +77,17 @@ void menu_keyboard_handler(void);
 int ui_nextbutton(void);
 int ui_prevbutton(void);
 
-bool ui_is_selectable(menuelement_t e);
+bool ui_is_selectable(menu_element e);
 
 // ----- specific object handlers -----
 
-extern menu_t menu_settings;
+extern menu menu_settings;
 
-bool onclick_closemenu(menuelement_t *this);
-bool onclick_quit(menuelement_t *this);
-bool onclick_open_settings(menuelement_t *this);
+bool onclick_closemenu(menu_element *this);
+bool onclick_quit(menu_element *this);
+bool onclick_open_settings(menu_element *this);
 // can handle any setup-type element
-bool onclick_setup_bool(menuelement_t *this);
-bool onclick_setup_slider(menuelement_t *this);
+bool onclick_setup_bool(menu_element *this);
+bool onclick_setup_slider(menu_element *this);
 
 #endif

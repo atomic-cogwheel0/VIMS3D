@@ -38,7 +38,7 @@ int tick_tank_marker_arrow(world_obj *arrow, llist l, world_obj *player, fixed t
 typedef struct { 
 	vec3f pathfind_target;
 	bool should_move;
-} person_data_t;
+} person_data;
 
 // a PERSON object's handlers
 int add_person(world_obj *person, llist l);

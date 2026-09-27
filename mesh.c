@@ -5,7 +5,7 @@
   functions for handling meshes and colliders
 */
 
-mesh imesh(trianglef *arr, texture_t **tx_arr, uint8_t arrlen, vec3f pos, vec3f ctr) {
+mesh imesh(trianglef *arr, texture **tx_arr, uint8_t arrlen, vec3f pos, vec3f ctr) {
 	mesh m;
 	m.mesh_arr = arr;
 	m.tx_arr = tx_arr;
@@ -30,7 +30,7 @@ int m_setcoll(mesh *m, collider *colls, uint8_t coll_cnt) {
 	return S_SUCCESS;
 }
 
-mesh ibill(trianglef *arr, texture_t **tx_arr, vec3f pos) {
+mesh ibill(trianglef *arr, texture **tx_arr, vec3f pos) {
 	mesh m;
 	m.mesh_arr = arr;
 	m.tx_arr = tx_arr;

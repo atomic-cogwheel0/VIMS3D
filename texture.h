@@ -17,7 +17,7 @@ typedef struct {
 	unsigned int u_tile_size : 4; // number of repeats on the X axis
 	unsigned int v_tile_size : 4; // number of repeats on the Y axis
 	byte *pixels; // array of bytes; each byte is 4 pixels; serialized row by row
-} tx_data_t;
+} tx_data;
 
 // data for animation
 typedef struct {
@@ -28,29 +28,29 @@ typedef struct {
 	
 	bool is_loop : 1; // should the animation loop?
 	bool is_running : 1; // used to pause animation
-} anim_data_t;
+} anim_data;
 
 // a texture INSTANCE with unique animation data and possibly shared texture data
 typedef struct {
-	tx_data_t *texture;
+	tx_data *texture;
 	// if animated, texture->tx_data holds every frame, each frame comes immediately after the next; w, h and tile_sizes used normally
-	anim_data_t anim;
-} texture_t;
+	anim_data anim;
+} texture;
 
 // init animated texture
-texture_t *i_tx_anim(tx_data_t *tx, uint8_t nframes, unsigned int frame_us, bool loop, bool imm_start);
+texture *i_tx_anim(tx_data *tx, uint8_t nframes, unsigned int frame_us, bool loop, bool imm_start);
 // init texture with no animation (single frame)
-texture_t *i_tx_static(tx_data_t *tx);
+texture *i_tx_static(tx_data *tx);
 // free and set *tx to NULL
-void tx_free(texture_t **tx);
+void tx_free(texture **tx);
 
 // create a new node for the texture (returns tx and stores status (NULLable))
-texture_t *a_register_texture(texture_t *tx, int *status);
+texture *a_register_texture(texture *tx, int *status);
 // figure out frames to display
 void a_tick(uint32_t elapse_us);
 // deallocate every registered texture
 void a_dealloc(void);
 
-int a_px_offset(texture_t *tx);
+int a_px_offset(texture *tx);
 
 #endif

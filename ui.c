@@ -1,10 +1,19 @@
 #include "ui.h"
 
 static volatile bool inmenu = FALSE;
-static menu_instance_t current_menu = {NULL, 0, 0, NULL, 0};
 
-menuelement_t ielement(bool (*onclick)(struct _menuelement_t *this), int x1, int y1, int width, char *text, enum menuelement_id type, enum setup_key_id setupkey) {
-    menuelement_t e;
+// has a single static instance, in which the global state is stored
+typedef struct {
+    menu *menu; // the currently open menu
+    int page; // currently viewed page
+    int selected; // index of the selected selectable (this element should be selectable; -1 means current menu has no selectables at all)
+    menu_element *in_slider;
+    int sliderpos;
+} menu_instance;
+static menu_instance current_menu = {NULL, 0, 0, NULL, 0};
+
+menu_element ielement(bool (*onclick)(struct _menu_element *this), int x1, int y1, int width, char *text, enum menuelement_id type, enum setup_key_id setupkey) {
+    menu_element e;
     e.onclick = onclick;
     e.y1 = y1;
     if (width != -1) {
@@ -29,8 +38,8 @@ menuelement_t ielement(bool (*onclick)(struct _menuelement_t *this), int x1, int
     return e;
 }
 
-menupage_t imenupage(menuelement_t *elements, uint8_t element_cnt) {
-    menupage_t p;
+menu_page imenupage(menu_element *elements, uint8_t element_cnt) {
+    menu_page p;
     int i;
     p.elements = elements;
     p.element_cnt = element_cnt;
@@ -46,8 +55,8 @@ menupage_t imenupage(menuelement_t *elements, uint8_t element_cnt) {
     return p;
 }
 
-menu_t imenu(menupage_t *pages, uint8_t page_cnt, menu_t *prev) {
-    menu_t m;
+menu imenu(menu_page *pages, uint8_t page_cnt, menu *prev) {
+    menu m;
     m.page_cnt = page_cnt;
     m.pages = pages;
     m.prev_menu = prev;
@@ -66,7 +75,7 @@ int ui_rendermenu(void) {
     uint8_t i, l;
     static char buf[24];
     static const unsigned char bulletin[3] = "\xe6\x9b";
-    menuelement_t curr;
+    menu_element curr;
 
     if (!inmenu || current_menu.menu == NULL) return S_ENOMENU;
 
@@ -145,7 +154,7 @@ int ui_rendermenu(void) {
 int ui_rendermenu_slider(void) {
     int lower, upper, val;
     int sliderpx;
-    menuelement_t *el = current_menu.in_slider;
+    menu_element *el = current_menu.in_slider;
 
     static char buf[24];
 
@@ -175,7 +184,7 @@ int ui_rendermenu_slider(void) {
     return S_SUCCESS;
 }
 
-bool ui_is_selectable(menuelement_t e) {
+bool ui_is_selectable(menu_element e) {
     return e.type == MENUELEMENT_BUTTON || e.type == MENUELEMENT_SETUP_BOOL || e.type == MENUELEMENT_SETUP_SLIDER;
 }
 
@@ -212,7 +221,7 @@ int ui_initpage(void) {
     return S_SUCCESS;
 }
 
-int ui_entermenu(menu_t *menu) {
+int ui_entermenu(menu *menu) {
     current_menu.menu = menu;
     if (menu != NULL) {
         current_menu.page = 0;
@@ -360,7 +369,7 @@ int ui_prevbutton(void) {
 
 // ----- specific object handlers -----
 
-bool onclick_closemenu(menuelement_t *this) {
+bool onclick_closemenu(menu_element *this) {
     if (ui_closemenu() == S_SUCCESS) {
         return TRUE;
     }
@@ -369,22 +378,22 @@ bool onclick_closemenu(menuelement_t *this) {
 
 extern void quit(void);
 
-bool onclick_quit(menuelement_t *this) {
+bool onclick_quit(menu_element *this) {
     quit();
     return TRUE; // won't run
 }
 
-bool onclick_open_settings(menuelement_t *this) {
+bool onclick_open_settings(menu_element *this) {
     return ui_entermenu(&menu_settings);
 }
 
-bool onclick_setup_bool(menuelement_t *this) {
+bool onclick_setup_bool(menu_element *this) {
     uint8_t key = this->setupkey;
     setup_setval(key, !setup_getval(key));
     return TRUE;
 }
 
-bool onclick_setup_slider(menuelement_t *this) {
+bool onclick_setup_slider(menu_element *this) {
     current_menu.in_slider = this;
     current_menu.sliderpos = (int)setup_getval(this->setupkey);
     return TRUE;

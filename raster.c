@@ -91,18 +91,18 @@ int g_draw_horizon(camera *cam) {
 
 // define fallback texture (2*2 checkerboard)
 static byte tx_o_fallback[] = {65};
-static tx_data_t fallback_txdata = {2, 2, 1, 1, tx_o_fallback};
-static texture_t fallback_texture = {&fallback_txdata, {1}}; // inits a static animated texture
+static tx_data fallback_txdata = {2, 2, 1, 1, tx_o_fallback};
+static texture fallback_texture = {&fallback_txdata, {1}}; // inits a static animated texture
 
 static void DrawLine_depthbuf(int x1, int y1, int x2, int y2);
 
 // the One and Only Rendering(TM) function
 // have fun :)
-int g_rasterize_triangles(trianglef *tris, texture_t **textures, int len, camera cam, position pos, vec3f zero_offset) {
+int g_rasterize_triangles(trianglef *tris, texture **textures, int len, camera cam, position pos, vec3f zero_offset) {
 	int curr_tidx;
 	int bbox_left, bbox_right, bbox_top, bbox_bottom; // bounding box (on screen)
 	int tri_cnt = 0;
-	texture_t *tx;
+	texture *tx;
 
 	trianglef t;
 	vec3f a, b, c;
@@ -552,7 +552,7 @@ int g_text2d(unsigned char *text, unsigned int x, unsigned int y, unsigned int p
 	return S_SUCCESS;
 }
 
-int g_texture2d(texture_t *tx, unsigned int x, unsigned int y) {
+int g_texture2d(texture *tx, unsigned int x, unsigned int y) {
 	unsigned int xiter, yiter;
 	byte px;
 	int px_offset, anim_offset;
